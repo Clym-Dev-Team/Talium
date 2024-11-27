@@ -22,10 +22,7 @@
     <logger name="talium.system.StopWatch" level="INFO" additivity="false">
         <appender-ref ref="SYSTEM"/>
     </logger>
-    <logger name="talium.system.eventSystem" level="INFO"/>
-    <logger name="talium.system.commandSystem" level="INFO"/>
-    <logger name="talium.system.twitchCommands.cooldown.CooldownService" level="INFO"/>
-    <logger name="talium.system.commandSystem.CommandProcessor.Chat" level="DEBUG"/>
+    <logger name="talium.system.coinsWatchtime" level="WARN"/>
     <logger name="talium.system.ASCIIProgressbar" level="INFO"/>
     <logger name="logback" level="INFO"/>
     <logger name="org.springframework.security.web" level="INFO" additivity="false">

@@ -64,6 +64,8 @@ public class EventDispatcher {
                     method.invoke(null, event);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     logger.error("Could not invoke Method: {} with Event {}", method, event.getClass(), e);
+                } catch (Exception e) {
+                    logger.error("Subscriber {} through exception: {} for event: {}", method.getName(), e.getMessage(), event, e);
                 }
                 invokedMethods.add(method.getName());
             }

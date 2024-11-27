@@ -1,7 +1,5 @@
 package talium.system.inputSystem.configuration;
 
-import javassist.bytecode.CodeIterator;
-import org.checkerframework.checker.units.qual.N;
 import talium.inputs.Twitch4J.TwitchUserPermission;
 import talium.system.stringTemplates.Template;
 import talium.system.twitchCommands.cooldown.ChatCooldown;
@@ -11,18 +9,13 @@ import talium.system.twitchCommands.triggerEngine.TriggerCallback;
 import talium.system.twitchCommands.triggerEngine.TriggerEngine;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 public record InputConfiguration(List<RuntimeTrigger> commands, List<Template> templates) {
-    public InputConfiguration() {
-        this(new ArrayList<>(), new ArrayList<>());
-    }
 
     public static class Builder {
-        private static final ChatCooldown DEFAULT_COOLDOWN = new ChatCooldown(CooldownType.MESSAGES, 2);
+        private static final ChatCooldown DEFAULT_COOLDOWN = new ChatCooldown(CooldownType.MESSAGES, 0);
         List<RuntimeTrigger> commands = new ArrayList<>();
         List<Template> templates = new ArrayList<>();
 

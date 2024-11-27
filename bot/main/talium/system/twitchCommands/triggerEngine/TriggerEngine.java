@@ -8,7 +8,6 @@ import talium.inputs.Twitch4J.ChatMessage;
 import talium.system.Out;
 import talium.system.eventSystem.Subscriber;
 import talium.system.stringTemplates.TemplateService;
-import talium.system.twitchCommands.cooldown.CooldownService;
 
 import static talium.system.twitchCommands.triggerEngine.TriggerProvider.triggers;
 import static talium.system.twitchCommands.cooldown.CooldownService.*;
@@ -50,7 +49,8 @@ public class TriggerEngine {
      */
     private static void processTrigger(RuntimeTrigger trigger, ChatMessage message) {
         // if ordinal of user is smaller than the command/trigger, than the user has fewer permissions and is not allowed to execute
-        if (message.user().permission().ordinal() <= trigger.permission().ordinal()) {
+        if (message.user().permission().ordinal() < trigger.permission().ordinal()) {
+            logger.debug("User {} with {}, missing {} permission for command {}", message.user().name(), message.user().permission(), trigger.permission(), trigger.id());
             return;
         }
 
@@ -67,11 +67,16 @@ public class TriggerEngine {
 
         var cooldown = inGlobalCooldown(message, trigger.id(), trigger.userCooldown()) || inUserCooldown(message, trigger.id(), trigger.userCooldown());
         if (cooldown) {
+            logger.debug("Call to command {} from {} rejected because of cooldowns", trigger.id(), message.user().name());
             return;
         }
         updateCooldownState(message, trigger.id(), trigger.globalCooldown(), trigger.userCooldown());
 
-        trigger.callback().triggerCallback(trigger.id(), message);
+        try {
+            trigger.callback().triggerCallback(trigger.id(), message);
+        } catch (Exception e) {
+            logger.error("Error thrown in callback of command {}", trigger.id(), e);
+        }
     }
 
     public static void executeTextCommand(String commandId, ChatMessage message) {

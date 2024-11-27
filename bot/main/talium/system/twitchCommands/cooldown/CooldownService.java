@@ -1,5 +1,6 @@
 package talium.system.twitchCommands.cooldown;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import kotlin.Pair;
 import org.checkerframework.dataflow.qual.Impure;
 import org.checkerframework.dataflow.qual.Pure;
@@ -13,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,10 +44,12 @@ public class CooldownService {
     private static final HashMap<String, Instant> secondsGlobalCooldown = new HashMap<>();
 
     /** Scheduled cleanup job to reclaim memory from very old userCooldown entries */
-    private static final ScheduledExecutorService cleanupService = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService cleanupService;
     private static final Logger log = LoggerFactory.getLogger(CooldownService.class);
 
     static {
+        ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("COOLDOWN_CLEANUP_EXECUTOR").build();
+        cleanupService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
         cleanupService.scheduleAtFixedRate(CooldownService::cleanupCooldownUser, 0, 30, TimeUnit.MINUTES);
     }
 
@@ -182,6 +186,7 @@ public class CooldownService {
      * Cleanup task to remove UserCooldown entries that are pretty old
      */
     private static void cleanupCooldownUser() {
+        //TODO wrap in try/catch because otherwise executor will end on runtime error
         log.info("Running Cooldown cleanup task");
         // if the index of the message that executed this command last is more than 100 messages ago than the last send message of the user we remove the message
         for (var entry : messageUserCooldown.entrySet()) {

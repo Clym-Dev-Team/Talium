@@ -13,4 +13,10 @@
     font-size: 2rem;
     flex: 1;
     border-top: var(--primary-border);
+    flex-direction: column;
+    gap: .5em;
+}
+
+.placeholder > .bottomText {
+    font-size: .6em;
 }

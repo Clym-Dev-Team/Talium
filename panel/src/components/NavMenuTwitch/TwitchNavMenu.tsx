@@ -16,12 +16,11 @@ export default function TwitchNavMenu() {
     </div>
     <div className="otherOptions">
       <NavLink target="/history" name="Message History Test"/>
+      <NavLink target="/watchtime" name="Watchtime & Coins"/>
       <NavLink target="/health" name="Health"/>
       <NavLink target="/oauth" name="External accounts"/>
-      <NavLink target="/goal" name="Goals"/>
-      <NavLink target="/templates" name="Templates"/>
       <NavLink target="/accounts" name="Panel Accounts"/>
-      <NavLink target="/" name="WebConsole" allowChildren={false}/>
+      <NavLink target="/goal" name="Goals"/>
     </div>
     <div className="account">
       {/*

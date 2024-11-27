@@ -19,6 +19,7 @@ import GiveawayEditPage from "./components/giveaways/editPage/GiveawayEditPage.t
 import {TooltipProvider} from "../@shadcn/components/ui/tooltip.tsx";
 import TokenRemover from "./components/Login/TokenRemover.tsx";
 import AccountsPage from "./components/panelAccounts/AccountsPage.tsx";
+import WatchtimePage from "./components/watchtime/WatchtimePage.tsx";
 
 export const PANEL_BASE_URL = import.meta.env.VITE_PANEL_BASE_URL;
 export const BOT_BACKEND_ADDR = import.meta.env.VITE_BOT_BACKEND_ADDR
@@ -47,9 +48,10 @@ const router = createBrowserRouter(
         <Route path="/health" element={<HealthOverview/>}/>
         <Route path="/oauth" element={<OauthSetup/>}/>
         <Route path="/oauth/result" element={<OauthResult/>}/>
+        <Route path="/accounts" element={<AccountsPage/>}/>
         <Route path="/giveaways" element={<GiveawayListPage/>}/>
         <Route path="/giveawayEdit" element={<GiveawayEditPage/>}/>
-        <Route path="/accounts" element={<AccountsPage/>}/>
+        <Route path="/watchtime" element={<WatchtimePage/>}/>
       </Route>
       <Route path="/twitchToken" element={<TokenRemover/>}/>
     </>

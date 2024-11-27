@@ -3,6 +3,7 @@ package talium.system;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import talium.inputs.Twitch4J.Twitch4JInput;
+import talium.inputs.Twitch4J.TwitchApi;
 import talium.system.stringTemplates.Template;
 import talium.system.stringTemplates.TemplateService;
 import talium.system.templateParser.exeptions.ArgumentValueNullException;
@@ -30,7 +31,7 @@ public class Out {
     public static class Twitch {
 
         public static void sendRawMessage(String message) {
-            Twitch4JInput.sendMessage(message);
+            TwitchApi.sendMessage(message);
         }
 
         public static String sendNamedTemplate(String id, HashMap<String, Object> baseValues) throws NoSuchElementException {
@@ -55,7 +56,7 @@ public class Out {
                 // the exceptions should be displayed in the console and in the webconsole with a fairly high priority
                 throw new RuntimeException(e);
             }
-            Twitch4JInput.sendMessage(message);
+            TwitchApi.sendMessage(message);
             return message;
         }
     }
