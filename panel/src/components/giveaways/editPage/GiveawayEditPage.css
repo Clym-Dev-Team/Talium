@@ -54,36 +54,38 @@
 .winnersListScrollArea {
     flex: 1;
     border: var(--primary-border);
-}
-
-.winnersList {
     display: flex;
     flex-direction: column;
-    gap: 1em;
-    padding: 1em;
+    padding: .2em;
 }
 
-.potentialWinner {
+.sectionTitle {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    padding: .5em;
+}
+
+.sectionTitle>.sectionTitleText {
+    font-size: large;
+}
+
+.sectionTitle>.legend {
+    display: flex;
     justify-content: space-between;
-    align-items: center;
+    font-size: small;
+    color: var(--muted-text);
 }
 
-.potentialWinnerActionBtns {
+.winnerList {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: .2em;
+    flex-direction: column;
+    gap: .2rem;
 }
 
-.potentialWinnerActionBtns > button {
-    aspect-ratio: 1;
-    padding: 0;
-}
-
-.potentialWinnerActionBtns > button > svg {
-    stroke: red;
+.ticketList {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
 }
 
 .logs {

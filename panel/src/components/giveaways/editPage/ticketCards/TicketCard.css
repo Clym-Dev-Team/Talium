@@ -1,0 +1,27 @@
+.gwResultCard {
+    display: flex;
+    justify-content: space-between;
+    font-size: x-large;
+    box-sizing: border-box;
+    padding: .3em .5em;
+}
+
+.winnerCard {
+    background-color: green;
+    border-radius: .5rem;
+    flex-direction: column;
+}
+
+.winnerCard>.comment {
+    font-size: small;
+    color: var(--muted-text);
+}
+
+.winnerCard.rejected {
+    background-color: hsl(var(--destructive));
+}
+
+.gwResultCard:hover {
+    background-color: hsl(var(--purple-hsl));
+    border-radius: 5px;
+}
