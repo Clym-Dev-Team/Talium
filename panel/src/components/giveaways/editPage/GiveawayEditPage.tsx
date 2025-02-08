@@ -12,9 +12,13 @@ import IconChecked from "../../../assets/IconChecked.tsx";
 import IconX from "../../../assets/IconX.tsx";
 import {useForm} from "react-hook-form";
 import {Command} from "../../Commands/commands/Command.ts";
+import BeanCheckBox from "../../../common/BeanBox/BeanCheckBox.tsx";
+import {useState} from "react";
 
 export default function GiveawayEditPage() {
   //work arround so that templateEditor is happy
+  const [bool1, setBool1] = useState(true);
+  const [bool2, setBool2] = useState(false)
   const {register} = useForm<Command>()
   return <div className="giveawayEditPage">
     <div className="tileBar">
@@ -24,17 +28,18 @@ export default function GiveawayEditPage() {
     <ScrollArea className="contentBorder">
       <div className="formContent">
         <div className="column">
-          <h1>Primary Fields</h1>
+          <h1>Giveaway</h1>
           <VLabel name="Giveaway ID"><Input disabled={true}/></VLabel>
-          <VLabel name="Command Pattern"><Input/></VLabel>
           <VLabel name="Giveaway Name"><Input/></VLabel>
           <VLabel name="Notes/Internal Description"><Textarea/></VLabel>
+          <VLabel name="Command Pattern"><Input/></VLabel>
+          <Textarea/>
           <VLabel name="Autostart Time"><Input type="time"/></VLabel>
           <VLabel name="Autoclose Time"><Input type="time"/></VLabel>
           <VLabel name="Ticket Cost"><Input type="number"/></VLabel>
           <VLabel name="Max Tickets per User"><Input type="number"/></VLabel>
-          <VLabel name="Allow Redraw of User"><Switch/></VLabel>
-          <VLabel name="Announce Winner in Chat"><Switch/></VLabel>
+          <BeanCheckBox checked={bool1} onChange={b => setBool1(b)}>Allow Redraw of User</BeanCheckBox>
+          <BeanCheckBox checked={bool2} onChange={b => setBool2(b)}>Announce Winner in Chat</BeanCheckBox>
           <VLabel name="Giveaway Policy"><Select>
             <SelectTrigger>Select a Giveaway Policy</SelectTrigger>
             <SelectContent className="dark">
