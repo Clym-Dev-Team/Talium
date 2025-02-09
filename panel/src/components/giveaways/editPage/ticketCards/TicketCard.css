@@ -9,10 +9,16 @@
 .winnerCard {
     background-color: green;
     border-radius: .5rem;
-    flex-direction: column;
+    flex-direction: row;
 }
 
-.winnerCard>.comment {
+.winnerCard>.winnerData {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+}
+
+.winnerCard>.winnerData>.comment {
     font-size: small;
     color: var(--muted-text);
 }
@@ -24,4 +30,13 @@
 .gwResultCard:hover {
     background-color: hsl(var(--purple-hsl));
     border-radius: 5px;
+}
+
+.winnerCard>.actions {
+    display: none;
+}
+
+.winnerCard:hover>.actions {
+    display: flex;
+    align-items: center;
 }
