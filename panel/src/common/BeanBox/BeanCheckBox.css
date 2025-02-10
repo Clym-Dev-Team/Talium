@@ -28,7 +28,8 @@
 }
 
 .beanCheckBox>.backGround  {
-    transform: translateX(-100%);
+    /* Move a bit more because otherwise we can see one pixel of it, probably some box sizing somewhere */
+    transform: translateX(-101%);
 }
 
 .beanCheckBox.checked>.backGround {
