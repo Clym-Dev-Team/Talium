@@ -6,6 +6,7 @@ import com.github.twitch4j.common.exception.UnauthorizedException;
 import com.github.twitch4j.helix.TwitchHelix;
 import com.github.twitch4j.helix.domain.Chatter;
 import com.github.twitch4j.helix.domain.User;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import talium.TwitchBot;
@@ -36,7 +37,11 @@ public class TwitchApiImpl implements TwitchApi {
     private static<T> T doHelixCall(Call<T> call) {
         try {
             return call.call(Twitch4JInput.helix);
-        }  catch (UnauthorizedException e) {
+        }  catch (HystrixRuntimeException e) {
+            if (!(e.getCause() instanceof UnauthorizedException)) {
+                // ehh, log and throw i guess
+                throw new RuntimeException(e);
+            }
             logger.warn("Twitch Credentials invalid, trying to reconnect to twitch!");
             var success = TwitchBot.reconnectTwitch();
             if (!success) {
