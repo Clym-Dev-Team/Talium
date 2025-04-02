@@ -79,7 +79,6 @@ export default function GiveawayEditPage() {
         </div>
         <div className="column">
           <div className="winnersListCard">
-            <h1>Winner List</h1>
             <ScrollArea className="winnersListScrollArea">
               <div className="winnerList">
                 <div className="sectionTitle">
@@ -112,7 +111,7 @@ export default function GiveawayEditPage() {
           </div>
           <ComingSoon>
             <div className="logs">
-              <h1>Logs</h1>
+              <h1 style={{ height: "4rem"}}>Logs</h1>
             </div>
           </ComingSoon>
           <div className="dangerArea">
