@@ -9,6 +9,7 @@ import talium.twitch4J.TwitchUserPermission;
 import talium.twitchCommands.cooldown.ChatCooldown;
 import talium.twitchCommands.cooldown.CooldownType;
 import talium.twitchCommands.persistence.TriggerEntity;
+import talium.twitchCommands.triggerEngine.TriggerProvider;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -52,7 +53,9 @@ public class GiveawayService {
                 new ArrayList<>(),
                 new ArrayList<>()
         );
-        return giveawayRepo.save(giveaway).id();
+        var savedId = giveawayRepo.save(giveaway).id();
+        TriggerProvider.rebuildTriggerCache();
+        return savedId;
     }
 
     private static TriggerEntity createGWEnterCommand(UUID giveawayId, String commandPattern) {
