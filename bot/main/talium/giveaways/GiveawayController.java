@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import talium.giveaways.persistence.GiveawayService;
 import talium.giveaways.transit.GiveawayDTO;
+import talium.giveaways.transit.GiveawaySaveDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,15 +26,20 @@ public class GiveawayController {
         this.giveawayService = giveawayService;
     }
 
-    @PostMapping
-    public HttpStatus create(@RequestBody String body) {
-        var chatterDto = gson.fromJson(body, GiveawayDTO.class);
+    @PostMapping("/save/{gwId}")
+    public HttpStatus create(@RequestBody String body, @PathVariable UUID gwId) {
+        var giveaway = gson.fromJson(body, GiveawaySaveDTO.class);
+        System.out.println("Giveaway");
+        System.out.println(giveaway);
         //TODO save all to DB
         //TODO update command for GW
         //TODO trigger possible correction of amount and ticket amounts
         //TODO trigger update of autostart/close timers
         return HttpStatus.CREATED;
     }
+
+    //TODO make create into into save
+    // make new, create from template endpoint
 
     //TODO open close GW
     //TODO archive endpoint

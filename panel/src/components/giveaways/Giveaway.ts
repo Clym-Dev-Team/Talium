@@ -11,7 +11,7 @@ export interface Giveaway {
   commandPattern: string,
   title: string,
   notes?: string,
-  startTime: number,
+  startTime?: number,
   endTime?: number,
   status: GiveawayStatus,
   ticketCost: number,
