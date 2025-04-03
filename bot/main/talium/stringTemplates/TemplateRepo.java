@@ -14,4 +14,5 @@ public interface TemplateRepo extends ListCrudRepository<Template, String> {
     List<String> searchAllBy(String search);
 
 
+    Template getById(String id);
 }

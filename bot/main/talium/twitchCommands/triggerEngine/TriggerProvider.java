@@ -9,6 +9,7 @@ import talium.twitchCommands.persistence.TriggerService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
@@ -108,17 +109,19 @@ public class TriggerProvider {
      * Add the command to an internal list to use while building the final cache of commands.
      * @param command command
      */
-    public static void addCommandRegistration(RuntimeTrigger command) {
+    public static TriggerEntity addCommandRegistration(RuntimeTrigger command) {
         codeTriggerMap.put(command.id(), command);
-        if (triggerService.existsById(command.id())) {
-            return;
+        Optional<TriggerEntity> trigger = triggerService.getTriggersId(command.id());
+        if (trigger.isPresent()) {
+            return trigger.get();
         }
         var patterns = command.patterns().stream().map(pattern -> new MessagePattern(pattern.pattern(), true, false, true)).toList();
         TriggerEntity entity = new TriggerEntity(command.id(), "", patterns, command.permission(), command.userCooldown(), command.globalCooldown(), true, null);
         try {
-            triggerService.save(entity);
+            return triggerService.save(entity);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 }

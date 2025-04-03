@@ -50,7 +50,7 @@ public class TriggerService {
     }
 
     @Transactional
-    public void save(TriggerEntity entity) {
+    public TriggerEntity save(TriggerEntity entity) {
         var oldEntity = repo.findById(entity.id);
 
         for (MessagePattern pattern : entity.patterns) {
@@ -59,9 +59,10 @@ public class TriggerService {
         if (entity.template != null && entity.template.id != null && !entity.template.id.isBlank()) {
             templateService.save(entity.template);
         }
-        repo.save(entity);
+        var saved = repo.save(entity);
         oldEntity.ifPresent(messagePatternRepo::deleteAllByParentTrigger);
         TriggerProvider.rebuildTriggerCache();
+        return saved;
     }
 
     public boolean existsById(String id) {

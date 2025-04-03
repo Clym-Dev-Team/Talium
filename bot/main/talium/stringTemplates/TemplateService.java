@@ -43,14 +43,14 @@ public class TemplateService {
         return repo.findAll();
     }
 
-    public void save(Template template) {
-        repo.save(template);
+    public Template save(Template template) {
+        return repo.save(template);
     }
 
-    public void saveIfAbsent(Template template) {
+    public Template saveIfAbsent(Template template) {
         if (repo.existsById(template.id)) {
-            return;
+            return repo.getById(template.id);
         }
-        save(template);
+        return save(template);
     }
 }

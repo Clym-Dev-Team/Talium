@@ -5,9 +5,9 @@ import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import talium.giveaways.persistence.GiveawayService;
 import talium.giveaways.transit.GiveawayDTO;
 import talium.giveaways.transit.GiveawaySaveDTO;
+import talium.giveaways.transit.GiveawayTemplateDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -24,6 +24,17 @@ public class GiveawayController {
     @Autowired
     public GiveawayController(GiveawayService giveawayService) {
         this.giveawayService = giveawayService;
+    }
+
+    @GetMapping("/templates")
+    public String getGiveawayTemplates() {
+        return gson.toJson(List.of(new GiveawayTemplateDTO("BLANK", "blank")));
+    }
+
+    @PostMapping("/fromTemplate/{templateId}")
+    public HttpStatus getGiveawayTemplates(@PathVariable String templateId) {
+        giveawayService.createFromTemplate(templateId);
+        return HttpStatus.CREATED;
     }
 
     @PostMapping("/save/{gwId}")

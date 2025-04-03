@@ -8,6 +8,7 @@ import talium.stringTemplates.Template;
 import talium.stringTemplates.TemplateService;
 import talium.twitchCommands.cooldown.ChatCooldown;
 import talium.twitchCommands.cooldown.CooldownType;
+import talium.twitchCommands.persistence.TriggerEntity;
 import talium.twitchCommands.triggerEngine.RuntimeTrigger;
 import talium.twitchCommands.triggerEngine.TriggerCallback;
 import talium.twitchCommands.triggerEngine.TriggerEngine;
@@ -76,6 +77,7 @@ public class Registrar {
         }
 
         public Command id(String id) {
+            checkId(id);
             this.id = id;
             return this;
         }
@@ -108,34 +110,40 @@ public class Registrar {
         }
 
         /// Registers an automatically generated command with a callback
-        public void registerActionCommand(TriggerCallback callback) {
-            TriggerProvider.addCommandRegistration(new RuntimeTrigger(id, patterns, permission, userCooldown,globalCooldown, callback));
+        ///
+        /// @return TriggerEntity that was saved to the DB
+        public TriggerEntity registerActionCommand(TriggerCallback callback) {
+            return TriggerProvider.addCommandRegistration(new RuntimeTrigger(id, patterns, permission, userCooldown,globalCooldown, callback));
         }
 
         /// Registers an automatically generated command without a callback, but with a template
-        public void registerTextCommand(String template) {
-            registerTextCommand(template, null);
+        ///
+        /// @return TriggerEntity that was saved to the DB
+        public TriggerEntity registerTextCommand(String template) {
+            return registerTextCommand(template, null);
         }
 
         /// Registers an automatically generated command without a callback, but with a template
-        public void registerTextCommand(String template, String messageColor) {
+        ///
+        /// @return TriggerEntity that was saved to the DB
+        public TriggerEntity registerTextCommand(String template, String messageColor) {
             templateService.saveIfAbsent(new Template(id, template, messageColor));
-            TriggerProvider.addCommandRegistration(new RuntimeTrigger(id, patterns, permission, userCooldown,globalCooldown, TriggerEngine.TEXT_COMMAND_CALLBACK));
+            return TriggerProvider.addCommandRegistration(new RuntimeTrigger(id, patterns, permission, userCooldown,globalCooldown, TriggerEngine.TEXT_COMMAND_CALLBACK));
         }
     }
 
     /// Registers a template with the context variables (captured environment)
-    public static void registerTemplate(Template template) {
-        templateService.saveIfAbsent(template);
+    public static Template registerTemplate(Template template) {
+        return templateService.saveIfAbsent(template);
     }
 
     /// Registers a template with the context variables (captured environment)
-    public static void registerTemplate(String templateId, String template, String messageColor) {
-        templateService.saveIfAbsent(new Template(templateId, template, messageColor));
+    public static Template registerTemplate(String templateId, String template, String messageColor) {
+        return templateService.saveIfAbsent(new Template(templateId, template, messageColor));
     }
 
     /// Registers a template with the context variables (captured environment)
-    public static void registerTemplate(String templateId, String template) {
-        templateService.saveIfAbsent(new Template(templateId, template, null));
+    public static Template registerTemplate(String templateId, String template) {
+        return templateService.saveIfAbsent(new Template(templateId, template, null));
     }
 }
