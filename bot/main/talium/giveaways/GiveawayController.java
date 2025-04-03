@@ -1,16 +1,16 @@
 package talium.giveaways;
 
+import com.github.twitch4j.helix.domain.User;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import talium.giveaways.transit.GiveawayDTO;
-import talium.giveaways.transit.GiveawaySaveDTO;
-import talium.giveaways.transit.GiveawayTemplateDTO;
+import talium.Out;
+import talium.giveaways.persistence.GiveawayRepo;
+import talium.giveaways.transit.*;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,12 +19,14 @@ import java.util.UUID;
 @RequestMapping("/giveaway")
 public class GiveawayController {
     private final Gson gson = new GsonBuilder().serializeNulls().create();
+    private final GiveawayRepo giveawayRepo;
 
     GiveawayService giveawayService;
 
     @Autowired
-    public GiveawayController(GiveawayService giveawayService) {
+    public GiveawayController(GiveawayService giveawayService, GiveawayRepo giveawayRepo) {
         this.giveawayService = giveawayService;
+        this.giveawayRepo = giveawayRepo;
     }
 
     @GetMapping("/templates")
@@ -39,7 +41,7 @@ public class GiveawayController {
     }
 
     @PostMapping("/save/{gwId}")
-    public HttpStatus create(@RequestBody String body, @PathVariable UUID gwId) {
+    public HttpStatus save(@RequestBody String body, @PathVariable UUID gwId) {
         var giveaway = gson.fromJson(body, GiveawaySaveDTO.class);
         System.out.println("Giveaway");
         System.out.println(giveaway);
@@ -50,19 +52,51 @@ public class GiveawayController {
         return HttpStatus.CREATED;
     }
 
-    //TODO make create into into save
-    // make new, create from template endpoint
-
     //TODO open close GW
     //TODO archive endpoint
     //TODO draw endpoint
     //TODO winner save endpoint
     //TODO refund all tickets
 
-    @GetMapping
-    public String getActive() {
-        var g = new GiveawayDTO(UUID.randomUUID(), "test Title", "", Instant.MIN, Instant.now(), GiveawayStatus.CREATED, "giveaways.test1", "!testGW", "you failed", Optional.empty(), Optional.empty(), 3, 10, false, false, List.of(), List.of());
-        return gson.toJson(g);
+
+    @GetMapping("/get/{gwId}")
+    public ResponseEntity<String> getGiveaway(@PathVariable UUID gwId) {
+        var entity = giveawayRepo.findById(gwId);
+        if (entity.isEmpty()) {
+            return new ResponseEntity<>("No Giveaway with Id: " + gwId + " could be found", HttpStatus.NOT_FOUND);
+        }
+        var gw = entity.get();
+        var dto = new GiveawayDTO(
+                gw.id(),
+                gw.title(),
+                gw.notes(),
+                gw.createdAt(),
+                gw.lastUpdatedAt(),
+                gw.status(),
+                gw.command().patterns.getFirst().pattern,
+                Optional.ofNullable(gw.autoStart()),
+                Optional.ofNullable(gw.autoEnd()),
+                gw.ticketCost(),
+                gw.maxTickets(),
+                gw.allowRedrawOfUser(),
+                gw.autoAnnounceWinner(),
+                gw.ticketList().stream().map(ent -> {
+                    var name = Out.Twitch.api.getUserById(ent.userId()).map(User::getId).orElse(ent.userId());
+                    return new EntryDTO(ent.userId(), name, ent.tickets());
+                }).toList(),
+                gw.winners().stream().map(win -> {
+                    var name = Out.Twitch.api.getUserById(win.userId()).map(User::getId).orElse(win.userId());
+                    return new WinnerDTO(name, win.userId(), win.rejected(), Optional.ofNullable(win.comment()));
+                }).toList()
+        );
+        return ResponseEntity.ok(gson.toJson(dto));
+    }
+
+    @GetMapping("/listActive")
+    public String getGiveaways() {
+        return gson.toJson(giveawayRepo
+                .findAllByStatusIsNot(GiveawayStatus.ARCHIVED)
+                .stream().map(GiveawayPreview::new));
     }
 
     //TODO needed: Object to Manage the relationship with Commands. Update them, create and Set Command when needed,

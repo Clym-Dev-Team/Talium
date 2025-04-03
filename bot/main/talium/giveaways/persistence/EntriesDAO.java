@@ -7,7 +7,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "giveawayEntries")
 @IdClass(EntriesDAO.EntriesId.class)
-class EntriesDAO {
+public class EntriesDAO {
     public static class EntriesId {
         GiveawayDAO giveaway;
         String userId;
@@ -34,9 +34,11 @@ class EntriesDAO {
 
     protected EntriesDAO() { }
 
-    protected EntriesDAO(GiveawayDAO giveaway, String userId, int tickets) {
-        this.giveaway = giveaway;
-        this.userId = userId;
-        this.tickets = tickets;
+    public int tickets() {
+        return tickets;
+    }
+
+    public String userId() {
+        return userId;
     }
 }
