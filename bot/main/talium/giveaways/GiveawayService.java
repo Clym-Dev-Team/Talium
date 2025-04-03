@@ -1,6 +1,5 @@
 package talium.giveaways;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import talium.Registrar;
 import talium.giveaways.persistence.GiveawayDAO;
@@ -17,14 +16,21 @@ import java.util.UUID;
 
 @Service
 public class GiveawayService {
-    private final GiveawayRepo giveawayRepo;
+    private static GiveawayRepo giveawayRepo;
 
-    @Autowired
-    public GiveawayService(GiveawayRepo giveawayRepo) {
-        this.giveawayRepo = giveawayRepo;
+    public static void init(GiveawayRepo giveawayRepo) {
+        GiveawayService.giveawayRepo = giveawayRepo;
+        var activeGWs = giveawayRepo.findAllByStatusIsNot(GiveawayStatus.ARCHIVED);
+        for (var gw : activeGWs) {
+            createGWEnterCommand(gw.id(), gw.command().id);
+        }
     }
 
-    public void createFromTemplate(String templateId) {
+    /**
+     * @param templateId ID of template to copy values from
+     * @return UUID of created giveaway
+     */
+    public UUID createFromTemplate(String templateId) {
         //TODO get giveaway template from DB
         var template = new GiveawayTemplateDAO();
         UUID giveawayId = UUID.randomUUID();
@@ -46,10 +52,10 @@ public class GiveawayService {
                 new ArrayList<>(),
                 new ArrayList<>()
         );
-        giveawayRepo.save(giveaway);
+        return giveawayRepo.save(giveaway).id();
     }
 
-    private TriggerEntity createGWEnterCommand(UUID giveawayId, String commandPattern) {
+    private static TriggerEntity createGWEnterCommand(UUID giveawayId, String commandPattern) {
         String commandId = STR."giveaway.\{giveawayId.toString()}.enter";
         return new Registrar
                 .Command(commandId)

@@ -40,9 +40,13 @@ export default function useData<T>(urlPath: string, objectName: string, initialV
   }, [get]);
 
   const sendData = useCallback((urlPath: string, successToast: string, init?: RequestInit) => {
-    fetchWithAuth(BOT_BACKEND_ADDR + urlPath, init).then()
-      .then(() => toast({className: "toast toast-success", title: successToast}))
-      .then(get)
+    return fetchWithAuth(BOT_BACKEND_ADDR + urlPath, init)
+      .then(response => response.json())
+      .then(value => {
+        toast({className: "toast toast-success", title: successToast});
+        get();
+        return value;
+      })
       .catch(reason => toast({
         className: "toast toast-failure",
         title: "ERROR saving " + objectName,

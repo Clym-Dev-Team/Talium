@@ -53,20 +53,66 @@ public class GiveawayDAO {
         this.winners = winners;
     }
 
-    public GiveawayDAO(String title, String notes, TriggerEntity command, @Nullable OffsetDateTime autoStart, @Nullable OffsetDateTime autoEnd, int ticketCost, int maxTickets, boolean allowRedrawOfUser, boolean autoAnnounceWinner) {
-        this.id = UUID.randomUUID();
-        this.createdAt = OffsetDateTime.now();
-        this.lastUpdatedAt = OffsetDateTime.now();
-        this.title = title;
-        this.notes = notes;
-        this.status = GiveawayStatus.CREATED;
-        this.command = command;
-        this.autoStart = autoStart;
-        this.autoEnd = autoEnd;
-        this.ticketCost = ticketCost;
-        this.maxTickets = maxTickets;
-        this.allowRedrawOfUser = allowRedrawOfUser;
-        this.autoAnnounceWinner = autoAnnounceWinner;
+    public UUID id() {
+        return id;
+    }
+
+    public OffsetDateTime createdAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime lastUpdatedAt() {
+        return lastUpdatedAt;
+    }
+
+    public String title() {
+        return title;
+    }
+
+    public String notes() {
+        return notes;
+    }
+
+    public GiveawayStatus status() {
+        return status;
+    }
+
+    public TriggerEntity command() {
+        return command;
+    }
+
+    @Nullable
+    public OffsetDateTime autoStart() {
+        return autoStart;
+    }
+
+    @Nullable
+    public OffsetDateTime autoEnd() {
+        return autoEnd;
+    }
+
+    public int ticketCost() {
+        return ticketCost;
+    }
+
+    public int maxTickets() {
+        return maxTickets;
+    }
+
+    public boolean allowRedrawOfUser() {
+        return allowRedrawOfUser;
+    }
+
+    public boolean autoAnnounceWinner() {
+        return autoAnnounceWinner;
+    }
+
+    public List<EntriesDAO> ticketList() {
+        return ticketList;
+    }
+
+    public List<WinnersDAO> winners() {
+        return winners;
     }
 }
 

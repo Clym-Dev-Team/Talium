@@ -26,7 +26,6 @@ public class TriggerProvider {
     @Autowired
     public TriggerProvider(TriggerService triggerService) {
         TriggerProvider.triggerService = triggerService;
-        triggers = buildTrigger();
     }
 
     public static List<RuntimeTrigger> triggers() {

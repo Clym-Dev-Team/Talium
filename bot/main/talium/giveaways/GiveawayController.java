@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import talium.giveaways.transit.GiveawayDTO;
 import talium.giveaways.transit.GiveawaySaveDTO;
@@ -32,9 +33,9 @@ public class GiveawayController {
     }
 
     @PostMapping("/fromTemplate/{templateId}")
-    public HttpStatus getGiveawayTemplates(@PathVariable String templateId) {
-        giveawayService.createFromTemplate(templateId);
-        return HttpStatus.CREATED;
+    public ResponseEntity getGiveawayTemplates(@PathVariable String templateId) {
+        var id = giveawayService.createFromTemplate(templateId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
     @PostMapping("/save/{gwId}")

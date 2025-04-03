@@ -4,6 +4,8 @@ import jakarta.annotation.PreDestroy;
 import jakarta.persistence.PreRemove;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.springframework.context.ConfigurableApplicationContext;
+import talium.giveaways.GiveawayService;
+import talium.giveaways.persistence.GiveawayRepo;
 import talium.tipeeeStream.DonationRepo;
 import talium.tipeeeStream.TipeeeConfig;
 import talium.tipeeeStream.TipeeeInput;
@@ -74,6 +76,7 @@ public class TwitchBot {
         // This section is used to pass the execution/control to different parts of the bot to do some initialisation
         WatchtimeUpdateService.init(ctx.getBean(ChatterService.class));
         WIPWatchtimeCommandServer.init(ctx.getBean(ChatterService.class));
+        GiveawayService.init(ctx.getBean(GiveawayRepo.class));
 
         TriggerProvider.rebuildTriggerCache();
         //TODO remove all templates that were once registered automatically, but are no longer
