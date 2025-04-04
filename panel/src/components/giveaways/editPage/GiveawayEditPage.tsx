@@ -11,11 +11,12 @@ import BeanCheckBox from "../../../common/BeanBox/BeanCheckBox.tsx";
 import ComingSoon from "../../../common/CommingSoon/ComingSoon.tsx";
 import WinnerCard from "./ticketCards/WinnerCard.tsx";
 import TicketCard from "./ticketCards/TicketCard.tsx";
-import GWPolicySelector from "./GWPolicySelector.tsx";
 import useData from "../../../common/useData.ts";
 import {Giveaway} from "../Giveaway.ts";
 import {GiveawaySave} from "../GiveawaySave.ts";
 import {useCallback} from "react";
+import InputVL from "../../../common/InputVL.tsx";
+import TextareaVL from "../../../common/TextAreaVL.tsx";
 
 export default function GiveawayEditPage() {
   const data: Giveaway = {}
@@ -57,14 +58,14 @@ export default function GiveawayEditPage() {
       <div className="formContent">
         <div className="column">
           <h1>Giveaway</h1>
-          <VLabel name="Giveaway ID"><Input disabled={true} value={data.id}/></VLabel>
-          <VLabel name="Giveaway Title"><Input {...register("title")}/></VLabel>
-          <VLabel name="Notes/Internal Description"><Textarea {...register("notes")}/></VLabel>
-          <VLabel name="Command Pattern"><Input {...register("commandPattern")}/></VLabel>
-          <VLabel name="Autostart Time"><Input type="time" {...register("startTime")}/></VLabel>
-          <VLabel name="Autoclose Time"><Input type="time" {...register("endTime")}/></VLabel>
-          <VLabel name="Ticket Cost"><Input type="number" {...register("ticketCost")}/></VLabel>
-          <VLabel name="Max Tickets per User"><Input type="number" {...register("maxTickets")}/></VLabel>
+          <InputVL label="Giveaway ID" disabled={true} value={data.id} hoverText="Internal unique Giveaway Identifier. You wil always be able to uniquely find this Giveaway under this ID, even if other Giveaways have the same title. Although, you will rarely need to use this"/>
+          <InputVL label="Giveaway Title" {...register("title")}/>
+          <TextareaVL label="Notes/Internal Description" {...register("notes")}/>
+          <InputVL label="Command Pattern" {...register("commandPattern")}/>
+          <InputVL label="Autostart Time" type="time" {...register("startTime")}/>
+          <InputVL label="Autoclose Time" type="time" {...register("endTime")}/>
+          <InputVL label="Ticket Cost" type="number" {...register("ticketCost")}/>
+          <InputVL label="Max Tickets per User" type="number" {...register("maxTickets")}/>
           <BeanCheckBox checked={watch("allowUserRedraw")} onChange={b => setValue("allowUserRedraw", b)}>
             Allow Redraw of User
           </BeanCheckBox>
@@ -97,8 +98,8 @@ export default function GiveawayEditPage() {
             </VLabel>
             {/* TODO add template color field*/}
             <h1>Public Website</h1>
-            <VLabel name="Image Url"><Input type="url"/></VLabel>
-            <VLabel name="Public Description"><Textarea/></VLabel>
+            <InputVL label="Image Url" type="url"/>
+            <TextareaVL label="Public Description"/>
           </ComingSoon>
         </div>
 
