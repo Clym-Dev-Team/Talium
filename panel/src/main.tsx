@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import './main.css'
-import {GoalEditorPane} from "./components/Goals/GoalEditor.tsx";
 import {createBrowserRouter, createRoutesFromChildren, Outlet, Route, RouterProvider} from "react-router-dom";
 import MessagePane from "./components/ChatHistory/Pane/MessagePane.tsx";
 import LoginPage from "./components/Login/LoginPage.tsx";
@@ -18,7 +17,6 @@ import {TooltipProvider} from "../@shadcn/components/ui/tooltip.tsx";
 import TokenRemover from "./components/Login/TokenRemover.tsx";
 import AccountsPage from "./components/panelAccounts/AccountsPage.tsx";
 import WatchtimePage from "./components/watchtime/WatchtimePage.tsx";
-import TemplateList from "./components/Commands/templates/TemplateList.tsx";
 
 export const PANEL_BASE_URL = import.meta.env.VITE_PANEL_BASE_URL;
 export const BOT_BACKEND_ADDR = import.meta.env.VITE_BOT_BACKEND_ADDR
@@ -37,7 +35,6 @@ const router = createBrowserRouter(
           </div>
         </LoginPage>
       }>
-        <Route path="/goal" element={<GoalEditorPane/>}/>
         <Route path="/history" element={<MessagePane/>}/>
         <Route path="*" element={<p>Diese seite gibt es nicht</p>}/>
         <Route path="/" element={<p>Diese seite gibt es nicht</p>}/>
