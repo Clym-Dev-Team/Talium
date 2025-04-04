@@ -1,5 +1,5 @@
 import {Input} from "../../@shadcn/components/ui/input.tsx";
-import React from "react";
+import React  from "react";
 import VLabel from "./VerticalLabel/VLabel.tsx";
 
 export interface InputVLProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -7,8 +7,10 @@ export interface InputVLProps extends React.InputHTMLAttributes<HTMLInputElement
 }
 
 // Input with Vertical label (label positioned vertically above the Input) (and with an optional info message on hover)
-export default function InputVL({i18nFieldId, ...props}: InputVLProps) {
-  return <VLabel i18nFieldId={i18nFieldId}>
-    <Input {...props}/>
+const InputVL = React.forwardRef<HTMLInputElement, InputVLProps>((props, ref) => {
+  return <VLabel i18nFieldId={props.i18nFieldId}>
+    <Input ref={ref} {...props}/>
   </VLabel>;
-}
+});
+
+export default InputVL;

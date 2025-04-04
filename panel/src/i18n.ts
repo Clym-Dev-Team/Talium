@@ -4,7 +4,7 @@ import en from "../locales/en.json";
 i18next.init({
   lng: "en", // Default language
   fallbackLng: "en",
-  debug: true,
+  debug: false,
   resources: {
     en: { translation: en },
   },
