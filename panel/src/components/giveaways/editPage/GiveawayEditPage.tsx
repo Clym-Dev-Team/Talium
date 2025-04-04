@@ -5,7 +5,7 @@ import VLabel from "../../../common/VerticalLabel/VLabel.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "../../../../@shadcn/components/ui/select.tsx";
 import TemplateEditor from "../../Commands/common/templates/TemplateEditor.tsx";
 import {useForm} from "react-hook-form";
-import BeanCheckBox from "../../../common/BeanBox/BeanCheckBox.tsx";
+import CheckBar from "../../../common/BeanBox/CheckBar.tsx";
 import ComingSoon from "../../../common/CommingSoon/ComingSoon.tsx";
 import WinnerCard from "./ticketCards/WinnerCard.tsx";
 import TicketCard from "./ticketCards/TicketCard.tsx";
@@ -64,12 +64,12 @@ export default function GiveawayEditPage() {
           <InputVL i18nFieldId="giveaway.edit.endTime" type="time" {...register("endTime")}/>
           <InputVL i18nFieldId="giveaway.edit.ticketCost" type="number" {...register("ticketCost")}/>
           <InputVL i18nFieldId="giveaway.edit.maxTickets" type="number" {...register("maxTickets")}/>
-          <BeanCheckBox checked={watch("allowUserRedraw")} onChange={b => setValue("allowUserRedraw", b)}>
+          <CheckBar checked={watch("allowUserRedraw")} onChange={b => setValue("allowUserRedraw", b)}>
             Allow Redraw of User
-          </BeanCheckBox>
-          <BeanCheckBox checked={watch("announceWinnerInChat")} onChange={b => setValue("announceWinnerInChat", b)}>
+          </CheckBar>
+          <CheckBar checked={watch("announceWinnerInChat")} onChange={b => setValue("announceWinnerInChat", b)}>
             Announce Winner in Chat
-          </BeanCheckBox>
+          </CheckBar>
           {/*<GWPolicySelector/>*/}
         </div>
 
@@ -78,10 +78,10 @@ export default function GiveawayEditPage() {
         <div className="column">
           <ComingSoon>
             <h1>Reminder Timer</h1>
-            <BeanCheckBox checked={false} onChange={_ => {
+            <CheckBar checked={false} onChange={_ => {
             }}>
               Enable Reminder Message Timer
-            </BeanCheckBox>
+            </CheckBar>
             <VLabel i18nFieldId="giveaway.edit.policy"><Select>
               <SelectTrigger>Select the Timer Group to add the Message to</SelectTrigger>
               <SelectContent className="dark">

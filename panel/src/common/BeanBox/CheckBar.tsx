@@ -6,7 +6,7 @@ import IconX from "../../assets/IconX.tsx";
 import IconCheck from "../../assets/IconCheck.tsx";
 import "./BeanCheckBox.css"
 
-export interface BeanCheckBoxProps {
+export interface CheckBarProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   hoverText?: string,
@@ -14,10 +14,15 @@ export interface BeanCheckBoxProps {
   children: React.ReactNode
 }
 
-export default function BeanCheckBox(props: BeanCheckBoxProps) {
+export default function CheckBar(props: CheckBarProps) {
   return <Tooltip>
     {props.hoverText ? <TooltipContent>{props.hoverText}</TooltipContent> : ""}
-    <TooltipTrigger>
+    <TooltipTrigger onKeyDown={event => {
+      if (event.key === ' ' || event.key === 'Enter') {
+        event.stopPropagation();
+        props.onChange(!props.checked)
+      }
+    }}>
       <Label className={props.checked ? "beanCheckBox checked" : "beanCheckBox"} style={{maxWidth: props.maxWidth}} onClick={event => {
         event.stopPropagation();
         props.onChange(!props.checked)
