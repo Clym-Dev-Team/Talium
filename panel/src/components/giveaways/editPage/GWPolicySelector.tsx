@@ -2,7 +2,7 @@ import VLabel from "../../../common/VerticalLabel/VLabel.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "../../../../@shadcn/components/ui/select.tsx";
 
 export default function GWPolicySelector() {
-  return <VLabel name="Giveaway Policy"><Select>
+  return <VLabel i18nFieldId="Giveaway Policy"><Select>
       <SelectTrigger>Select a Giveaway Policy</SelectTrigger>
       <SelectContent className="dark">
           <SelectItem value="DE-BRIEF">DE-BRIEF</SelectItem>

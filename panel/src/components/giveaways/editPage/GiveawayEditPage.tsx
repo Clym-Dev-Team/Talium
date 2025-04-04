@@ -15,14 +15,12 @@ import {GiveawaySave} from "../GiveawaySave.ts";
 import {useCallback} from "react";
 import InputVL from "../../../common/InputVL.tsx";
 import TextareaVL from "../../../common/TextAreaVL.tsx";
-import {useTranslation} from "react-i18next";
 
 export default function GiveawayEditPage() {
   const data: Giveaway = {}
   if (false) {
     const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
   }
-  const {t} = useTranslation();
   const {register, watch, setValue, handleSubmit} = useForm<GiveawaySave>({
     defaultValues: {
       commandPattern: data.commandPattern,
@@ -58,14 +56,14 @@ export default function GiveawayEditPage() {
       <div className="formContent">
         <div className="column">
           <h1>Giveaway</h1>
-          <InputVL label="Giveaway ID" disabled={true} value={data.id} hoverText={t("giveaway.edit.idLabelTooltip")}/>
-          <InputVL label="Giveaway Title" {...register("title")}/>
-          <TextareaVL label="Notes/Internal Description" {...register("notes")}/>
-          <InputVL label="Command Pattern" {...register("commandPattern")}/>
-          <InputVL label="Autostart Time" type="time" {...register("startTime")}/>
-          <InputVL label="Autoclose Time" type="time" {...register("endTime")}/>
-          <InputVL label="Ticket Cost" type="number" {...register("ticketCost")}/>
-          <InputVL label="Max Tickets per User" type="number" {...register("maxTickets")}/>
+          <InputVL i18nFieldId="giveaway.edit.gwId" disabled={true} value={data.id} />
+          <InputVL i18nFieldId="giveaway.edit.title" {...register("title")}/>
+          <TextareaVL i18nFieldId="giveaway.edit.notes" {...register("notes")}/>
+          <InputVL i18nFieldId="giveaway.edit.commandPattern" {...register("commandPattern")}/>
+          <InputVL i18nFieldId="giveaway.edit.startTime" type="time" {...register("startTime")}/>
+          <InputVL i18nFieldId="giveaway.edit.endTime" type="time" {...register("endTime")}/>
+          <InputVL i18nFieldId="giveaway.edit.ticketCost" type="number" {...register("ticketCost")}/>
+          <InputVL i18nFieldId="giveaway.edit.maxTickets" type="number" {...register("maxTickets")}/>
           <BeanCheckBox checked={watch("allowUserRedraw")} onChange={b => setValue("allowUserRedraw", b)}>
             Allow Redraw of User
           </BeanCheckBox>
@@ -84,7 +82,7 @@ export default function GiveawayEditPage() {
             }}>
               Enable Reminder Message Timer
             </BeanCheckBox>
-            <VLabel name="Giveaway Policy"><Select>
+            <VLabel i18nFieldId="giveaway.edit.policy"><Select>
               <SelectTrigger>Select the Timer Group to add the Message to</SelectTrigger>
               <SelectContent className="dark">
                 <SelectItem value="GW-TIMER">Gewinnspiel</SelectItem>
@@ -93,13 +91,13 @@ export default function GiveawayEditPage() {
                 <SelectItem value="SOME-TIMER2">Booster (alle 30 Minuten)</SelectItem>
               </SelectContent>
             </Select></VLabel>
-            <VLabel name="Timer Template">
+            <VLabel i18nFieldId="giveaway.edit.timerTemplate">
               <TemplateEditor register={undefined} varSchema=""/>
             </VLabel>
             {/* TODO add template color field*/}
             <h1>Public Website</h1>
-            <InputVL label="Image Url" type="url"/>
-            <TextareaVL label="Public Description"/>
+            <InputVL i18nFieldId="giveaway.edit.imageUrl" type="url"/>
+            <TextareaVL i18nFieldId="giveaway.edit.publicDescription"/>
           </ComingSoon>
         </div>
 

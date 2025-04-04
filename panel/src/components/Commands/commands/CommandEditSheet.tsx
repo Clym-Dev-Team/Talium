@@ -49,7 +49,7 @@ export function CommandForm({command, isNew, onSubmit, onDelete}: CommandFormPro
   }
 
   return <div className="commandPopup">
-    <VLabel name="Internal Command Name/Id:">
+    <VLabel i18nFieldId="Internal Command Name/Id:">
       <Input id="commandId" type="text" {...register("id", {required: true, disabled: !isNew})} />
     </VLabel>
 
@@ -64,7 +64,7 @@ export function CommandForm({command, isNew, onSubmit, onDelete}: CommandFormPro
       })}>Add a new Alias</Button>
     </div>
 
-    <VLabel name="Required Permission Level:">
+    <VLabel i18nFieldId="Required Permission Level:">
       <Select defaultValue={getValues().permission} onValueChange={value => setValue("permission", value)}>
         <SelectTrigger>
           <SelectValue placeholder="Select a Permission Level"/>
@@ -79,16 +79,16 @@ export function CommandForm({command, isNew, onSubmit, onDelete}: CommandFormPro
     </VLabel>
 
     <div className="cooldown">
-      <VLabel name="Global Cooldown:">
+      <VLabel i18nFieldId="Global Cooldown:">
         <InputUnit unitType={CooldownTypes} unitFieldValue={getValues("globalCooldown.type")} onUnitChange={unitType => setValue("globalCooldown.type", unitType)} registerValue={register("globalCooldown.amount", {required: true, min: 0, valueAsNumber: true})}/>
       </VLabel>
-      <VLabel name="User Cooldown:">
+      <VLabel i18nFieldId="User Cooldown:">
         <InputUnit unitType={CooldownTypes} unitFieldValue={getValues("userCooldown.type")} onUnitChange={unitType => setValue("userCooldown.type", unitType)} registerValue={register("userCooldown.amount", {required: true, min: 0, valueAsNumber: true})}/>
       </VLabel>
     </div>
 
     { command.template != null ?
-    <VLabel name="Template:">
+    <VLabel i18nFieldId="Template:">
       <TemplateEditor varSchema={command.varJsonSchema} register={register("template.template")}/>
     </VLabel> : <div className="noTemplate">This Command doesn't have a template because it triggers a callback inside the Bot</div>
     }

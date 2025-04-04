@@ -1,7 +1,43 @@
 {
   "giveaway": {
     "edit": {
-      "idLabelTooltip": "Internal unique Giveaway Identifier. You wil always be able to uniquely find this Giveaway under this ID, even if other Giveaways have the same title. Although, you will rarely need to use this"
+      "gwId": {
+        "label": "Unique Giveaway Identifier",
+        "tooltip": "Internal unique Giveaway Identifier. You wil always be able to uniquely find this Giveaway under this ID, even if other Giveaways have the same title. Although, you will rarely need to use this"
+      },
+      "title" : {
+        "label": "Title"
+      },
+      "notes" : {
+        "label": "Notes/Internal Description"
+      },
+      "commandPattern" : {
+        "label": "Command Pattern"
+      },
+      "startTime" : {
+        "label": "Autostart Time"
+      },
+      "endTime" : {
+        "label": "Autoclose Time"
+      },
+      "ticketCost" : {
+        "label": "Coin cost per Ticket"
+      },
+      "maxTickets" : {
+        "label": "Maximum Tickets per User"
+      },
+      "policy" : {
+        "label": "Active Giveaway Policy"
+      },
+      "imageUrl" : {
+        "label": "Public Ad Image Url"
+      },
+      "publicDescription" : {
+        "label": "Public Description"
+      },
+      "timerTemplate" : {
+        "label": "Ad Timer Template"
+      }
     }
   }
 }

@@ -62,10 +62,10 @@ export default function WatchtimeEditor() {
       <Button type="submit" onClick={loadData}><IconCloudDown/></Button>
     </form>
     <div className="dataBox">
-      <VLabel name="Watchtime [seconds]">
+      <VLabel i18nFieldId="Watchtime [seconds]">
         <Input placeholder="..." {...register("watchtimeSeconds")}/>
       </VLabel>
-      <VLabel name="Coins">
+      <VLabel i18nFieldId="Coins">
         <Input placeholder="..." {...register("coins")}/>
       </VLabel>
     </div>

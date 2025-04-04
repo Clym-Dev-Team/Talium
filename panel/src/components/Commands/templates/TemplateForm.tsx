@@ -24,13 +24,13 @@ export default function TemplateForm({template, onSubmit, onDelete}: TemplateFor
   }
 
   return <div className="commandPopup">
-    <VLabel name="Internal Template Name/Id:">
+    <VLabel i18nFieldId="Internal Template Name/Id:">
       <Input id="templateId" type="text" {...register("id", {required: true, disabled: true})} />
     </VLabel>
-    <VLabel name="Twitch Message Color:">
+    <VLabel i18nFieldId="Twitch Message Color:">
       <Input id="color" type="text" {...register("messageColor", {required: false})} />
     </VLabel>
-    <VLabel name="Template:">
+    <VLabel i18nFieldId="Template:">
       <TemplateEditor varSchema={template.template} register={register("template")}/>
     </VLabel>
     <SheetFooter>
