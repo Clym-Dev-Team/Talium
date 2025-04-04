@@ -9,7 +9,6 @@ import {Input} from "../../../../../@shadcn/components/ui/input.tsx";
 import {Button} from "../../../../../@shadcn/components/ui/button.tsx";
 import {useToast} from "../../../../../@shadcn/components/ui/use-toast.ts";
 import {fetchWithAuth} from "../../../Login/LoginPage.tsx";
-import {BOT_BACKEND_ADDR} from "../../../../main.tsx";
 
 export interface WinnerCardProps {
   username: string,
@@ -35,7 +34,7 @@ export default function WinnerCard({userId, username}: WinnerCardProps) {
 
   const submit = useCallback((state: WinnerState) => {
     //TODO make endpoint                 \/
-    fetchWithAuth(BOT_BACKEND_ADDR + "/!TODO!", {method: "POST", body: JSON.stringify(state)})
+    fetchWithAuth("/!TODO!", {method: "POST", body: JSON.stringify(state)})
       .then(() => toast({className: "toast toast-success", title: "Saved Winner!"}))
       .catch(reason => toast({
         className: "toast toast-failure",

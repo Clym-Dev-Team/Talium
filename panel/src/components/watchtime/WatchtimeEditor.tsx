@@ -7,7 +7,6 @@ import {useToast} from "../../../@shadcn/components/ui/use-toast.ts";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {fetchWithAuth} from "../Login/LoginPage.tsx";
-import {BOT_BACKEND_ADDR} from "../../main.tsx";
 
 interface ChatterDTO {
   userId: string,
@@ -22,7 +21,7 @@ export default function WatchtimeEditor() {
   const {handleSubmit, register, reset} = useForm<ChatterDTO>({disabled: !loadedUser});
 
   function loadData() {
-    fetchWithAuth(BOT_BACKEND_ADDR + "/watchtime/username/" + userName)
+    fetchWithAuth("/watchtime/username/" + userName)
       .then(response => response.json())
       .then(value => reset(value))
       .then(() => setLoadedUser(true))
@@ -44,7 +43,7 @@ export default function WatchtimeEditor() {
   }
 
   function submit(chatter: ChatterDTO) {
-    fetchWithAuth(BOT_BACKEND_ADDR + "/watchtime/update", {method: "POST", body: JSON.stringify(chatter)})
+    fetchWithAuth("/watchtime/update", {method: "POST", body: JSON.stringify(chatter)})
       .then(() => toast({className: "toast toast-success", title: "Saved Watchtime!"}))
       .then(() => setLoadedUser(false))
       .catch(reason => toast({
