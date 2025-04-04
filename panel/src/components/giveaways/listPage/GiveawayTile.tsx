@@ -1,23 +1,16 @@
-import {GiveawayStatus} from "../Giveaway.ts";
+import { Link } from "react-router-dom";
+import {GiveawayPreview} from "../GiveawayPreview.ts";
 
 export interface GiveawayTileProps {
-  isArchived?: boolean;
+  preview: GiveawayPreview
 }
 
-export default function GiveawayTile(props: GiveawayTileProps) {
-  let rand = Math.trunc(Math.random() * 4);
-  if (rand == 3) {
-    rand = 4;
-  }
-  let status = GiveawayStatus[rand];
-  if (props.isArchived) {
-    status = GiveawayStatus[GiveawayStatus.ARCHIVED]
-  }
-  return <div className={"tile " + status}>
+export default function GiveawayTile({preview}: GiveawayTileProps) {
+  return <Link to={"/giveawayEdit/" + encodeURIComponent(preview.id)} ><div className={"tile " + preview.status}>
     <div className="firstRow">
-      <span className="title">{"gwTitle"}</span>
-      <span className="status">{status}</span>
+      <span className="title">{preview.title}</span>
+      <span className="status">{preview.status}</span>
     </div>
-    <span className="description">{""}</span>
-  </div>
+    <span className="description">{preview.notes}</span>
+  </div></Link>;
 }

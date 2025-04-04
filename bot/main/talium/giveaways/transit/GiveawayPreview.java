@@ -15,4 +15,14 @@ public record GiveawayPreview(
     public GiveawayPreview(GiveawayDAO gw) {
         this(gw.id(), gw.status(), gw.title(), gw.notes());
     }
+
+    @Override
+    public String toString() {
+        return "GiveawayPreview{" +
+                "id=" + id +
+                ", status=" + status +
+                ", title='" + title + '\'' +
+                ", notes='" + notes + '\'' +
+                '}';
+    }
 }

@@ -44,7 +44,7 @@ const router = createBrowserRouter(
         <Route path="/oauth/result" element={<OauthResult/>}/>
         <Route path="/accounts" element={<AccountsPage/>}/>
         <Route path="/giveaways" element={<GiveawayListPage/>}/>
-        <Route path="/giveawayEdit" element={<GiveawayEditPage/>}/>
+        <Route path="/giveawayEdit/*" element={<GiveawayEditPage/>}/>
         <Route path="/watchtime" element={<WatchtimePage/>}/>
       </Route>
       <Route path="/twitchToken" element={<TokenRemover/>}/>

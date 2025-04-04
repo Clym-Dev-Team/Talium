@@ -114,6 +114,27 @@ public class GiveawayDAO {
     public List<WinnersDAO> winners() {
         return winners;
     }
+
+    @Override
+    public String toString() {
+        return "GiveawayDAO{" +
+                "id=" + id +
+                ", createdAt=" + createdAt +
+                ", lastUpdatedAt=" + lastUpdatedAt +
+                ", title='" + title + '\'' +
+                ", notes='" + notes + '\'' +
+                ", status=" + status +
+                ", command=" + command +
+                ", autoStart=" + autoStart +
+                ", autoEnd=" + autoEnd +
+                ", ticketCost=" + ticketCost +
+                ", maxTickets=" + maxTickets +
+                ", allowRedrawOfUser=" + allowRedrawOfUser +
+                ", autoAnnounceWinner=" + autoAnnounceWinner +
+                ", ticketList=" + ticketList +
+                ", winners=" + winners +
+                '}';
+    }
 }
 
 

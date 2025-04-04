@@ -11,9 +11,7 @@ import talium.Out;
 import talium.giveaways.persistence.GiveawayRepo;
 import talium.giveaways.transit.*;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/giveaway")
@@ -96,11 +94,9 @@ public class GiveawayController {
     public String getGiveaways() {
         return gson.toJson(giveawayRepo
                 .findAllByStatusIsNot(GiveawayStatus.ARCHIVED)
-                .stream().map(GiveawayPreview::new));
+                .stream().map(GiveawayPreview::new).toList());
     }
 
-    //TODO needed: Object to Manage the relationship with Commands. Update them, create and Set Command when needed,
-    // delete Commands, and register and handle Callbacks from Commands
     //TODO needed: A Object to handle Giveaway AutostartTimers, schedule them, have interrupt to check if something changed on gw save,
     // trigger action when timer up
     //TODO concept: Do we still want to do the automatic action (autostart/close) when the status of the giveaway changed in the meantime?
