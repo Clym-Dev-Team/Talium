@@ -14,7 +14,6 @@ function InfiniteScroll() {
   const previousScrollPosition = useRef(0);
 
   function getEarlier(timeStamp: number) {
-    console.log("loaded!")
     const promise = loadMore(timeStamp);
     promise.then(value => {
       items.push(...value);
@@ -32,7 +31,7 @@ function InfiniteScroll() {
   }
 
   useEffect(() => {
-    console.log('Container Ref:', containerRef.current);
+    // console.log('Container Ref:', containerRef.current);
 
     const handleScroll = () => {
       if (containerRef.current == null) {

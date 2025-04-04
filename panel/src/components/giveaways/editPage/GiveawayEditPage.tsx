@@ -9,7 +9,6 @@ import CheckBar from "../../../common/BeanBox/CheckBar.tsx";
 import ComingSoon from "../../../common/CommingSoon/ComingSoon.tsx";
 import WinnerCard from "./ticketCards/WinnerCard.tsx";
 import TicketCard from "./ticketCards/TicketCard.tsx";
-import useData from "../../../common/useData.ts";
 import {Giveaway} from "../Giveaway.ts";
 import {GiveawaySave} from "../GiveawaySave.ts";
 import {useCallback} from "react";
@@ -18,9 +17,7 @@ import TextareaVL from "../../../common/TextAreaVL.tsx";
 
 export default function GiveawayEditPage() {
   const data: Giveaway = {}
-  if (false) {
-    const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
-  }
+    // const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
   const {register, watch, setValue, handleSubmit} = useForm<GiveawaySave>({
     defaultValues: {
       commandPattern: data.commandPattern,
