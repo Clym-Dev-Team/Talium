@@ -1,7 +1,7 @@
 import "./GiveawayEditPage.css"
 import {Button} from "../../../../@shadcn/components/ui/button.tsx";
 import {ScrollArea} from "../../ui/scroll-area.tsx";
-import VLabel from "../../../common/VerticalLabel/VLabel.tsx";
+import VLabel from "../../../common/VLabel.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "../../../../@shadcn/components/ui/select.tsx";
 import TemplateEditor from "../../Commands/common/templates/TemplateEditor.tsx";
 import {useForm} from "react-hook-form";

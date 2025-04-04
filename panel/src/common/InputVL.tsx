@@ -1,6 +1,6 @@
 import {Input} from "../../@shadcn/components/ui/input.tsx";
 import React  from "react";
-import VLabel from "./VerticalLabel/VLabel.tsx";
+import VLabel from "./VLabel.tsx";
 
 export interface InputVLProps extends React.InputHTMLAttributes<HTMLInputElement> {
   i18nFieldId: string;

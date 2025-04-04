@@ -1,4 +1,4 @@
-import VLabel from "../../../common/VerticalLabel/VLabel.tsx";
+import VLabel from "../../../common/VLabel.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "../../../../@shadcn/components/ui/select.tsx";
 
 export default function GWPolicySelector() {

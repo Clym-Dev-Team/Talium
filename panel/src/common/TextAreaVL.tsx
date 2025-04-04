@@ -1,5 +1,5 @@
 import React from "react";
-import VLabel from "./VerticalLabel/VLabel.tsx";
+import VLabel from "./VLabel.tsx";
 import {Textarea} from "../../@shadcn/components/ui/textarea.tsx";
 
 export interface TextAreaVLProps extends React.InputHTMLAttributes<HTMLTextAreaElement> {

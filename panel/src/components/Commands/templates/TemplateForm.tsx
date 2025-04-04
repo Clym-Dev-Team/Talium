@@ -1,6 +1,6 @@
 import {Template} from "./Template.ts";
 import {useForm} from "react-hook-form";
-import VLabel from "../../../common/VerticalLabel/VLabel.tsx";
+import VLabel from "../../../common/VLabel.tsx";
 import {Input} from "../../../../@shadcn/components/ui/input.tsx";
 import TemplateEditor from "../common/templates/TemplateEditor.tsx";
 import {SheetFooter} from "../../../../@shadcn/components/ui/sheet.tsx";
