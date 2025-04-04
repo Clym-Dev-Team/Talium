@@ -71,9 +71,7 @@ export default function GiveawayEditPage() {
           <BeanCheckBox checked={watch("announceWinnerInChat")} onChange={b => setValue("announceWinnerInChat", b)}>
             Announce Winner in Chat
           </BeanCheckBox>
-          <ComingSoon>
-            <GWPolicySelector/>
-          </ComingSoon>
+          {/*<GWPolicySelector/>*/}
         </div>
 
         {/* ------- COLUMN 2 ------- */}

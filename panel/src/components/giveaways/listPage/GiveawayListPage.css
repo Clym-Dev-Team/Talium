@@ -62,6 +62,7 @@
 
 .tile.CREATED {
     background-color: #e3e3e3;
+    color: var(--text-color-dark);
 }
 
 .tile.RUNNING {

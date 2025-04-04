@@ -30,6 +30,7 @@
           var(--accentColor) 100%
   );
   --text-color: rgba(255, 255, 255, 0.87);
+  --text-color-dark: var(--select-grey);
 }
 
 body {
