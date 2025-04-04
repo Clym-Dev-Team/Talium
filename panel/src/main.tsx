@@ -17,6 +17,9 @@ import {TooltipProvider} from "../@shadcn/components/ui/tooltip.tsx";
 import TokenRemover from "./components/Login/TokenRemover.tsx";
 import AccountsPage from "./components/panelAccounts/AccountsPage.tsx";
 import WatchtimePage from "./components/watchtime/WatchtimePage.tsx";
+import {I18nextProvider} from "react-i18next";
+import i18n from "./i18n.ts";
+import "./i18n"; // import to initialize
 
 export const PANEL_BASE_URL = import.meta.env.VITE_PANEL_BASE_URL;
 export const BOT_BACKEND_ADDR = import.meta.env.VITE_BOT_BACKEND_ADDR
@@ -54,8 +57,10 @@ const router = createBrowserRouter(
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <TooltipProvider>
-      <RouterProvider router={router}/>
-    </TooltipProvider>
+    <I18nextProvider i18n={i18n}>
+      <TooltipProvider>
+        <RouterProvider router={router}/>
+      </TooltipProvider>
+    </I18nextProvider>
   </React.StrictMode>,
 )

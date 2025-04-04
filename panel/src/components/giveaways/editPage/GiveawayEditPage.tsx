@@ -2,8 +2,6 @@ import "./GiveawayEditPage.css"
 import {Button} from "../../../../@shadcn/components/ui/button.tsx";
 import {ScrollArea} from "../../ui/scroll-area.tsx";
 import VLabel from "../../../common/VerticalLabel/VLabel.tsx";
-import {Input} from "../../../../@shadcn/components/ui/input.tsx";
-import {Textarea} from "../../../../@shadcn/components/ui/textarea.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "../../../../@shadcn/components/ui/select.tsx";
 import TemplateEditor from "../../Commands/common/templates/TemplateEditor.tsx";
 import {useForm} from "react-hook-form";
@@ -17,12 +15,14 @@ import {GiveawaySave} from "../GiveawaySave.ts";
 import {useCallback} from "react";
 import InputVL from "../../../common/InputVL.tsx";
 import TextareaVL from "../../../common/TextAreaVL.tsx";
+import {useTranslation} from "react-i18next";
 
 export default function GiveawayEditPage() {
   const data: Giveaway = {}
   if (false) {
     const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
   }
+  const {t} = useTranslation();
   const {register, watch, setValue, handleSubmit} = useForm<GiveawaySave>({
     defaultValues: {
       commandPattern: data.commandPattern,
@@ -58,7 +58,7 @@ export default function GiveawayEditPage() {
       <div className="formContent">
         <div className="column">
           <h1>Giveaway</h1>
-          <InputVL label="Giveaway ID" disabled={true} value={data.id} hoverText="Internal unique Giveaway Identifier. You wil always be able to uniquely find this Giveaway under this ID, even if other Giveaways have the same title. Although, you will rarely need to use this"/>
+          <InputVL label="Giveaway ID" disabled={true} value={data.id} hoverText={t("giveaway.edit.idLabelTooltip")}/>
           <InputVL label="Giveaway Title" {...register("title")}/>
           <TextareaVL label="Notes/Internal Description" {...register("notes")}/>
           <InputVL label="Command Pattern" {...register("commandPattern")}/>

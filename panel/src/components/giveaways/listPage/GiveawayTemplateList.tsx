@@ -15,20 +15,6 @@ interface TemplateItem {
 
 export default function GiveawayTemplateList({}: GiveawayTemplateListProps) {
   const {loading, data, sendData} = useData<TemplateItem[]>("/giveaway/templates", "Giveaway Templates", [])
-  const templateList: TemplateItem[] = [
-    {
-      displayName: "test Template 1",
-      id: "test1"
-    },
-    {
-      displayName: "Goldkette",
-      id: "goldkette"
-    },
-    {
-      displayName: "Steam Key",
-      id: "steamKey"
-    }
-  ]
 
   const onCreate = useCallback((id: string) => {
     sendData("/giveaway/fromTemplate/" + encodeURIComponent(id), "Successfully created Giveaway from template", {method: "POST"})
