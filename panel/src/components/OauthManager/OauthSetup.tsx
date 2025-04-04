@@ -1,9 +1,7 @@
-import {useEffect, useState} from "react";
-import {useToast} from "../../../@shadcn/components/ui/use-toast.ts";
-import {getOauth} from "./GetOauth.ts";
 import AuthTile from "./AuthTile.tsx";
 import "./AuthList.css"
 import {Loader} from "lucide-react";
+import useData from "../../common/useData.ts";
 
 export interface Oauth {
   service: string,
@@ -12,30 +10,19 @@ export interface Oauth {
 }
 
 export default function OauthSetup() {
-  const toast = useToast();
-  const [loading, setLoading] = useState(true);
-  const [oauth, setOauth] = useState<Oauth[]>([])
-
-  useEffect(() => {
-    getOauth()
-      .then(r => setOauth(r))
-      .then(() => setLoading(false))
-      .catch(reason => toast.toast(
-        {className: "toast toast-failure", title: "ERROR Loading Oauth Status", description: reason.toString()}))
-      .finally(() => setLoading(false));
-  }, [])
+  const {loading, data} = useData<Oauth[]>("/setup/auth/list", "Oauth Status", [])
 
   if (loading)
     return <Loader/>
 
-  if (oauth == undefined || oauth.length == 0) {
+  if (data == undefined || data.length == 0) {
     return <div className="authNotNeeded"><h1>All accounts are setup!</h1></div>
   }
 
   return <div className="authListContainer">
     <h1>External accounts that need to be setup:</h1>
     <div className="authList">
-      {oauth.map((oauth, index) => <AuthTile key={index} oauth={oauth}/>)}
+      {data.map((oauth, index) => <AuthTile key={index} oauth={oauth}/>)}
     </div>
   </div>
 }

@@ -20,7 +20,6 @@ export default function TwitchNavMenu() {
       <NavLink target="/health" name="Health"/>
       <NavLink target="/oauth" name="External accounts"/>
       <NavLink target="/accounts" name="Panel Accounts"/>
-      <NavLink target="/goal" name="Goals"/>
     </div>
     <div className="account">
       {/*
