@@ -1,7 +1,7 @@
-import {Label} from "@shadcn/label.tsx";
 import React from "react";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
 import {useTranslation} from "react-i18next";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
+import {Label} from "@shadcn/label.tsx";
 
 export interface VLabelProps {
   i18nFieldId: string,
@@ -10,7 +10,7 @@ export interface VLabelProps {
 
 export default function VLabel({i18nFieldId, children}: VLabelProps) {
   const {t, i18n} = useTranslation();
-  let tooltipKey = i18nFieldId + ".tooltip";
+  const tooltipKey = i18nFieldId + ".tooltip";
 
   if (!i18n.exists(tooltipKey)) {
     return <Label>

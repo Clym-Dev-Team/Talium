@@ -1,6 +1,6 @@
-import {Label} from "@shadcn/label.tsx";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
 import {useTranslation} from "react-i18next";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
+import {Label} from "@shadcn/label.tsx";
 import "./InfoData.css"
 
 export interface InfoDataProps {
@@ -10,7 +10,7 @@ export interface InfoDataProps {
 
 export default function InfoData({i18nFieldId, data}: InfoDataProps) {
   const {t, i18n} = useTranslation();
-  let tooltipKey = i18nFieldId + ".tooltip";
+  const tooltipKey = i18nFieldId + ".tooltip";
 
   if (!i18n.exists(tooltipKey)) {
     return <Label className="infoDataLabel">
@@ -32,7 +32,7 @@ export default function InfoData({i18nFieldId, data}: InfoDataProps) {
           padding: "5px",
         }}>{t(tooltipKey)}</span>
       </TooltipContent>
-      <TooltipTrigger style={{ cursor: "default" }}>
+      <TooltipTrigger style={{cursor: "default"}}>
         <span>{t(i18nFieldId + ".label")}: </span>
       </TooltipTrigger>
     </Tooltip>

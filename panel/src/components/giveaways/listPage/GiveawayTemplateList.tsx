@@ -1,19 +1,16 @@
 import "./GiveawayTemplateList.css"
+import {useCallback} from "react";
 import {Button} from "@shadcn/button.tsx";
-import IconGear from "@/assets/IconGear.tsx";
 import useData from "@/common/useData.ts";
 import Loader from "@/common/LoadingSpinner/Loader.tsx";
-import {useCallback} from "react";
-
-export interface GiveawayTemplateListProps {
-}
+import IconGear from "@/assets/IconGear.tsx";
 
 interface TemplateItem {
   displayName: string;
   id: string,
 }
 
-export default function GiveawayTemplateList({}: GiveawayTemplateListProps) {
+export default function GiveawayTemplateList() {
   const {loading, data, sendData} = useData<TemplateItem[]>("/giveaway/templates", "Giveaway Templates", [])
 
   const onCreate = useCallback((id: string) => {

@@ -1,8 +1,8 @@
 import {InputHealth} from "./InputHealth.ts";
 import HealthTile from "./HealthTile.tsx";
+import useData from "@/common/useData.ts";
 import Loader from "@/common/LoadingSpinner/Loader.tsx";
 import "./HealthOverview.css"
-import useData from "@/common/useData.ts";
 
 export default function HealthOverview() {
   const {loading, data} = useData<InputHealth[]>("/health/json", "Health", [])

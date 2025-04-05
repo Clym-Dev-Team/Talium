@@ -1,7 +1,7 @@
 import "./InputUnit.css"
-import {Input} from "@shadcn/input.tsx";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@shadcn/select.tsx";
 import {UseFormRegisterReturn} from "react-hook-form";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@shadcn/select.tsx";
+import {Input} from "@shadcn/input.tsx";
 
 export interface InputUnitProps<EnumType extends object, UnitField extends string> {
   unitType: EnumType

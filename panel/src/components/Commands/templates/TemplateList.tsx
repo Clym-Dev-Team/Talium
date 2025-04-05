@@ -1,15 +1,15 @@
 import "@/components/Commands/common/ListView.css"
+import {useState} from "react";
+import {Search} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@shadcn/table.tsx";
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@shadcn/sheet.tsx";
-import {useState} from "react";
-import Loader from "@/common/LoadingSpinner/Loader.tsx";
-import useData from "@/common/useData.ts";
-import {Button} from "@shadcn/button.tsx";
 import {Input} from "@shadcn/input.tsx";
-import {Search} from "lucide-react";
-import WarningBox from "@/common/warning/WarningBox.tsx";
-import {Template} from "./Template.ts";
+import {Button} from "@shadcn/button.tsx";
 import TemplateForm from "./TemplateForm.tsx";
+import {Template} from "./Template.ts";
+import WarningBox from "@/common/warning/WarningBox.tsx";
+import useData from "@/common/useData.ts";
+import Loader from "@/common/LoadingSpinner/Loader.tsx";
 
 export default function TemplateList() {
   const [searchBox, setSearchBox] = useState<string>("")

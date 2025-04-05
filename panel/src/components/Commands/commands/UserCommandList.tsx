@@ -1,6 +1,6 @@
 import "@/components/Commands/common/ListView.css"
-import {CommandForm} from "./CommandEditSheet.tsx";
-import {Command, CommandPermission, CooldownTypes} from "./Command.ts";
+import {useState} from "react";
+import {Search} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,14 +16,14 @@ import {
   SheetHeader,
   SheetTitle
 } from "@shadcn/sheet.tsx";
-import {useState} from "react";
-import Loader from "@/common/LoadingSpinner/Loader.tsx";
-import useData from "@/common/useData.ts";
-import {Button} from "@shadcn/button.tsx";
 import {Input} from "@shadcn/input.tsx";
-import {Search} from "lucide-react";
+import {Button} from "@shadcn/button.tsx";
+import {CommandForm} from "./CommandEditSheet.tsx";
+import {Command, CommandPermission, CooldownTypes} from "./Command.ts";
 import IsVisibleCheckBox from "@/components/Commands/common/IsVisibleCheckbox.tsx";
 import EnabledCheckBox from "@/components/Commands/common/EnabledCheckBox.tsx";
+import useData from "@/common/useData.ts";
+import Loader from "@/common/LoadingSpinner/Loader.tsx";
 
 const emptyCommand: Command = {
   id: "",

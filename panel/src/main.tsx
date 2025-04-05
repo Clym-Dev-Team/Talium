@@ -1,25 +1,25 @@
 import React from 'react'
+import {createBrowserRouter, createRoutesFromChildren, Outlet, Route, RouterProvider} from "react-router-dom";
+import {I18nextProvider} from "react-i18next";
 import ReactDOM from 'react-dom/client'
+import {TooltipProvider} from "@shadcn/tooltip.tsx";
+import {Toaster} from "@shadcn/toaster.tsx";
+import i18n from "./i18n.ts";
+import WatchtimePage from "@/components/watchtime/WatchtimePage.tsx";
+import AccountsPage from "@/components/panelAccounts/AccountsPage.tsx";
+import OauthSetup from "@/components/OauthManager/OauthSetup.tsx";
+import OauthResult from "@/components/OauthManager/OauthResult.tsx";
+import TwitchNavMenu from "@/components/NavMenuTwitch/TwitchNavMenu.tsx";
+import TokenRemover from "@/components/Login/TokenRemover.tsx";
+import LoginPage from "@/components/Login/LoginPage.tsx";
+import HealthOverview from "@/components/Health/HealthOverview.tsx";
+import GiveawayListPage from "@/components/giveaways/listPage/GiveawayListPage.tsx";
+import GiveawayEditPage from "@/components/giveaways/editPage/GiveawayEditPage.tsx";
+import CommandsPage from "@/components/Commands/CommandsPage.tsx";
+import MessagePane from "@/components/ChatHistory/Pane/MessagePane.tsx";
 import './index.css'
 import './main.css'
-import {createBrowserRouter, createRoutesFromChildren, Outlet, Route, RouterProvider} from "react-router-dom";
-import i18n from "./i18n.ts";
 import "./i18n";
-import LoginPage from "./components/Login/LoginPage.tsx";
-import {Toaster} from "@shadcn/toaster.tsx";
-import OauthSetup from "@/components/OauthManager/OauthSetup.tsx";
-import OauthResult from "./components/OauthManager/OauthResult.tsx";
-import TwitchNavMenu from "./components/NavMenuTwitch/TwitchNavMenu.tsx";
-import HealthOverview from "./components/Health/HealthOverview.tsx";
-import CommandsPage from "./components/Commands/CommandsPage.tsx";
-import GiveawayListPage from "./components/giveaways/listPage/GiveawayListPage.tsx";
-import GiveawayEditPage from "./components/giveaways/editPage/GiveawayEditPage.tsx";
-import {TooltipProvider} from "@shadcn/tooltip.tsx";
-import TokenRemover from "./components/Login/TokenRemover.tsx";
-import AccountsPage from "./components/panelAccounts/AccountsPage.tsx";
-import WatchtimePage from "./components/watchtime/WatchtimePage.tsx";
-import {I18nextProvider} from "react-i18next";
-import MessagePane from "./components/ChatHistory/Pane/MessagePane.tsx"; // import to initialize
 
 export const PANEL_BASE_URL = import.meta.env.VITE_PANEL_BASE_URL;
 export const BOT_BACKEND_ADDR = import.meta.env.VITE_BOT_BACKEND_ADDR

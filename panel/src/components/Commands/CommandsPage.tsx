@@ -1,8 +1,8 @@
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@shadcn/tabs.tsx";
-import AllCommandList from "./commands/AllCommandList.tsx";
-import UserCommandList from "./commands/UserCommandList.tsx";
-import "./CommandPage.css"
 import TemplateList from "./templates/TemplateList.tsx";
+import UserCommandList from "./commands/UserCommandList.tsx";
+import AllCommandList from "./commands/AllCommandList.tsx";
+import "./CommandPage.css"
 
 export default function CommandsPage() {
   return <Tabs defaultValue="commands" >

@@ -1,7 +1,7 @@
-import {Textarea} from "@shadcn/textarea.tsx";
-import "./TemplateEditor.css"
-import {Popover, PopoverContent, PopoverTrigger} from "@shadcn/popover.tsx";
 import {UseFormRegisterReturn} from "react-hook-form";
+import {Textarea} from "@shadcn/textarea.tsx";
+import {Popover, PopoverContent, PopoverTrigger} from "@shadcn/popover.tsx";
+import "./TemplateEditor.css"
 
 export interface TemplateEditorProps {
   varSchema: string,

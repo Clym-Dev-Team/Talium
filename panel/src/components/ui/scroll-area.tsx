@@ -1,6 +1,6 @@
 import * as React from "react"
-import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
 import {cn} from "@shadcn/../../lib/utils.ts";
+import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
 
 
 const ScrollArea = React.forwardRef<

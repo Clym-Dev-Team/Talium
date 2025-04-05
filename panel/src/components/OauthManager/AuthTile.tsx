@@ -1,6 +1,6 @@
 import "./OauthResult.tsx"
-import {Oauth} from "./OauthSetup.tsx";
 import {Link} from "react-router-dom";
+import {Oauth} from "./OauthSetup.tsx";
 import "./AuthTile.css"
 
 export interface AuthTileProps {

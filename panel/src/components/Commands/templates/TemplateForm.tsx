@@ -1,10 +1,10 @@
-import {Template} from "./Template.ts";
 import {useForm} from "react-hook-form";
-import VLabel from "@/common/VLabel.tsx";
-import {Input} from "@shadcn/input.tsx";
 import {SheetFooter} from "@shadcn/sheet.tsx";
+import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
+import {Template} from "./Template.ts";
 import TemplateEditor from "@/components/Commands/common/templates/TemplateEditor.tsx";
+import VLabel from "@/common/VLabel.tsx";
 
 export interface TemplateFormProps {
   template: Template,

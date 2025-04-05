@@ -1,6 +1,6 @@
 import React from "react";
-import VLabel from "./VLabel.tsx";
 import {Textarea} from "@shadcn/textarea.tsx";
+import VLabel from "./VLabel.tsx";
 
 export interface TextAreaVLProps extends React.InputHTMLAttributes<HTMLTextAreaElement> {
   i18nFieldId: string;

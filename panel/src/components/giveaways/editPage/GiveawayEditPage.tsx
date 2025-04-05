@@ -1,21 +1,21 @@
 import "./GiveawayEditPage.css"
-import {Button} from "@shadcn/button.tsx";
-import VLabel from "@/common/VLabel.tsx";
-import {Select, SelectContent, SelectItem, SelectTrigger} from "@shadcn/select.tsx";
+import {useCallback} from "react";
 import {useForm} from "react-hook-form";
-import CheckBar from "@/common/BeanBox/CheckBar.tsx";
-import ComingSoon from "@/common/CommingSoon/ComingSoon.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger} from "@shadcn/select.tsx";
+import {Button} from "@shadcn/button.tsx";
 import WinnerCard from "./ticketCards/WinnerCard.tsx";
 import TicketCard from "./ticketCards/TicketCard.tsx";
-import {useCallback} from "react";
-import InputVL from "@/common/InputVL.tsx";
-import TextareaVL from "@/common/TextAreaVL.tsx";
-import IconSave from "@/assets/IconSave.tsx";
-import InfoData from "@/common/InfoData.tsx";
-import {Giveaway} from "@/components/giveaways/Giveaway.ts";
-import {GiveawaySave} from "@/components/giveaways/GiveawaySave.ts";
 import {ScrollArea} from "@/components/ui/scroll-area.tsx";
+import {GiveawaySave} from "@/components/giveaways/GiveawaySave.ts";
+import {Giveaway} from "@/components/giveaways/Giveaway.ts";
 import TemplateEditor from "@/components/Commands/common/templates/TemplateEditor.tsx";
+import VLabel from "@/common/VLabel.tsx";
+import TextareaVL from "@/common/TextAreaVL.tsx";
+import InputVL from "@/common/InputVL.tsx";
+import InfoData from "@/common/InfoData.tsx";
+import ComingSoon from "@/common/CommingSoon/ComingSoon.tsx";
+import CheckBar from "@/common/BeanBox/CheckBar.tsx";
+import IconSave from "@/assets/IconSave.tsx";
 
 export default function GiveawayEditPage() {
   const data: Giveaway = {}
@@ -79,10 +79,7 @@ export default function GiveawayEditPage() {
         <div className="column">
           <ComingSoon>
             <h1>Reminder Timer</h1>
-            <CheckBar checked={false} onChange={_ => {
-            }}>
-              Enable Reminder Message Timer
-            </CheckBar>
+            <CheckBar checked={false} onChange={_ => {}}>Enable Reminder Message Timer</CheckBar>
             <VLabel i18nFieldId="giveaway.edit.policy"><Select>
               <SelectTrigger>Select the Timer Group to add the Message to</SelectTrigger>
               <SelectContent className="dark">
