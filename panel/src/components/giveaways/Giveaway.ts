@@ -1,5 +1,5 @@
 export enum GiveawayStatus {
-  CREATED,
+  CREATE, // Special status to tell GW Edit page that this is an object creation, and to disable certain actions
   RUNNING,
   PAUSED,
   ARCHIVED,
@@ -59,4 +59,24 @@ export interface GiveawayJSON {
   announceWinnerInChat: boolean,
   ticketList: Entry[],
   winnerList: Winner[],
+}
+
+export function parseJsonToGiveaway(data: GiveawayJSON): Giveaway {
+  return {
+    status: (GiveawayStatus as any)[data.status] as GiveawayStatus,
+    title: data.title,
+    maxTickets: data.maxTickets,
+    notes: data.notes,
+    ticketCost: data.ticketCost,
+    autoStartTime: data.autoStartTime ? new Date(data.autoStartTime) : undefined,
+    autoCloseTime: data.autoCloseTime ? new Date(data.autoCloseTime) : undefined,
+    lastUpdatedAt: new Date(data.lastUpdatedAt),
+    createdAt: new Date(data.createdAt),
+    commandPattern: data.commandPattern,
+    allowUserRedraw: data.allowUserRedraw,
+    announceWinnerInChat: data.announceWinnerInChat,
+    id: data.id,
+    ticketList: data.ticketList,
+    winnerList: data.winnerList,
+  } as Giveaway;
 }

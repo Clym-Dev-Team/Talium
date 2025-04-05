@@ -33,9 +33,9 @@ public class GiveawayController {
     }
 
     @PostMapping("/fromTemplate/{templateId}")
-    public ResponseEntity<UUID> getGiveawayTemplates(@PathVariable String templateId) {
-        var id = giveawayService.createFromTemplate(templateId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(id);
+    public ResponseEntity<String> getGiveawayTemplates(@PathVariable String templateId) {
+        var body = gson.toJson(giveawayService.createFromTemplate(templateId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     @PostMapping("/save/{gwId}")

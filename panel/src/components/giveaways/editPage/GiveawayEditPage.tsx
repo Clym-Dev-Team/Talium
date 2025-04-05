@@ -28,7 +28,7 @@ function OpenCloseBtn({status, autoStart, onClick}: OpenCloseBtnProps) {
   let isEnabled = true;
 
   switch (status) {
-    case GiveawayStatus.CREATED:
+    case GiveawayStatus.CREATE:
       text = "Open NOW";
       break;
     case GiveawayStatus.PAUSED:
@@ -169,7 +169,7 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
               <Button onClick={onRefund} variant="destructive">Refund All Tickets</Button>
               {/*TODO show but disable these buttons if there are no tickets bought */}
             </> : ""}
-            {gw.status != GiveawayStatus.CREATED ?
+            {gw.status != GiveawayStatus.CREATE ?
               <Button onClick={onArchive}
                       variant="default">{gw.status == GiveawayStatus.ARCHIVED ? "Unarchive" : "Archive"}</Button>
               : ""}

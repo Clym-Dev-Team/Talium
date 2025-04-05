@@ -1,7 +1,7 @@
 import GiveawayEditPage from "@c/giveaways/editPage/GiveawayEditPage.tsx";
 import {useParams} from "react-router-dom";
 import useData from "@s/useData.ts";
-import {Giveaway, GiveawayJSON, GiveawayStatus} from "@c/giveaways/Giveaway.ts";
+import {GiveawayJSON, parseJsonToGiveaway} from "@c/giveaways/Giveaway.ts";
 import Loader from "@s/loadingSpinner/Loader.tsx";
 
 export default function GiveawayQueryParamLoader() {
@@ -14,22 +14,6 @@ export default function GiveawayQueryParamLoader() {
   if (data == undefined) {
     return "Error: Loading data failed, returned value undefined"
   }
-  let gw: Giveaway = {
-    status: (GiveawayStatus as any)[data.status] as GiveawayStatus ,
-    title: data.title,
-    maxTickets: data.maxTickets,
-    notes: data.notes,
-    ticketCost: data.ticketCost,
-    autoStartTime: data.autoStartTime ? new Date(data.autoStartTime) : undefined,
-    autoCloseTime: data.autoCloseTime ? new Date(data.autoCloseTime) : undefined,
-    lastUpdatedAt: new Date(data.lastUpdatedAt),
-    createdAt: new Date(data.createdAt),
-    commandPattern: data.commandPattern,
-    allowUserRedraw: data.allowUserRedraw,
-    announceWinnerInChat: data.announceWinnerInChat,
-    id: data.id,
-    ticketList: data.ticketList,
-    winnerList: data.winnerList,
-  }
+  let gw = parseJsonToGiveaway(data);
   return <GiveawayEditPage initialData={gw}/>
 }

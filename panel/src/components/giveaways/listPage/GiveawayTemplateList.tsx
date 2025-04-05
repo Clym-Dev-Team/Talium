@@ -4,19 +4,27 @@ import useData from "@s/useData.ts";
 import Loader from "@s/loadingSpinner/Loader.tsx";
 import IconGear from "@i/IconGear.tsx";
 import "./GiveawayTemplateList.css"
+import {Giveaway, GiveawayJSON, GiveawayStatus, parseJsonToGiveaway} from "@c/giveaways/Giveaway.ts";
+
+export interface GiveawayTemplateListProps {
+  handleCreateGw: (gw: Giveaway) => void;
+}
 
 interface TemplateItem {
   displayName: string;
   id: string,
 }
 
-export default function GiveawayTemplateList() {
+export default function GiveawayTemplateList({handleCreateGw}: GiveawayTemplateListProps) {
   const {loading, data, sendData} = useData<TemplateItem[]>("/giveaway/templates", "Giveaway Templates", [])
 
   const onCreate = useCallback((id: string) => {
     sendData("/giveaway/fromTemplate/" + encodeURIComponent(id), "Successfully created Giveaway from template", {method: "POST"})
       .then(res => {
-        window.location.href = "/giveawayEdit/" + res;
+        const gw = parseJsonToGiveaway(res as GiveawayJSON);
+        // hardcode CREATED, BE doesn't know this state, so it just sets PAUSED
+        gw.status = GiveawayStatus.CREATE;
+        handleCreateGw(gw);
       })
   }, [])
 
