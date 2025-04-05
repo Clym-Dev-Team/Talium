@@ -5,12 +5,12 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@sh
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@shadcn/sheet.tsx";
 import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
-import {CommandForm} from "./CommandEditSheet.tsx";
-import {Command, CommandPermission, CooldownTypes} from "./Command.ts";
-import IsVisibleCheckBox from "@c/Commands/common/IsVisibleCheckbox.tsx";
-import EnabledCheckBox from "@c/Commands/common/EnabledCheckBox.tsx";
 import useData from "@s/useData.ts";
 import Loader from "@s/LoadingSpinner/Loader.tsx";
+import IsVisibleCheckBox from "@c/Commands/common/IsVisibleCheckbox.tsx";
+import EnabledCheckBox from "@c/Commands/common/EnabledCheckBox.tsx";
+import {CommandForm} from "./CommandEditSheet.tsx";
+import {Command, CommandPermission, CooldownTypes} from "./Command.ts";
 
 const emptyCommand: Command = {
   id: "",

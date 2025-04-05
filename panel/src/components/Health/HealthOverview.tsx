@@ -1,7 +1,7 @@
-import {InputHealth} from "./InputHealth.ts";
-import HealthTile from "./HealthTile.tsx";
 import useData from "@s/useData.ts";
 import Loader from "@s/LoadingSpinner/Loader.tsx";
+import {InputHealth} from "./InputHealth.ts";
+import HealthTile from "./HealthTile.tsx";
 import "./HealthOverview.css"
 
 export default function HealthOverview() {

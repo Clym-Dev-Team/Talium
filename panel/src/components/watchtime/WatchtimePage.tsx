@@ -1,7 +1,7 @@
 import "./watchtime.css"
+import Placeholder from "@c/Placeholder/Placeholder.tsx";
 import WatchtimeLeaderboard from "./WatchtimeLeaderboard.tsx";
 import WatchtimeEditor from "./WatchtimeEditor.tsx";
-import Placeholder from "@c/Placeholder/Placeholder.tsx";
 
 export default function WatchtimePage() {
 

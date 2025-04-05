@@ -3,10 +3,10 @@ import {useForm} from "react-hook-form";
 import {useToast} from "@shadcn/use-toast.ts";
 import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
-import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
 import VLabel from "@s/VLabel.tsx";
 import IconSave from "@i/IconSave.tsx";
 import IconCloudDown from "@i/IconCloudDown.tsx";
+import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
 
 interface ChatterDTO {
   userId: string,

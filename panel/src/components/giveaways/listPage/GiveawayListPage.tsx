@@ -1,7 +1,7 @@
 import "./GiveawayListPage.css"
+import Placeholder from "@c/Placeholder/Placeholder.tsx";
 import GiveawayTemplateList from "./GiveawayTemplateList.tsx";
 import GiveawayList from "./GiveawayList.tsx";
-import Placeholder from "@c/Placeholder/Placeholder.tsx";
 
 export default function GiveawayListPage() {
   return <div className="giveawayListView">

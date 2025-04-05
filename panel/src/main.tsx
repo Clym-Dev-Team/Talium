@@ -4,7 +4,6 @@ import {I18nextProvider} from "react-i18next";
 import ReactDOM from 'react-dom/client'
 import {TooltipProvider} from "@shadcn/tooltip.tsx";
 import {Toaster} from "@shadcn/toaster.tsx";
-import i18n from "./i18n.ts";
 import WatchtimePage from "@c/watchtime/WatchtimePage.tsx";
 import AccountsPage from "@c/panelAccounts/AccountsPage.tsx";
 import OauthSetup from "@c/OauthManager/OauthSetup.tsx";
@@ -17,6 +16,7 @@ import GiveawayListPage from "@c/giveaways/listPage/GiveawayListPage.tsx";
 import GiveawayEditPage from "@c/giveaways/editPage/GiveawayEditPage.tsx";
 import CommandsPage from "@c/Commands/CommandsPage.tsx";
 import MessagePane from "@c/ChatHistory/Pane/MessagePane.tsx";
+import i18n from "./i18n.ts";
 import './index.css'
 import './main.css'
 import "./i18n";
