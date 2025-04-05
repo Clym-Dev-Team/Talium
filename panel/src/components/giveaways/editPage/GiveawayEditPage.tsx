@@ -1,32 +1,76 @@
 import "./GiveawayEditPage.css"
-import {useCallback} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "@shadcn/select.tsx";
 import {Button} from "@shadcn/button.tsx";
 import VLabel from "@s/VLabel.tsx";
 import TextareaVL from "@s/TextAreaVL.tsx";
 import InputVL from "@s/InputVL.tsx";
-import InfoData from "@s/InfoData.tsx";
 import ComingSoon from "@s/comingSoon/ComingSoon.tsx";
 import CheckBar from "@s/checkBar/CheckBar.tsx";
-import IconSave from "@i/IconSave.tsx";
 import {ScrollArea} from "@c/ui/scroll-area.tsx";
 import {GiveawaySave} from "@c/giveaways/GiveawaySave.ts";
-import {Giveaway} from "@c/giveaways/Giveaway.ts";
+import {Giveaway, GiveawayStatus} from "@c/giveaways/Giveaway.ts";
 import TemplateEditor from "@c/Commands/common/templates/TemplateEditor.tsx";
-import WinnerCard from "./ticketCards/WinnerCard.tsx";
-import TicketCard from "./ticketCards/TicketCard.tsx";
+import {TicketResultsPanel} from "@c/giveaways/editPage/TicketResultsPanel.tsx";
+import {GwAuditLogs} from "@c/giveaways/editPage/GwAuditLogs.tsx";
+import {GwTitleBar} from "@c/giveaways/editPage/GwTitleBar.tsx";
 
-export default function GiveawayEditPage() {
-  const data: Giveaway = {}
+export interface GiveawayEditPageProps {
+  isCreate: false
+}
+
+interface OpenCloseBtnProps {
+  status: GiveawayStatus,
+  autoStart: Date | undefined,
+}
+
+function OpenCloseBtn({status, autoStart}: OpenCloseBtnProps) {
+  const [text, setText] = useState("")
+  const [isEnabled, setIsEnabled] = useState(true)
+
+  useEffect(() => {
+      switch (status) {
+        case GiveawayStatus.CREATED:
+          setText("Open NOW");
+          break;
+        case GiveawayStatus.PAUSED:
+          if (autoStart != undefined) {
+            setText("Open NOW");
+          } else {
+            setText ("Open");
+          }
+          break;
+        case GiveawayStatus.RUNNING:
+          if (autoStart != undefined) {
+            setText("Close NOW");
+          } else {
+            setText("Close");
+          }
+          break;
+        case GiveawayStatus.ARCHIVED:
+          setIsEnabled(false);
+          break;
+      }
+  }, [status, autoStart]);
+  if (!isEnabled) {
+    return ""
+  }
+  return <Button variant="default">{text}</Button>;
+}
+
+export default function GiveawayEditPage({isCreate}: GiveawayEditPageProps) {
+  const data: Giveaway = {
+    status: GiveawayStatus.CREATED,
+  }
   // const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
   const {register, watch, setValue, handleSubmit} = useForm<GiveawaySave>({
     defaultValues: {
       commandPattern: data.commandPattern,
       allowUserRedraw: data.allowUserRedraw ? data.allowUserRedraw : false,
       announceWinnerInChat: data.announceWinnerInChat ? data.announceWinnerInChat : false,
-      endTime: data.endTime,
-      startTime: data.startTime,
+      autoCloseTime: data.autoCloseTime,
+      autoStartTime: data.autoStartTime,
       title: data.title,
       maxTickets: data.maxTickets,
       notes: data.notes,
@@ -46,15 +90,8 @@ export default function GiveawayEditPage() {
   }, []);
 
   return <div className="giveawayEditPage">
-    <div className="tileBar">
-      <Button variant="default" className="saveBtn" onClick={handleSubmit(submit)}><IconSave/></Button>
-      <span>Edit: {data.title}</span>
-      <div className="infoBoxes">
-        <InfoData i18nFieldId={"giveaway.edit.gwId"} data={data.id}/>
-        <InfoData i18nFieldId={"giveaway.edit.createdAt"} data={data.createdAt}/>
-        <InfoData i18nFieldId={"giveaway.edit.lastUpdatedAt"} data={data.lastUpdatedAt}/>
-      </div>
-    </div>
+    <GwTitleBar onSave={handleSubmit(submit)} title={data.title} id={data.id} lastUpdatedAt={data.lastUpdatedAt}
+                createdAt={data.createdAt}/>
     <ScrollArea className="contentBorder">
       <div className="formContent">
         <div className="column">
@@ -71,7 +108,7 @@ export default function GiveawayEditPage() {
           <CheckBar checked={watch("announceWinnerInChat")} onChange={b => setValue("announceWinnerInChat", b)}>
             Announce Winner in Chat
           </CheckBar>
-          {/*<GWPolicySelector/>*/}
+          {/*<GwPolicySelector/>*/}
         </div>
 
         {/* ------- COLUMN 2 ------- */}
@@ -79,7 +116,8 @@ export default function GiveawayEditPage() {
         <div className="column">
           <ComingSoon>
             <h1>Reminder Timer</h1>
-            <CheckBar checked={false} onChange={_ => {}}>Enable Reminder Message Timer</CheckBar>
+            <CheckBar checked={false} onChange={_ => {
+            }}>Enable Reminder Message Timer</CheckBar>
             <VLabel i18nFieldId="giveaway.edit.policy"><Select>
               <SelectTrigger>Select the Timer Group to add the Message to</SelectTrigger>
               <SelectContent className="dark">
@@ -102,45 +140,12 @@ export default function GiveawayEditPage() {
         {/* ------- COLUMN 3 ------- */}
 
         <div className="column">
-          {/*TODO Move this entire WinnerListCard into own component*/}
-          <div className="winnersListCard">
-            <ScrollArea className="winnersListScrollArea">
-              <div className="winnerList">
-                <div className="sectionTitle">
-                  <h3 className="sectionTitleText">Winner:</h3>
-                  <span className="legend">
-                    <span>Username</span>
-                    <span>Actions</span>
-                  </span>
-                </div>
-                <WinnerCard username="testUser82834834"/>
-                <WinnerCard username="hdh82"/>
-                <WinnerCard username="cookie"/>
-                <WinnerCard username="supie"/>
-                <WinnerCard username="clym"/>
-              </div>
-              <hr/>
-              <div className="ticketList">
-                <div className="sectionTitle">
-                  <h3 className="sectionTitleText">Submitted Tickets:</h3>
-                  <span className="legend">
-                    <span>Username</span>
-                    <span>Ticket Amount</span>
-                  </span>
-                </div>
-                <TicketCard tickets={98393} username="zuser23"/>
-                <TicketCard tickets={1} username="user8239239"/>
-                <TicketCard tickets={9} username="jfk"/>
-              </div>
-            </ScrollArea>
-          </div>
+          <TicketResultsPanel/>
           <ComingSoon>
-            <div className="logs">
-              <h1 style={{height: "4rem"}}>Logs</h1>
-            </div>
+            <GwAuditLogs/>
           </ComingSoon>
           <div className="dangerArea">
-            <Button variant="default">Start NOW</Button> {/* This button is Start/Pause GW as necessary */}
+            <OpenCloseBtn autoStart={data.autoStartTime} status={data.status}/>
             <Button variant="destructive">Refund All Tickets</Button>
             <Button variant="default" onClick={handleSubmit(submit)}>Save & Exit</Button>
           </div>

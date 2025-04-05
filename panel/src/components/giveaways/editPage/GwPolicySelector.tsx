@@ -1,7 +1,7 @@
 import {Select, SelectContent, SelectItem, SelectTrigger} from "@shadcn/select.tsx";
 import VLabel from "@s/VLabel.tsx";
 
-export default function GWPolicySelector() {
+export default function GwPolicySelector() {
   return <VLabel i18nFieldId="Giveaway Policy"><Select>
       <SelectTrigger>Select a Giveaway Policy</SelectTrigger>
       <SelectContent className="dark">

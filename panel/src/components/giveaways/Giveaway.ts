@@ -3,7 +3,6 @@ export enum GiveawayStatus {
   RUNNING,
   PAUSED,
   ARCHIVED,
-  AWAITING_CONFIRMATION
 }
 
 export interface Giveaway {
@@ -14,8 +13,8 @@ export interface Giveaway {
   lastUpdatedAt: Date;
   commandPattern: string,
   status: GiveawayStatus,
-  startTime?: number,
-  endTime?: number,
+  autoStartTime?: Date,
+  autoCloseTime?: Date,
   ticketCost: number,
   maxTickets: number,
   allowUserRedraw: boolean,
