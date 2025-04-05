@@ -1,6 +1,6 @@
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "../../../@shadcn/components/ui/table.tsx";
-import Loader from "../../common/LoadingSpinner/Loader.tsx";
-import useData from "../../common/useData.ts";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@shadcn/table.tsx";
+import Loader from "@/common/LoadingSpinner/Loader.tsx";
+import useData from "@/common/useData.ts";
 
 interface LeaderboardDTO {
   twitchUserName: string,

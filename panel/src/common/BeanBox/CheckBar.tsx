@@ -1,9 +1,9 @@
 import React from "react";
 import {Property} from "csstype";
-import {Tooltip, TooltipContent, TooltipTrigger} from "../../../@shadcn/components/ui/tooltip.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
 import {Label} from "@radix-ui/react-label";
-import IconX from "../../assets/IconX.tsx";
-import IconCheck from "../../assets/IconCheck.tsx";
+import IconX from "@/assets/IconX.tsx";
+import IconCheck from "@/assets/IconCheck.tsx";
 import "./BeanCheckBox.css"
 
 export interface CheckBarProps {
@@ -23,10 +23,11 @@ export default function CheckBar(props: CheckBarProps) {
         props.onChange(!props.checked)
       }
     }}>
-      <Label className={props.checked ? "beanCheckBox checked" : "beanCheckBox"} style={{maxWidth: props.maxWidth}} onClick={event => {
-        event.stopPropagation();
-        props.onChange(!props.checked)
-      }}>
+      <Label className={props.checked ? "beanCheckBox checked" : "beanCheckBox"} style={{maxWidth: props.maxWidth}}
+             onClick={event => {
+               event.stopPropagation();
+               props.onChange(!props.checked)
+             }}>
         <span className="backGround"/>
         <span className="content">{props.checked ? <IconCheck/> : <IconX/>}{props.children}</span>
       </Label>

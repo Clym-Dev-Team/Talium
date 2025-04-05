@@ -1,4 +1,4 @@
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "../../../@shadcn/components/ui/tabs.tsx";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@shadcn/tabs.tsx";
 import AllCommandList from "./commands/AllCommandList.tsx";
 import UserCommandList from "./commands/UserCommandList.tsx";
 import "./CommandPage.css"

@@ -1,4 +1,4 @@
-import {Input} from "../../@shadcn/components/ui/input.tsx";
+import {Input} from "@shadcn/input.tsx";
 import React  from "react";
 import VLabel from "./VLabel.tsx";
 

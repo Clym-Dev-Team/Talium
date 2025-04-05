@@ -1,21 +1,21 @@
 import "./GiveawayEditPage.css"
-import {Button} from "../../../../@shadcn/components/ui/button.tsx";
-import {ScrollArea} from "../../ui/scroll-area.tsx";
-import VLabel from "../../../common/VLabel.tsx";
-import {Select, SelectContent, SelectItem, SelectTrigger} from "../../../../@shadcn/components/ui/select.tsx";
-import TemplateEditor from "../../Commands/common/templates/TemplateEditor.tsx";
+import {Button} from "@shadcn/button.tsx";
+import VLabel from "@/common/VLabel.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger} from "@shadcn/select.tsx";
 import {useForm} from "react-hook-form";
-import CheckBar from "../../../common/BeanBox/CheckBar.tsx";
-import ComingSoon from "../../../common/CommingSoon/ComingSoon.tsx";
+import CheckBar from "@/common/BeanBox/CheckBar.tsx";
+import ComingSoon from "@/common/CommingSoon/ComingSoon.tsx";
 import WinnerCard from "./ticketCards/WinnerCard.tsx";
 import TicketCard from "./ticketCards/TicketCard.tsx";
-import {Giveaway} from "../Giveaway.ts";
-import {GiveawaySave} from "../GiveawaySave.ts";
 import {useCallback} from "react";
-import InputVL from "../../../common/InputVL.tsx";
-import TextareaVL from "../../../common/TextAreaVL.tsx";
-import IconSave from "../../../assets/IconSave.tsx";
-import InfoData from "../../../common/InfoData.tsx";
+import InputVL from "@/common/InputVL.tsx";
+import TextareaVL from "@/common/TextAreaVL.tsx";
+import IconSave from "@/assets/IconSave.tsx";
+import InfoData from "@/common/InfoData.tsx";
+import {Giveaway} from "@/components/giveaways/Giveaway.ts";
+import {GiveawaySave} from "@/components/giveaways/GiveawaySave.ts";
+import {ScrollArea} from "@/components/ui/scroll-area.tsx";
+import TemplateEditor from "@/components/Commands/common/templates/TemplateEditor.tsx";
 
 export default function GiveawayEditPage() {
   const data: Giveaway = {}

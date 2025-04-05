@@ -1,14 +1,14 @@
 import {useCallback, useState} from "react";
 import "./TicketCard.css"
-import IconCheckBox from "../../../../common/IconCheckBox/IconCheckBox.tsx";
-import IconCheck from "../../../../assets/IconCheck.tsx";
-import IconX from "../../../../assets/IconX.tsx";
-import IconSave from "../../../../assets/IconSave.tsx";
+import IconCheckBox from "@/common/IconCheckBox/IconCheckBox.tsx";
+import IconCheck from "@/assets/IconCheck.tsx";
+import IconX from "@/assets/IconX.tsx";
+import IconSave from "@/assets/IconSave.tsx";
 import {useForm} from "react-hook-form";
-import {Input} from "../../../../../@shadcn/components/ui/input.tsx";
-import {Button} from "../../../../../@shadcn/components/ui/button.tsx";
-import {useToast} from "../../../../../@shadcn/components/ui/use-toast.ts";
-import {fetchWithAuth} from "../../../Login/LoginPage.tsx";
+import {Input} from "@shadcn/input.tsx";
+import {Button} from "@shadcn/button.tsx";
+import {useToast} from "@shadcn/use-toast.ts";
+import {fetchWithAuth} from "@/components/Login/LoginPage.tsx";
 
 export interface WinnerCardProps {
   username: string,

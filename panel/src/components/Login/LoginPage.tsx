@@ -1,6 +1,6 @@
 import {PropsWithChildren} from "react";
 import LoginPane from "./LoginPane.tsx"
-import {BOT_BACKEND_ADDR} from "../../main.tsx";
+import {BOT_BACKEND_ADDR} from "@/main.tsx";
 
 export default function LoginPage(props: PropsWithChildren<Record<never, never>>) {
   if (localStorage.getItem("accessToken") == null) {

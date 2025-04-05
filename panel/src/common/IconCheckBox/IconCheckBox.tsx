@@ -1,6 +1,6 @@
 import React from "react";
 import "./IconCheckBox.css"
-import {Tooltip, TooltipContent, TooltipTrigger} from "../../../@shadcn/components/ui/tooltip.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
 
 export interface IconCheckBoxProps {
   checked: boolean;

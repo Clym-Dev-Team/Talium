@@ -1,6 +1,6 @@
 import "./LoginPane.css"
 import {Link} from "react-router-dom";
-import {PANEL_BASE_URL, TWITCH_CLIENT_ID} from "../../main.tsx";
+import {PANEL_BASE_URL, TWITCH_CLIENT_ID} from "@/main.tsx";
 
 export default function LoginPane() {
   const redirectUri = PANEL_BASE_URL + "/twitchToken";

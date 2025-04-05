@@ -1,6 +1,6 @@
-import {Label} from "../../@shadcn/components/ui/label.tsx";
+import {Label} from "@shadcn/label.tsx";
 import React from "react";
-import {Tooltip, TooltipContent, TooltipTrigger} from "../../@shadcn/components/ui/tooltip.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
 import {useTranslation} from "react-i18next";
 
 export interface VLabelProps {

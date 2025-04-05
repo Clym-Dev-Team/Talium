@@ -1,5 +1,5 @@
 import "./warningBox.css"
-import IconWarning from "../../assets/IconWarning.tsx";
+import IconWarning from "@/assets/IconWarning.tsx";
 
 export interface WarningBoxProps {
   children: React.ReactNode;

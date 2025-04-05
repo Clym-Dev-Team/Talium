@@ -1,6 +1,6 @@
-import {useToast} from "../../@shadcn/components/ui/use-toast.ts";
+import {useToast} from "@shadcn/use-toast.ts";
 import {useCallback} from "react";
-import {fetchWithAuth} from "../components/Login/LoginPage.tsx";
+import {fetchWithAuth} from "@/components/Login/LoginPage.tsx";
 
 export default function useFetch() {
   const {toast} = useToast();

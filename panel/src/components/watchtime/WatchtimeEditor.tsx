@@ -1,12 +1,12 @@
-import {Input} from "../../../@shadcn/components/ui/input.tsx";
-import {Button} from "../../../@shadcn/components/ui/button.tsx";
-import IconCloudDown from "../../assets/IconCloudDown.tsx";
-import VLabel from "../../common/VLabel.tsx";
-import IconSave from "../../assets/IconSave.tsx";
-import {useToast} from "../../../@shadcn/components/ui/use-toast.ts";
+import {Input} from "@shadcn/input.tsx";
+import {Button} from "@shadcn/button.tsx";
+import IconCloudDown from "@/assets/IconCloudDown.tsx";
+import VLabel from "@/common/VLabel.tsx";
+import IconSave from "@/assets/IconSave.tsx";
+import {useToast} from "@shadcn/use-toast.ts";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
-import {fetchWithAuth} from "../Login/LoginPage.tsx";
+import {fetchWithAuth} from "@/components/Login/LoginPage.tsx";
 
 interface ChatterDTO {
   userId: string,

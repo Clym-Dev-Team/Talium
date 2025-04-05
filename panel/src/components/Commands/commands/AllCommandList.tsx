@@ -1,17 +1,17 @@
-import "../common/ListView.css"
+import "@/components/Commands/common/ListView.css"
 import {CommandForm} from "./CommandEditSheet.tsx";
 import {Command} from "./Command.ts";
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "../../../../@shadcn/components/ui/table.tsx";
-import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "../../../../@shadcn/components/ui/sheet.tsx";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@shadcn/table.tsx";
+import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@shadcn/sheet.tsx";
 import {useState} from "react";
-import EnabledCheckBox from "../common/EnabledCheckBox.tsx";
-import IsVisibleCheckBox from "../common/IsVisibleCheckbox.tsx";
-import Loader from "../../../common/LoadingSpinner/Loader.tsx";
-import useData from "../../../common/useData.ts";
-import {Button} from "../../../../@shadcn/components/ui/button.tsx";
-import {Input} from "../../../../@shadcn/components/ui/input.tsx";
+import Loader from "@/common/LoadingSpinner/Loader.tsx";
+import useData from "@/common/useData.ts";
+import {Button} from "@shadcn/button.tsx";
+import {Input} from "@shadcn/input.tsx";
 import {Search} from "lucide-react";
-import WarningBox from "../../../common/warning/WarningBox.tsx";
+import WarningBox from "@/common/warning/WarningBox.tsx";
+import IsVisibleCheckBox from "@/components/Commands/common/IsVisibleCheckbox.tsx";
+import EnabledCheckBox from "@/components/Commands/common/EnabledCheckBox.tsx";
 
 export default function AllCommandList() {
   const [searchBox, setSearchBox] = useState<string>("")

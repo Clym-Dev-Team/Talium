@@ -1,7 +1,7 @@
 import AuthTile from "./AuthTile.tsx";
 import "./AuthList.css"
 import {Loader} from "lucide-react";
-import useData from "../../common/useData.ts";
+import useData from "@/common/useData.ts";
 
 export interface Oauth {
   service: string,

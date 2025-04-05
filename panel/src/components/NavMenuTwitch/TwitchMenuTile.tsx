@@ -1,6 +1,6 @@
 import "./TwitchMenuTile.css"
 import React, {useEffect} from "react";
-import {Tooltip, TooltipContent, TooltipTrigger} from "../../../@shadcn/components/ui/tooltip.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
 import {useLocation} from "react-router-dom";
 
 export interface TwitchMenuTileProps {

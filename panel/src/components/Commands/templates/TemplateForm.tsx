@@ -1,10 +1,10 @@
 import {Template} from "./Template.ts";
 import {useForm} from "react-hook-form";
-import VLabel from "../../../common/VLabel.tsx";
-import {Input} from "../../../../@shadcn/components/ui/input.tsx";
-import TemplateEditor from "../common/templates/TemplateEditor.tsx";
-import {SheetFooter} from "../../../../@shadcn/components/ui/sheet.tsx";
-import {Button} from "../../../../@shadcn/components/ui/button.tsx";
+import VLabel from "@/common/VLabel.tsx";
+import {Input} from "@shadcn/input.tsx";
+import {SheetFooter} from "@shadcn/sheet.tsx";
+import {Button} from "@shadcn/button.tsx";
+import TemplateEditor from "@/components/Commands/common/templates/TemplateEditor.tsx";
 
 export interface TemplateFormProps {
   template: Template,
@@ -37,5 +37,5 @@ export default function TemplateForm({template, onSubmit, onDelete}: TemplateFor
       <Button variant={"destructive"} onClick={() => onDelete(template.id)}>Delete</Button>
       <Button variant={"default"} onClick={handleSubmit(submit)}>Save</Button>
     </SheetFooter>
-  </div>
+  </div>;
 }

@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import {Message} from "../Pane/Message.ts";
+import {Message} from "@/components/ChatHistory/Pane/Message.ts";
 import "./ChatLine.css"
 
 export interface ChatLineProps {

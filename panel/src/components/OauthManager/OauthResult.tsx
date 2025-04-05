@@ -1,6 +1,6 @@
-import useQuery from "../../common/useQuery.ts";
+import useQuery from "@/common/useQuery.ts";
 import {Link} from "react-router-dom";
-import {buttonVariants} from "../../../@shadcn/components/ui/button.tsx";
+import {buttonVariants} from "@shadcn/button.tsx";
 import "./OauthResult.css"
 
 export default function OauthResult() {

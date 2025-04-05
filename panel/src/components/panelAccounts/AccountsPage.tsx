@@ -1,10 +1,10 @@
-import useData from "../../common/useData.ts";
-import Loader from "../../common/LoadingSpinner/Loader.tsx";
-import {Button} from "../../../@shadcn/components/ui/button.tsx";
+import useData from "@/common/useData.ts";
+import Loader from "@/common/LoadingSpinner/Loader.tsx";
+import {Button} from "@shadcn/button.tsx";
 import {DeleteIcon, SaveIcon} from "lucide-react";
-import {ScrollArea} from "../ui/scroll-area.tsx";
-import {Input} from "../../../@shadcn/components/ui/input.tsx";
+import {Input} from "@shadcn/input.tsx";
 import {useState} from "react";
+import {ScrollArea} from "@/components/ui/scroll-area.tsx";
 
 interface Account {
   username: string,

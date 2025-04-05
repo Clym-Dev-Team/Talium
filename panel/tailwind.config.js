@@ -6,7 +6,7 @@ module.exports = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-    './@shadcn/components/**/*.{ts,tsx}',
+    './shadcn/components/**/*.{ts,tsx}',
   ],
   prefix: "tw-",
   theme: {

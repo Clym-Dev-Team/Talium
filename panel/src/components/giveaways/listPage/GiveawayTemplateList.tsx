@@ -1,8 +1,8 @@
 import "./GiveawayTemplateList.css"
-import {Button} from "../../../../@shadcn/components/ui/button.tsx";
-import IconGear from "../../../assets/IconGear.tsx";
-import useData from "../../../common/useData.ts";
-import Loader from "../../../common/LoadingSpinner/Loader.tsx";
+import {Button} from "@shadcn/button.tsx";
+import IconGear from "@/assets/IconGear.tsx";
+import useData from "@/common/useData.ts";
+import Loader from "@/common/LoadingSpinner/Loader.tsx";
 import {useCallback} from "react";
 
 export interface GiveawayTemplateListProps {

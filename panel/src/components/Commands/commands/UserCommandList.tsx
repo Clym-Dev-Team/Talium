@@ -1,4 +1,4 @@
-import "../common/ListView.css"
+import "@/components/Commands/common/ListView.css"
 import {CommandForm} from "./CommandEditSheet.tsx";
 import {Command, CommandPermission, CooldownTypes} from "./Command.ts";
 import {
@@ -8,22 +8,22 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "../../../../@shadcn/components/ui/table.tsx";
+} from "@shadcn/table.tsx";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle
-} from "../../../../@shadcn/components/ui/sheet.tsx";
+} from "@shadcn/sheet.tsx";
 import {useState} from "react";
-import EnabledCheckBox from "../common/EnabledCheckBox.tsx";
-import IsVisibleCheckBox from "../common/IsVisibleCheckbox.tsx";
-import Loader from "../../../common/LoadingSpinner/Loader.tsx";
-import useData from "../../../common/useData.ts";
-import {Button} from "../../../../@shadcn/components/ui/button.tsx";
-import {Input} from "../../../../@shadcn/components/ui/input.tsx";
+import Loader from "@/common/LoadingSpinner/Loader.tsx";
+import useData from "@/common/useData.ts";
+import {Button} from "@shadcn/button.tsx";
+import {Input} from "@shadcn/input.tsx";
 import {Search} from "lucide-react";
+import IsVisibleCheckBox from "@/components/Commands/common/IsVisibleCheckbox.tsx";
+import EnabledCheckBox from "@/components/Commands/common/EnabledCheckBox.tsx";
 
 const emptyCommand: Command = {
   id: "",

@@ -1,6 +1,6 @@
-import {fetchWithAuth} from "../components/Login/LoginPage.tsx";
+import {fetchWithAuth} from "@/components/Login/LoginPage.tsx";
 import {useCallback, useEffect, useState} from "react";
-import {useToast} from "../../@shadcn/components/ui/use-toast.ts";
+import {useToast} from "@shadcn/use-toast.ts";
 
 export default function useData<T>(urlPath: string, objectName: string, initialValue: T, init?: RequestInit) {
   const {toast} = useToast();
