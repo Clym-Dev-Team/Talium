@@ -1,31 +1,31 @@
 import {Label} from "../../@shadcn/components/ui/label.tsx";
-import React from "react";
 import {Tooltip, TooltipContent, TooltipTrigger} from "../../@shadcn/components/ui/tooltip.tsx";
 import {useTranslation} from "react-i18next";
+import "./InfoData.css"
 
-export interface VLabelProps {
+export interface InfoDataProps {
   i18nFieldId: string,
-  children: React.ReactNode
+  data: string
 }
 
-export default function VLabel({i18nFieldId, children}: VLabelProps) {
+export default function InfoData({i18nFieldId, data}: InfoDataProps) {
   const {t, i18n} = useTranslation();
   let tooltipKey = i18nFieldId + ".tooltip";
 
   if (!i18n.exists(tooltipKey)) {
-    return <Label>
-      <span style={{width: "100%", display: "flex", flexDirection: "row"}}>{t(i18nFieldId + ".label")}</span>
-      <div style={{paddingTop: "0.5rem"}}>
-        {children}
+    return <Label className="infoDataLabel">
+      <div className="infoDataLabel">
+        {t(i18nFieldId + ".label")}: {data}
       </div>
     </Label>
   }
 
-  return <Label>
+  return <Label className="infoDataLabel">
     <Tooltip>
       <TooltipContent>
         <span style={{
           fontSize: "medium",
+          fontWeight: "normal",
           maxWidth: "40em",
           display: "block",
           lineHeight: "normal",
@@ -33,11 +33,11 @@ export default function VLabel({i18nFieldId, children}: VLabelProps) {
         }}>{t(tooltipKey)}</span>
       </TooltipContent>
       <TooltipTrigger style={{ cursor: "default" }}>
-        <span style={{width: "100%", display: "flex", flexDirection: "row"}}>{t(i18nFieldId + ".label")}</span>
+        <span>{t(i18nFieldId + ".label")}: </span>
       </TooltipTrigger>
     </Tooltip>
-    <div style={{paddingTop: "0.5rem"}}>
-      {children}
+    <div>
+      {data}
     </div>
   </Label>
 }

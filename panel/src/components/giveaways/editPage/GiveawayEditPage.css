@@ -8,14 +8,26 @@
 .tileBar {
     background-color: darkorange;
     border-radius: 10px 10px 0 0;
-    padding: 1em;
+    padding: .5rem 1rem;
     display: flex;
     align-items: center;
-    gap: 1em;
+    gap: 1rem;
+    font-size: x-large;
+}
+
+.saveBtn:hover {
+    background-color: var(--confirm-green);
+}
+.infoBoxes {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    align-items: flex-end;
+    gap: 1.5rem;
 }
 
 .contentBorder {
-    padding: 0 1em 1em;
+    padding: 0 1rem 1rem;
     background-color: darkorange;
     border-radius: 0 0 1em 1em;
     border-top: 0;

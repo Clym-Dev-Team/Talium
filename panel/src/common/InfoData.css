@@ -1,0 +1,7 @@
+.infoDataLabel {
+    font-size: x-small;
+    font-weight: bold;
+    color: var(--select-grey);
+    display: flex;
+    align-items: start;
+}

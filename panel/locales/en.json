@@ -2,8 +2,14 @@
   "giveaway": {
     "edit": {
       "gwId": {
-        "label": "Unique Giveaway Identifier",
+        "label": "ID",
         "tooltip": "Internal unique Giveaway Identifier. You wil always be able to uniquely find this Giveaway under this ID, even if other Giveaways have the same title. Although, you will rarely need to use this"
+      },
+      "createdAt" : {
+        "label": "createdAt"
+      },
+      "lastUpdatedAt" : {
+        "label": "lastUpdatedAt"
       },
       "title" : {
         "label": "Title"

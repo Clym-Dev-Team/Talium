@@ -14,15 +14,17 @@ import {GiveawaySave} from "../GiveawaySave.ts";
 import {useCallback} from "react";
 import InputVL from "../../../common/InputVL.tsx";
 import TextareaVL from "../../../common/TextAreaVL.tsx";
+import IconSave from "../../../assets/IconSave.tsx";
+import InfoData from "../../../common/InfoData.tsx";
 
 export default function GiveawayEditPage() {
   const data: Giveaway = {}
-    // const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
+  // const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
   const {register, watch, setValue, handleSubmit} = useForm<GiveawaySave>({
     defaultValues: {
       commandPattern: data.commandPattern,
-      allowUserRedraw: data.allowUserRedraw? data.allowUserRedraw: false,
-      announceWinnerInChat: data.announceWinnerInChat? data.announceWinnerInChat: false,
+      allowUserRedraw: data.allowUserRedraw ? data.allowUserRedraw : false,
+      announceWinnerInChat: data.announceWinnerInChat ? data.announceWinnerInChat : false,
       endTime: data.endTime,
       startTime: data.startTime,
       title: data.title,
@@ -45,15 +47,17 @@ export default function GiveawayEditPage() {
 
   return <div className="giveawayEditPage">
     <div className="tileBar">
-      <Button variant="default">Save</Button>
-      {/*TODO Style better bigger bolder, and with GW Title */}
-      Edit: !testGW
+      <Button variant="default" className="saveBtn" onClick={handleSubmit(submit)}><IconSave/></Button>
+      <span>Edit: {data.title}</span>
+      <div className="infoBoxes">
+        <InfoData i18nFieldId={"giveaway.edit.gwId"} data={data.id}/>
+        <InfoData i18nFieldId={"giveaway.edit.createdAt"} data={data.createdAt}/>
+        <InfoData i18nFieldId={"giveaway.edit.lastUpdatedAt"} data={data.lastUpdatedAt}/>
+      </div>
     </div>
     <ScrollArea className="contentBorder">
       <div className="formContent">
         <div className="column">
-          <h1>Giveaway</h1>
-          <InputVL i18nFieldId="giveaway.edit.gwId" disabled={true} value={data.id} />
           <InputVL i18nFieldId="giveaway.edit.title" {...register("title")}/>
           <TextareaVL i18nFieldId="giveaway.edit.notes" {...register("notes")}/>
           <InputVL i18nFieldId="giveaway.edit.commandPattern" {...register("commandPattern")}/>

@@ -8,12 +8,14 @@ export enum GiveawayStatus {
 
 export interface Giveaway {
   id: string,
-  commandPattern: string,
   title: string,
   notes: string,
+  createdAt: Date;
+  lastUpdatedAt: Date;
+  commandPattern: string,
+  status: GiveawayStatus,
   startTime?: number,
   endTime?: number,
-  status: GiveawayStatus,
   ticketCost: number,
   maxTickets: number,
   allowUserRedraw: boolean,
