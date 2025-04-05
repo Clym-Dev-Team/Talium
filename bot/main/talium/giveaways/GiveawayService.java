@@ -5,6 +5,7 @@ import talium.Registrar;
 import talium.giveaways.persistence.GiveawayDAO;
 import talium.giveaways.persistence.GiveawayRepo;
 import talium.giveaways.persistence.GiveawayTemplateDAO;
+import talium.giveaways.transit.GiveawayDTO;
 import talium.twitch4J.TwitchUserPermission;
 import talium.twitchCommands.cooldown.ChatCooldown;
 import talium.twitchCommands.cooldown.CooldownType;
@@ -31,19 +32,20 @@ public class GiveawayService {
      * @param templateId ID of template to copy values from
      * @return UUID of created giveaway
      */
-    public UUID createFromTemplate(String templateId) {
+    public GiveawayDTO createFromTemplate(String templateId) {
+        //TODO return
         //TODO get giveaway template from DB
         var template = new GiveawayTemplateDAO();
         UUID giveawayId = UUID.randomUUID();
         TriggerEntity commandEntity = createGWEnterCommand(giveawayId, template.commandPattern);
-        var giveaway = new GiveawayDAO(
+        var giveaway = new GiveawayDTO(
                 giveawayId,
-                OffsetDateTime.now(),
-                OffsetDateTime.now(),
                 template.title,
                 template.notes,
-                GiveawayStatus.CREATED,
-                commandEntity,
+                OffsetDateTime.now().toString(),
+                OffsetDateTime.now().toString(),
+                GiveawayStatus.PAUSED,
+                commandEntity.patterns.getFirst().pattern,
                 null,
                 null,
                 template.ticketCost,
@@ -53,9 +55,10 @@ public class GiveawayService {
                 new ArrayList<>(),
                 new ArrayList<>()
         );
-        var savedId = giveawayRepo.save(giveaway).id();
-        TriggerProvider.rebuildTriggerCache();
-        return savedId;
+        //TODO reuse for save
+//        var savedId = giveawayRepo.save(giveaway).id();
+//        TriggerProvider.rebuildTriggerCache();
+        return giveaway;
     }
 
     private static TriggerEntity createGWEnterCommand(UUID giveawayId, String commandPattern) {

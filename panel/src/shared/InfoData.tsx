@@ -33,11 +33,11 @@ export default function InfoData({i18nFieldId, data}: InfoDataProps) {
         }}>{t(tooltipKey)}</span>
       </TooltipContent>
       <TooltipTrigger style={{cursor: "default"}}>
-        <span>{t(i18nFieldId + ".label")}: </span>
+        <div>
+          <span>{t(i18nFieldId + ".label")}: </span>
+          {data}
+        </div>
       </TooltipTrigger>
     </Tooltip>
-    <div>
-      {data}
-    </div>
   </Label>
 }

@@ -7,7 +7,7 @@ import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
 import WarningBox from "@s/warning/WarningBox.tsx";
 import useData from "@s/useData.ts";
-import Loader from "@s/LoadingSpinner/Loader.tsx";
+import Loader from "@s/loadingSpinner/Loader.tsx";
 import IsVisibleCheckBox from "@c/Commands/common/IsVisibleCheckbox.tsx";
 import EnabledCheckBox from "@c/Commands/common/EnabledCheckBox.tsx";
 import {CommandForm} from "./CommandEditSheet.tsx";

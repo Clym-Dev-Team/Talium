@@ -1,12 +1,10 @@
 package talium.giveaways.transit;
 
 
+import org.springframework.lang.Nullable;
 import talium.giveaways.GiveawayStatus;
-import talium.giveaways.persistence.GiveawayDAO;
 
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /// Used to display Giveaways
@@ -14,12 +12,12 @@ public record GiveawayDTO(
         UUID id,
         String title,
         String notes,
-        OffsetDateTime createdAt,
-        OffsetDateTime lastUpdatedAt,
+        String createdAt,
+        String lastUpdatedAt,
         GiveawayStatus status,
         String commandPattern,
-        Optional<OffsetDateTime> autoStart,
-        Optional<OffsetDateTime> autoEnd,
+        @Nullable String autoStart,
+        @Nullable String autoEnd,
         int ticketCost,
         int maxTickets,
         boolean allowRedrawOfUser,

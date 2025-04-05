@@ -68,12 +68,12 @@ public class GiveawayController {
                 gw.id(),
                 gw.title(),
                 gw.notes(),
-                gw.createdAt(),
-                gw.lastUpdatedAt(),
+                gw.createdAt().toString(),
+                gw.lastUpdatedAt().toString(),
                 gw.status(),
                 gw.command().patterns.getFirst().pattern,
-                Optional.ofNullable(gw.autoStart()),
-                Optional.ofNullable(gw.autoEnd()),
+                gw.autoStart() != null ? gw.autoStart().toString() : null,
+                gw.autoEnd() != null ? gw.autoEnd().toString() : null,
                 gw.ticketCost(),
                 gw.maxTickets(),
                 gw.allowRedrawOfUser(),
@@ -84,7 +84,7 @@ public class GiveawayController {
                 }).toList(),
                 gw.winners().stream().map(win -> {
                     var name = Out.Twitch.api.getUserById(win.userId()).map(User::getId).orElse(win.userId());
-                    return new WinnerDTO(name, win.userId(), win.rejected(), Optional.ofNullable(win.comment()));
+                    return new WinnerDTO(name, win.userId(), win.rejected(), win.comment());
                 }).toList()
         );
         return ResponseEntity.ok(gson.toJson(dto));

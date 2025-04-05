@@ -1,6 +1,7 @@
 import {Button} from "@shadcn/button.tsx";
 import IconSave from "@i/IconSave.tsx";
 import InfoData from "@s/InfoData.tsx";
+import {format} from "date-fns";
 
 export interface GiveawayProps {
   id: string,
@@ -16,8 +17,8 @@ export function GwTitleBar(props: GiveawayProps) {
     <span>Edit: {props.title}</span>
     <div className="infoBoxes">
       <InfoData i18nFieldId={"giveaway.edit.gwId"} data={props.id}/>
-      <InfoData i18nFieldId={"giveaway.edit.createdAt"} data={props.createdAt?.toISOString()}/>
-      <InfoData i18nFieldId={"giveaway.edit.lastUpdatedAt"} data={props.lastUpdatedAt?.toISOString()}/>
+      <InfoData i18nFieldId={"giveaway.edit.createdAt"} data={format(props.createdAt, "dd.MM.yyyy-HH:mm")}/>
+      <InfoData i18nFieldId={"giveaway.edit.lastUpdatedAt"} data={format(props.lastUpdatedAt, "dd.MM.yyyy-HH:mm")}/>
     </div>
   </div>;
 }

@@ -16,53 +16,53 @@ import {TicketResultsPanel} from "@c/giveaways/editPage/TicketResultsPanel.tsx";
 import {GwAuditLogs} from "@c/giveaways/editPage/GwAuditLogs.tsx";
 import {GwTitleBar} from "@c/giveaways/editPage/GwTitleBar.tsx";
 
-export interface GiveawayEditPageProps {
-  isCreate: false
-}
 
 interface OpenCloseBtnProps {
   status: GiveawayStatus,
   autoStart: Date | undefined,
+  onClick: () => void
 }
 
-function OpenCloseBtn({status, autoStart}: OpenCloseBtnProps) {
+function OpenCloseBtn({status, autoStart, onClick}: OpenCloseBtnProps) {
   const [text, setText] = useState("")
   const [isEnabled, setIsEnabled] = useState(true)
 
   useEffect(() => {
-      switch (status) {
-        case GiveawayStatus.CREATED:
+    switch (status) {
+      case GiveawayStatus.CREATED:
+        setText("Open NOW");
+        break;
+      case GiveawayStatus.PAUSED:
+        if (autoStart != undefined) {
           setText("Open NOW");
-          break;
-        case GiveawayStatus.PAUSED:
-          if (autoStart != undefined) {
-            setText("Open NOW");
-          } else {
-            setText ("Open");
-          }
-          break;
-        case GiveawayStatus.RUNNING:
-          if (autoStart != undefined) {
-            setText("Close NOW");
-          } else {
-            setText("Close");
-          }
-          break;
-        case GiveawayStatus.ARCHIVED:
-          setIsEnabled(false);
-          break;
-      }
+        } else {
+          setText("Open");
+        }
+        break;
+      case GiveawayStatus.RUNNING:
+        if (autoStart != undefined) {
+          setText("Close NOW");
+        } else {
+          setText("Close");
+        }
+        break;
+      case GiveawayStatus.ARCHIVED:
+        setIsEnabled(false);
+        break;
+    }
   }, [status, autoStart]);
   if (!isEnabled) {
     return ""
   }
-  return <Button variant="default">{text}</Button>;
+  return <Button variant="default" onClick={onClick}>{text}</Button>;
 }
 
-export default function GiveawayEditPage({isCreate}: GiveawayEditPageProps) {
-  const data: Giveaway = {
-    status: GiveawayStatus.CREATED,
-  }
+export interface GiveawayEditPageProps {
+  initialData: Giveaway,
+}
+
+export default function GiveawayEditPage({initialData}: GiveawayEditPageProps) {
+  const data: Giveaway = initialData;
   // const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
   const {register, watch, setValue, handleSubmit} = useForm<GiveawaySave>({
     defaultValues: {
@@ -78,7 +78,11 @@ export default function GiveawayEditPage({isCreate}: GiveawayEditPageProps) {
     }
   });
 
-  const submit = useCallback((gw: GiveawaySave) => {
+  const refresh = useCallback(() => {
+    //TODO check if we are not in create, so that we can actually refresh
+  })
+
+  const onSave = useCallback((gw: GiveawaySave) => {
     //TODO confirmation toast when:
     // - change ticket cost
     // - decrement max ticket ammount
@@ -87,10 +91,28 @@ export default function GiveawayEditPage({isCreate}: GiveawayEditPageProps) {
     // (in the request, and in the ui!)
     console.log("SAVING GW");
     console.log(gw)
+    //TODO try to refresh data now
   }, []);
 
+
+  const onArchive = useCallback(() => {
+    //TODO find if to archive or unarchive, and do that
+  });
+
+  const onOpenClose = useCallback(() => {
+    //TODO find if to open or close, and do that
+  });
+
+  const onRefund = useCallback(() => {
+    //TODO check if refund is currently possible/allowed, and request refund
+  })
+
+  const onDraw = useCallback(() => {
+    //TODO check if is currently possible to draw, and do that
+  })
+
   return <div className="giveawayEditPage">
-    <GwTitleBar onSave={handleSubmit(submit)} title={data.title} id={data.id} lastUpdatedAt={data.lastUpdatedAt}
+    <GwTitleBar onSave={handleSubmit(onSave)} title={data.title} id={data.id} lastUpdatedAt={data.lastUpdatedAt}
                 createdAt={data.createdAt}/>
     <ScrollArea className="contentBorder">
       <div className="formContent">
@@ -98,8 +120,8 @@ export default function GiveawayEditPage({isCreate}: GiveawayEditPageProps) {
           <InputVL i18nFieldId="giveaway.edit.title" {...register("title")}/>
           <TextareaVL i18nFieldId="giveaway.edit.notes" {...register("notes")}/>
           <InputVL i18nFieldId="giveaway.edit.commandPattern" {...register("commandPattern")}/>
-          <InputVL i18nFieldId="giveaway.edit.startTime" type="time" {...register("startTime")}/>
-          <InputVL i18nFieldId="giveaway.edit.endTime" type="time" {...register("endTime")}/>
+          <InputVL i18nFieldId="giveaway.edit.startTime" type="time" {...register("autoStartTime")}/>
+          <InputVL i18nFieldId="giveaway.edit.endTime" type="time" {...register("autoCloseTime")}/>
           <InputVL i18nFieldId="giveaway.edit.ticketCost" type="number" {...register("ticketCost")}/>
           <InputVL i18nFieldId="giveaway.edit.maxTickets" type="number" {...register("maxTickets")}/>
           <CheckBar checked={watch("allowUserRedraw")} onChange={b => setValue("allowUserRedraw", b)}>
@@ -145,9 +167,17 @@ export default function GiveawayEditPage({isCreate}: GiveawayEditPageProps) {
             <GwAuditLogs/>
           </ComingSoon>
           <div className="dangerArea">
-            <OpenCloseBtn autoStart={data.autoStartTime} status={data.status}/>
-            <Button variant="destructive">Refund All Tickets</Button>
-            <Button variant="default" onClick={handleSubmit(submit)}>Save & Exit</Button>
+            <OpenCloseBtn onClick={onOpenClose} autoStart={data.autoStartTime} status={data.status}/>
+            {data.status == GiveawayStatus.RUNNING || data.status == GiveawayStatus.PAUSED ? <>
+              <Button onClick={onDraw} variant="default">Draw</Button>
+              <Button onClick={onRefund} variant="destructive">Refund All Tickets</Button>
+              {/*TODO show but disable these buttons if there are no tickets bought */}
+            </> : ""}
+            {data.status != GiveawayStatus.CREATED ?
+              <Button onClick={onArchive}
+                      variant="default">{data.status == GiveawayStatus.ARCHIVED ? "Unarchive" : "Archive"}</Button>
+              : ""}
+            <Button onClick={handleSubmit(onSave)} variant="default">Save</Button>
           </div>
         </div>
       </div>

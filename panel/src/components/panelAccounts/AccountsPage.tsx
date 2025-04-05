@@ -3,7 +3,7 @@ import {DeleteIcon, SaveIcon} from "lucide-react";
 import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
 import useData from "@s/useData.ts";
-import Loader from "@s/LoadingSpinner/Loader.tsx";
+import Loader from "@s/loadingSpinner/Loader.tsx";
 import {ScrollArea} from "@c/ui/scroll-area.tsx";
 
 interface Account {

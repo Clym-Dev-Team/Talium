@@ -7,7 +7,7 @@ import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
 import WarningBox from "@s/warning/WarningBox.tsx";
 import useData from "@s/useData.ts";
-import Loader from "@s/LoadingSpinner/Loader.tsx";
+import Loader from "@s/loadingSpinner/Loader.tsx";
 import TemplateForm from "./TemplateForm.tsx";
 import {Template} from "./Template.ts";
 

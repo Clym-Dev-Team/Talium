@@ -1,6 +1,6 @@
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@shadcn/accordion.tsx";
 import useData from "@s/useData.ts";
-import Loader from "@s/LoadingSpinner/Loader.tsx";
+import Loader from "@s/loadingSpinner/Loader.tsx";
 import {ScrollArea} from "@c/ui/scroll-area.tsx";
 import {GiveawayPreview} from "@c/giveaways/GiveawayPreview.ts";
 import GiveawayTile from "./GiveawayTile.tsx";

@@ -13,7 +13,7 @@ import TokenRemover from "@c/Login/TokenRemover.tsx";
 import LoginPage from "@c/Login/LoginPage.tsx";
 import HealthOverview from "@c/Health/HealthOverview.tsx";
 import GiveawayListPage from "@c/giveaways/listPage/GiveawayListPage.tsx";
-import GiveawayEditPage from "@c/giveaways/editPage/GiveawayEditPage.tsx";
+import GiveawayQueryParamLoader from "@c/giveaways/GiveawayQueryParamLoader.tsx";
 import CommandsPage from "@c/Commands/CommandsPage.tsx";
 import MessagePane from "@c/ChatHistory/Pane/MessagePane.tsx";
 import i18n from "./i18n.ts";
@@ -48,7 +48,7 @@ const router = createBrowserRouter(
         <Route path="/oauth/result" element={<OauthResult/>}/>
         <Route path="/accounts" element={<AccountsPage/>}/>
         <Route path="/giveaways" element={<GiveawayListPage/>}/>
-        <Route path="/giveawayEdit/*" element={<GiveawayEditPage/>}/>
+        <Route path="/giveawayEdit/:gwId" element={<GiveawayQueryParamLoader/>}/>
         <Route path="/watchtime" element={<WatchtimePage/>}/>
       </Route>
     </>

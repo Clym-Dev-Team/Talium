@@ -1,5 +1,5 @@
 import useData from "@s/useData.ts";
-import Loader from "@s/LoadingSpinner/Loader.tsx";
+import Loader from "@s/loadingSpinner/Loader.tsx";
 import {InputHealth} from "./InputHealth.ts";
 import HealthTile from "./HealthTile.tsx";
 import "./HealthOverview.css"
