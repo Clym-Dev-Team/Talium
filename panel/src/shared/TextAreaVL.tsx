@@ -7,9 +7,9 @@ export interface TextAreaVLProps extends React.InputHTMLAttributes<HTMLTextAreaE
 }
 
 // Input with Vertical label (label positioned vertically above the Input) (and with an optional info message on hover)
-const TextareaVL = React.forwardRef<HTMLTextAreaElement, TextAreaVLProps>((props, ref) => {
-  return <VLabel i18nFieldId={props.i18nFieldId}>
-    <Textarea ref={ref} {...props}/>
+const TextareaVL = React.forwardRef<HTMLTextAreaElement, TextAreaVLProps>(({i18nFieldId, ...rest}, ref) => {
+  return <VLabel i18nFieldId={i18nFieldId}>
+    <Textarea ref={ref} {...rest}/>
   </VLabel>;
 });
 

@@ -7,9 +7,9 @@ export interface InputVLProps extends React.InputHTMLAttributes<HTMLInputElement
 }
 
 // Input with Vertical label (label positioned vertically above the Input) (and with an optional info message on hover)
-const InputVL = React.forwardRef<HTMLInputElement, InputVLProps>((props, ref) => {
-  return <VLabel i18nFieldId={props.i18nFieldId}>
-    <Input ref={ref} {...props}/>
+const InputVL = React.forwardRef<HTMLInputElement, InputVLProps>(({i18nFieldId, ...rest}, ref) => {
+  return <VLabel i18nFieldId={i18nFieldId}>
+    <Input ref={ref} {...rest}/>
   </VLabel>;
 });
 
