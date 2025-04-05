@@ -17,7 +17,7 @@ import IsVisibleCheckBox from "@c/Commands/common/IsVisibleCheckbox.tsx";
 import EnabledCheckBox from "@c/Commands/common/EnabledCheckBox.tsx";
 import VLabel from "@s/VLabel.tsx";
 import InputUnit from "@s/InputUnit/InputUnit.tsx";
-import CheckBox from "@s/CheckBox/CheckBox.tsx";
+import CheckBox from "@s/CheckBox.tsx";
 import IconX from "@i/IconX.tsx";
 
 export interface CommandFormProps {

@@ -4,7 +4,7 @@ import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
 import {Label} from "@radix-ui/react-label";
 import IconX from "@i/IconX.tsx";
 import IconCheck from "@i/IconCheck.tsx";
-import "./BeanCheckBox.css"
+import "./CheckBar.css"
 
 export interface CheckBarProps {
   checked: boolean;

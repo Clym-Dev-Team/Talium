@@ -14,7 +14,7 @@ import TextareaVL from "@s/TextAreaVL.tsx";
 import InputVL from "@s/InputVL.tsx";
 import InfoData from "@s/InfoData.tsx";
 import ComingSoon from "@s/CommingSoon/ComingSoon.tsx";
-import CheckBar from "@s/BeanBox/CheckBar.tsx";
+import CheckBar from "@s/checkBar/CheckBar.tsx";
 import IconSave from "@i/IconSave.tsx";
 
 export default function GiveawayEditPage() {
