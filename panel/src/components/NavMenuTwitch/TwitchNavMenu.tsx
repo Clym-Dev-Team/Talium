@@ -1,10 +1,10 @@
 import TwitchMenuTile from "./TwitchMenuTile.tsx";
 import "./TwitchNavMenu.css"
 import NavLink from "./NavLink.tsx";
-import IconTimer from "@/assets/IconTimer.tsx";
-import IconTextBox from "@/assets/IconTextBod.tsx";
-import IconMegaphone from "@/assets/IconMegaphone.tsx";
-import IconGift from "@/assets/IconGift.tsx";
+import IconTimer from "@i/IconTimer.tsx";
+import IconTextBox from "@i/IconTextBod.tsx";
+import IconMegaphone from "@i/IconMegaphone.tsx";
+import IconGift from "@i/IconGift.tsx";
 
 
 export default function TwitchNavMenu() {

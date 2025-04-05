@@ -1,29 +1,16 @@
-import "@/components/Commands/common/ListView.css"
+import "@c/Commands/common/ListView.css"
 import {useState} from "react";
 import {Search} from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@shadcn/table.tsx";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle
-} from "@shadcn/sheet.tsx";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@shadcn/table.tsx";
+import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@shadcn/sheet.tsx";
 import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
 import {CommandForm} from "./CommandEditSheet.tsx";
 import {Command, CommandPermission, CooldownTypes} from "./Command.ts";
-import IsVisibleCheckBox from "@/components/Commands/common/IsVisibleCheckbox.tsx";
-import EnabledCheckBox from "@/components/Commands/common/EnabledCheckBox.tsx";
-import useData from "@/common/useData.ts";
-import Loader from "@/common/LoadingSpinner/Loader.tsx";
+import IsVisibleCheckBox from "@c/Commands/common/IsVisibleCheckbox.tsx";
+import EnabledCheckBox from "@c/Commands/common/EnabledCheckBox.tsx";
+import useData from "@s/useData.ts";
+import Loader from "@s/LoadingSpinner/Loader.tsx";
 
 const emptyCommand: Command = {
   id: "",

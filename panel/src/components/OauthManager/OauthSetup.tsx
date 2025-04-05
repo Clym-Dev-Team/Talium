@@ -1,6 +1,6 @@
 import {Loader} from "lucide-react";
 import AuthTile from "./AuthTile.tsx";
-import useData from "@/common/useData.ts";
+import useData from "@s/useData.ts";
 import "./AuthList.css"
 
 export interface Oauth {

@@ -1,6 +1,6 @@
-import IconCheckBox from "@/common/IconCheckBox/IconCheckBox.tsx";
-import IconList from "@/assets/IconList.tsx";
-import IconHidden from "@/assets/IconHidden.tsx";
+import IconCheckBox from "@s/IconCheckBox/IconCheckBox.tsx";
+import IconList from "@i/IconList.tsx";
+import IconHidden from "@i/IconHidden.tsx";
 
 export interface IsVisibleCheckBoxProps {
   checked: boolean;

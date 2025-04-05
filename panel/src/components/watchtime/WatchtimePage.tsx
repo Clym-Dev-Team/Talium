@@ -1,7 +1,8 @@
 import "./watchtime.css"
 import WatchtimeLeaderboard from "./WatchtimeLeaderboard.tsx";
 import WatchtimeEditor from "./WatchtimeEditor.tsx";
-import Placeholder from "@/components/Placeholder/Placeholder.tsx";
+import Placeholder from "@c/Placeholder/Placeholder.tsx";
+
 export default function WatchtimePage() {
 
   return <div className="watchtimePage">

@@ -1,6 +1,6 @@
-import IconCheckBox from "@/common/IconCheckBox/IconCheckBox.tsx";
-import IconChecked from "@/assets/IconChecked.tsx";
-import IconBox from "@/assets/IconBox.tsx";
+import IconCheckBox from "@s/IconCheckBox/IconCheckBox.tsx";
+import IconChecked from "@i/IconChecked.tsx";
+import IconBox from "@i/IconBox.tsx";
 
 export interface CheckBoxProps {
   checked: boolean;

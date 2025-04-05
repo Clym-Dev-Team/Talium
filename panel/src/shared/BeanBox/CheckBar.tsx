@@ -2,8 +2,8 @@ import React from "react";
 import {Property} from "csstype";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@shadcn/tooltip.tsx";
 import {Label} from "@radix-ui/react-label";
-import IconX from "@/assets/IconX.tsx";
-import IconCheck from "@/assets/IconCheck.tsx";
+import IconX from "@i/IconX.tsx";
+import IconCheck from "@i/IconCheck.tsx";
 import "./BeanCheckBox.css"
 
 export interface CheckBarProps {

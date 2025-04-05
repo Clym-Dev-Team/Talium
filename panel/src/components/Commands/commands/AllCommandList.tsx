@@ -1,4 +1,4 @@
-import "@/components/Commands/common/ListView.css"
+import "@c/Commands/common/ListView.css"
 import {useState} from "react";
 import {Search} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@shadcn/table.tsx";
@@ -7,11 +7,11 @@ import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
 import {CommandForm} from "./CommandEditSheet.tsx";
 import {Command} from "./Command.ts";
-import IsVisibleCheckBox from "@/components/Commands/common/IsVisibleCheckbox.tsx";
-import EnabledCheckBox from "@/components/Commands/common/EnabledCheckBox.tsx";
-import WarningBox from "@/common/warning/WarningBox.tsx";
-import useData from "@/common/useData.ts";
-import Loader from "@/common/LoadingSpinner/Loader.tsx";
+import IsVisibleCheckBox from "@c/Commands/common/IsVisibleCheckbox.tsx";
+import EnabledCheckBox from "@c/Commands/common/EnabledCheckBox.tsx";
+import WarningBox from "@s/warning/WarningBox.tsx";
+import useData from "@s/useData.ts";
+import Loader from "@s/LoadingSpinner/Loader.tsx";
 
 export default function AllCommandList() {
   const [searchBox, setSearchBox] = useState<string>("")

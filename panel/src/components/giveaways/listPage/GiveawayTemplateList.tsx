@@ -1,9 +1,9 @@
 import "./GiveawayTemplateList.css"
 import {useCallback} from "react";
 import {Button} from "@shadcn/button.tsx";
-import useData from "@/common/useData.ts";
-import Loader from "@/common/LoadingSpinner/Loader.tsx";
-import IconGear from "@/assets/IconGear.tsx";
+import useData from "@s/useData.ts";
+import Loader from "@s/LoadingSpinner/Loader.tsx";
+import IconGear from "@i/IconGear.tsx";
 
 interface TemplateItem {
   displayName: string;

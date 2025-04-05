@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import {GiveawayPreview} from "@/components/giveaways/GiveawayPreview.ts";
+import {Link} from "react-router-dom";
+import {GiveawayPreview} from "@c/giveaways/GiveawayPreview.ts";
 
 export interface GiveawayTileProps {
   preview: GiveawayPreview

@@ -25,6 +25,15 @@
       "@shadcn/*": [
         "shadcn/components/ui/*"
       ],
+      "@i/*": [
+        "src/icons/*"
+      ],
+      "@s/*": [
+        "src/shared/*"
+      ],
+      "@c/*": [
+        "src/components/*"
+      ],
       "@/*": [
         "src/*"
       ]

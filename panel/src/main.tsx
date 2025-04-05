@@ -5,18 +5,18 @@ import ReactDOM from 'react-dom/client'
 import {TooltipProvider} from "@shadcn/tooltip.tsx";
 import {Toaster} from "@shadcn/toaster.tsx";
 import i18n from "./i18n.ts";
-import WatchtimePage from "@/components/watchtime/WatchtimePage.tsx";
-import AccountsPage from "@/components/panelAccounts/AccountsPage.tsx";
-import OauthSetup from "@/components/OauthManager/OauthSetup.tsx";
-import OauthResult from "@/components/OauthManager/OauthResult.tsx";
-import TwitchNavMenu from "@/components/NavMenuTwitch/TwitchNavMenu.tsx";
-import TokenRemover from "@/components/Login/TokenRemover.tsx";
-import LoginPage from "@/components/Login/LoginPage.tsx";
-import HealthOverview from "@/components/Health/HealthOverview.tsx";
-import GiveawayListPage from "@/components/giveaways/listPage/GiveawayListPage.tsx";
-import GiveawayEditPage from "@/components/giveaways/editPage/GiveawayEditPage.tsx";
-import CommandsPage from "@/components/Commands/CommandsPage.tsx";
-import MessagePane from "@/components/ChatHistory/Pane/MessagePane.tsx";
+import WatchtimePage from "@c/watchtime/WatchtimePage.tsx";
+import AccountsPage from "@c/panelAccounts/AccountsPage.tsx";
+import OauthSetup from "@c/OauthManager/OauthSetup.tsx";
+import OauthResult from "@c/OauthManager/OauthResult.tsx";
+import TwitchNavMenu from "@c/NavMenuTwitch/TwitchNavMenu.tsx";
+import TokenRemover from "@c/Login/TokenRemover.tsx";
+import LoginPage from "@c/Login/LoginPage.tsx";
+import HealthOverview from "@c/Health/HealthOverview.tsx";
+import GiveawayListPage from "@c/giveaways/listPage/GiveawayListPage.tsx";
+import GiveawayEditPage from "@c/giveaways/editPage/GiveawayEditPage.tsx";
+import CommandsPage from "@c/Commands/CommandsPage.tsx";
+import MessagePane from "@c/ChatHistory/Pane/MessagePane.tsx";
 import './index.css'
 import './main.css'
 import "./i18n";

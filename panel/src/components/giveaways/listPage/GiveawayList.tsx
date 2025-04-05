@@ -1,14 +1,9 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger
-} from "@shadcn/accordion.tsx";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@shadcn/accordion.tsx";
 import GiveawayTile from "./GiveawayTile.tsx";
-import {ScrollArea} from "@/components/ui/scroll-area.tsx";
-import {GiveawayPreview} from "@/components/giveaways/GiveawayPreview.ts";
-import useData from "@/common/useData.ts";
-import Loader from "@/common/LoadingSpinner/Loader.tsx";
+import {ScrollArea} from "@c/ui/scroll-area.tsx";
+import {GiveawayPreview} from "@c/giveaways/GiveawayPreview.ts";
+import useData from "@s/useData.ts";
+import Loader from "@s/LoadingSpinner/Loader.tsx";
 
 export default function GiveawayList() {
   const {loading, data} = useData<GiveawayPreview[]>("/giveaway/listActive", "Giveaway", [])

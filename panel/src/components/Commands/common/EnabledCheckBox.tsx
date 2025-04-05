@@ -1,6 +1,6 @@
-import IconCheckBox from "@/common/IconCheckBox/IconCheckBox.tsx";
-import IconPowerOn from "@/assets/IconPowerOn.tsx";
-import IconPowerOff from "@/assets/IconPowerOff.tsx";
+import IconCheckBox from "@s/IconCheckBox/IconCheckBox.tsx";
+import IconPowerOn from "@i/IconPowerOn.tsx";
+import IconPowerOff from "@i/IconPowerOff.tsx";
 
 export interface EnabledCheckBoxProps {
   checked: boolean;

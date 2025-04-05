@@ -1,24 +1,24 @@
 import "./CommandEditSheet.css"
 import {
-  useForm,
+  FieldArrayWithId,
   useFieldArray,
   UseFieldArrayRemove,
   UseFieldArrayUpdate,
-  UseFormRegister,
-  FieldArrayWithId
+  useForm,
+  UseFormRegister
 } from "react-hook-form";
 import {SheetFooter} from "@shadcn/sheet.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@shadcn/select.tsx";
 import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
 import {Command, CooldownTypes} from "./Command.ts";
-import TemplateEditor from "@/components/Commands/common/templates/TemplateEditor.tsx";
-import IsVisibleCheckBox from "@/components/Commands/common/IsVisibleCheckbox.tsx";
-import EnabledCheckBox from "@/components/Commands/common/EnabledCheckBox.tsx";
-import VLabel from "@/common/VLabel.tsx";
-import InputUnit from "@/common/InputUnit/InputUnit.tsx";
-import CheckBox from "@/common/CheckBox/CheckBox.tsx";
-import IconX from "@/assets/IconX.tsx";
+import TemplateEditor from "@c/Commands/common/templates/TemplateEditor.tsx";
+import IsVisibleCheckBox from "@c/Commands/common/IsVisibleCheckbox.tsx";
+import EnabledCheckBox from "@c/Commands/common/EnabledCheckBox.tsx";
+import VLabel from "@s/VLabel.tsx";
+import InputUnit from "@s/InputUnit/InputUnit.tsx";
+import CheckBox from "@s/CheckBox/CheckBox.tsx";
+import IconX from "@i/IconX.tsx";
 
 export interface CommandFormProps {
   command: Command,
