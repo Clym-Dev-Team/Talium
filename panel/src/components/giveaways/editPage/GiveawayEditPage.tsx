@@ -1,5 +1,5 @@
 import "./GiveawayEditPage.css"
-import {useCallback, useEffect, useState} from "react";
+import {useCallback} from "react";
 import {useForm} from "react-hook-form";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "@shadcn/select.tsx";
 import {Button} from "@shadcn/button.tsx";
@@ -24,33 +24,31 @@ interface OpenCloseBtnProps {
 }
 
 function OpenCloseBtn({status, autoStart, onClick}: OpenCloseBtnProps) {
-  const [text, setText] = useState("")
-  const [isEnabled, setIsEnabled] = useState(true)
+  let text = "";
+  let isEnabled = true;
 
-  useEffect(() => {
-    switch (status) {
-      case GiveawayStatus.CREATED:
-        setText("Open NOW");
-        break;
-      case GiveawayStatus.PAUSED:
-        if (autoStart != undefined) {
-          setText("Open NOW");
-        } else {
-          setText("Open");
-        }
-        break;
-      case GiveawayStatus.RUNNING:
-        if (autoStart != undefined) {
-          setText("Close NOW");
-        } else {
-          setText("Close");
-        }
-        break;
-      case GiveawayStatus.ARCHIVED:
-        setIsEnabled(false);
-        break;
-    }
-  }, [status, autoStart]);
+  switch (status) {
+    case GiveawayStatus.CREATED:
+      text = "Open NOW";
+      break;
+    case GiveawayStatus.PAUSED:
+      if (autoStart != undefined) {
+        text = "Open NOW";
+      } else {
+        text = "Open";
+      }
+      break;
+    case GiveawayStatus.RUNNING:
+      if (autoStart == undefined) {
+        text = "Close";
+      } else {
+        text = "Close NOW";
+      }
+      break;
+    case GiveawayStatus.ARCHIVED:
+      isEnabled = false;
+      break;
+  }
   if (!isEnabled) {
     return ""
   }
@@ -61,20 +59,18 @@ export interface GiveawayEditPageProps {
   initialData: Giveaway,
 }
 
-export default function GiveawayEditPage({initialData}: GiveawayEditPageProps) {
-  const data: Giveaway = initialData;
-  // const {data, loading, sendData} = useData<Giveaway | undefined>("/giveawas/", "Giveaway", undefined);
+export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProps) {
   const {register, watch, setValue, handleSubmit} = useForm<GiveawaySave>({
     defaultValues: {
-      commandPattern: data.commandPattern,
-      allowUserRedraw: data.allowUserRedraw ? data.allowUserRedraw : false,
-      announceWinnerInChat: data.announceWinnerInChat ? data.announceWinnerInChat : false,
-      autoCloseTime: data.autoCloseTime,
-      autoStartTime: data.autoStartTime,
-      title: data.title,
-      maxTickets: data.maxTickets,
-      notes: data.notes,
-      ticketCost: data.ticketCost,
+      commandPattern: gw.commandPattern,
+      allowUserRedraw: gw.allowUserRedraw ? gw.allowUserRedraw : false,
+      announceWinnerInChat: gw.announceWinnerInChat ? gw.announceWinnerInChat : false,
+      autoCloseTime: gw.autoCloseTime,
+      autoStartTime: gw.autoStartTime,
+      title: gw.title,
+      maxTickets: gw.maxTickets,
+      notes: gw.notes,
+      ticketCost: gw.ticketCost,
     }
   });
 
@@ -112,8 +108,8 @@ export default function GiveawayEditPage({initialData}: GiveawayEditPageProps) {
   })
 
   return <div className="giveawayEditPage">
-    <GwTitleBar onSave={handleSubmit(onSave)} title={data.title} id={data.id} lastUpdatedAt={data.lastUpdatedAt}
-                createdAt={data.createdAt}/>
+    <GwTitleBar onSave={handleSubmit(onSave)} title={gw.title} id={gw.id} lastUpdatedAt={gw.lastUpdatedAt}
+                createdAt={gw.createdAt}/>
     <ScrollArea className="contentBorder">
       <div className="formContent">
         <div className="column">
@@ -167,15 +163,15 @@ export default function GiveawayEditPage({initialData}: GiveawayEditPageProps) {
             <GwAuditLogs/>
           </ComingSoon>
           <div className="dangerArea">
-            <OpenCloseBtn onClick={onOpenClose} autoStart={data.autoStartTime} status={data.status}/>
-            {data.status == GiveawayStatus.RUNNING || data.status == GiveawayStatus.PAUSED ? <>
+            <OpenCloseBtn onClick={onOpenClose} autoStart={gw.autoStartTime} status={gw.status}/>
+            {gw.status == GiveawayStatus.RUNNING || gw.status == GiveawayStatus.PAUSED ? <>
               <Button onClick={onDraw} variant="default">Draw</Button>
               <Button onClick={onRefund} variant="destructive">Refund All Tickets</Button>
               {/*TODO show but disable these buttons if there are no tickets bought */}
             </> : ""}
-            {data.status != GiveawayStatus.CREATED ?
+            {gw.status != GiveawayStatus.CREATED ?
               <Button onClick={onArchive}
-                      variant="default">{data.status == GiveawayStatus.ARCHIVED ? "Unarchive" : "Archive"}</Button>
+                      variant="default">{gw.status == GiveawayStatus.ARCHIVED ? "Unarchive" : "Archive"}</Button>
               : ""}
             <Button onClick={handleSubmit(onSave)} variant="default">Save</Button>
           </div>

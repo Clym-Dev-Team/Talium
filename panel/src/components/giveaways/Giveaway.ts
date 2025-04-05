@@ -50,7 +50,7 @@ export interface GiveawayJSON {
   createdAt: string;
   lastUpdatedAt: string;
   commandPattern: string,
-  status: GiveawayStatus,
+  status: string,
   autoStartTime?: string,
   autoCloseTime?: string,
   ticketCost: number,

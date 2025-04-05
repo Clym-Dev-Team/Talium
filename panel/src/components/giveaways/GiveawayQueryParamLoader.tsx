@@ -1,7 +1,7 @@
 import GiveawayEditPage from "@c/giveaways/editPage/GiveawayEditPage.tsx";
 import {useParams} from "react-router-dom";
 import useData from "@s/useData.ts";
-import {Giveaway, GiveawayJSON} from "@c/giveaways/Giveaway.ts";
+import {Giveaway, GiveawayJSON, GiveawayStatus} from "@c/giveaways/Giveaway.ts";
 import Loader from "@s/loadingSpinner/Loader.tsx";
 
 export default function GiveawayQueryParamLoader() {
@@ -15,7 +15,7 @@ export default function GiveawayQueryParamLoader() {
     return "Error: Loading data failed, returned value undefined"
   }
   let gw: Giveaway = {
-    status: data.status,
+    status: (GiveawayStatus as any)[data.status] as GiveawayStatus ,
     title: data.title,
     maxTickets: data.maxTickets,
     notes: data.notes,
