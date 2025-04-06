@@ -26,8 +26,8 @@ export interface Giveaway {
   lastUpdatedAt: Date;
   commandPattern: string,
   status: GiveawayStatus,
-  autoStartTime?: Date,
-  autoCloseTime?: Date,
+  autoStartTime: Date | null,
+  autoCloseTime: Date | null,
   ticketCost: number,
   maxTickets: number,
   allowUserRedraw: boolean,

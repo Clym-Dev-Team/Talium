@@ -21,7 +21,7 @@ import DisruptiveActionPopup from "@c/giveaways/DisruptiveActionPopup.tsx";
 
 interface OpenCloseBtnProps {
   status: GiveawayStatus,
-  autoStart: Date | undefined,
+  autoStart: Date | null,
   onClick: () => void
 }
 
@@ -34,14 +34,14 @@ function OpenCloseBtn({status, autoStart, onClick}: OpenCloseBtnProps) {
       text = "Open NOW";
       break;
     case GiveawayStatus.PAUSED:
-      if (autoStart != undefined) {
+      if (autoStart != null) {
         text = "Open NOW";
       } else {
         text = "Open";
       }
       break;
     case GiveawayStatus.RUNNING:
-      if (autoStart == undefined) {
+      if (autoStart == null) {
         text = "Close";
       } else {
         text = "Close NOW";
@@ -101,11 +101,11 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
     if (getFieldState("allowUserRedraw") && gw.winnerList?.length > 0) {
       warnings.push("changed 'allow redraw of same user' after a user was already drawn")
     }
-    if (save.autoStartTime != undefined && save.autoStartTime <= new Date()) {
-      save.autoStartTime = undefined;
+    if (save.autoStartTime != null && save.autoStartTime <= new Date()) {
+      save.autoStartTime = null;
     }
-    if (save.autoCloseTime != undefined && save.autoCloseTime <= new Date()) {
-      save.autoCloseTime = undefined;
+    if (save.autoCloseTime != null && save.autoCloseTime <= new Date()) {
+      save.autoCloseTime = null;
     }
     //TODO display warning message, only continue if confirm
     showPopout(<DisruptiveActionPopup warnings={warnings} onConfirm={() => {
