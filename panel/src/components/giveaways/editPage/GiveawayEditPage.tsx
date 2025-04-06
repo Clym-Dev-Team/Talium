@@ -17,6 +17,7 @@ import {GwAuditLogs} from "@c/giveaways/editPage/GwAuditLogs.tsx";
 import {GwTitleBar} from "@c/giveaways/editPage/GwTitleBar.tsx";
 import {usePopout} from "@s/popoutProvider/PopoutProvider.tsx";
 import DisruptiveActionPopup from "@c/giveaways/DisruptiveActionPopup.tsx";
+import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
 
 
 interface OpenCloseBtnProps {
@@ -79,16 +80,24 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
 
   const refresh = useCallback(() => {
     //TODO check if we are not in create, so that we can actually refresh
-  })
+  }, [])
 
-  const doSave = useCallback(() => {
-    //TODO do actual save bits
+  const doSave = useCallback((save: GiveawaySave) => {
+    //TODO do actual save bit
+    if (gw.status == GiveawayStatus.CREATE) {
+      console.log("doing create save!")
+
+      fetchWithAuth("/giveaway/create", {
+        method: "POST",
+        body: JSON.stringify(save),
+      }).then(() => refresh());
+    }
     refresh();
-  })
+  }, [])
 
   const onSave = useCallback((save: GiveawaySave) => {
     if (gw.status == GiveawayStatus.CREATE) {
-      doSave();
+      doSave(save);
     }
 
     const warnings: string[] = [];
@@ -113,25 +122,25 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
     }}/>)
     console.log("SAVING GW");
     console.log(save)
-    doSave();
+    doSave(save);
   }, []);
 
 
   const onArchive = useCallback(() => {
     //TODO find if to archive or unarchive, and do that
-  });
+  }, []);
 
   const onOpenClose = useCallback(() => {
     //TODO find if to open or close, and do that
-  });
+  }, []);
 
   const onRefund = useCallback(() => {
     //TODO check if refund is currently possible/allowed, and request refund
-  })
+  }, [])
 
   const onDraw = useCallback(() => {
     //TODO check if is currently possible to draw, and do that
-  })
+  }, [])
 
   return <div className="giveawayEditPage">
     <GwTitleBar onSave={handleSubmit(onSave)} title={gw.title} id={gw.id} lastUpdatedAt={gw.lastUpdatedAt}
