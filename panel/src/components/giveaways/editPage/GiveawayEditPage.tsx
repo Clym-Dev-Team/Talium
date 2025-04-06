@@ -15,7 +15,7 @@ import TemplateEditor from "@c/Commands/common/templates/TemplateEditor.tsx";
 import {TicketResultsPanel} from "@c/giveaways/editPage/TicketResultsPanel.tsx";
 import {GwAuditLogs} from "@c/giveaways/editPage/GwAuditLogs.tsx";
 import {GwTitleBar} from "@c/giveaways/editPage/GwTitleBar.tsx";
-import {useComponentOverlay} from "@s/popoutProvider/PopoutProvider.tsx";
+import {usePopout} from "@s/popoutProvider/PopoutProvider.tsx";
 import DisruptiveActionPopup from "@c/giveaways/DisruptiveActionPopup.tsx";
 
 
@@ -62,7 +62,7 @@ export interface GiveawayEditPageProps {
 }
 
 export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProps) {
-  const {showComponent} = useComponentOverlay()
+  const {showPopout} = usePopout()
   const {register, watch, setValue, handleSubmit, getFieldState} = useForm<GiveawaySave>({
     defaultValues: {
       commandPattern: gw.commandPattern,
@@ -108,7 +108,7 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
       save.autoCloseTime = undefined;
     }
     //TODO display warning message, only continue if confirm
-    showComponent(<DisruptiveActionPopup warnings={warnings} onConfirm={() => {
+    showPopout(<DisruptiveActionPopup warnings={warnings} onConfirm={() => {
       console.log("confirmed!");
     }}/>)
     console.log("SAVING GW");

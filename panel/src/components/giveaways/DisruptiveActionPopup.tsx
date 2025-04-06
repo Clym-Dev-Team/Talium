@@ -1,7 +1,7 @@
 import {Button} from "@shadcn/button";
 import "./DisruptiveActionPopout.css"
 import IconWarningS from "@i/IconWarningS.tsx";
-import {useComponentOverlay} from "@s/popoutProvider/PopoutProvider.tsx";
+import {usePopout} from "@s/popoutProvider/PopoutProvider.tsx";
 
 export interface DisruptiveActionPopupProps {
   warnings: string[]
@@ -10,11 +10,8 @@ export interface DisruptiveActionPopupProps {
 }
 
 export default function DisruptiveActionPopup({warnings, onConfirm, onCancel}: DisruptiveActionPopupProps) {
-  const {clearComponent} = useComponentOverlay();
-  // const warnings: string[] = [
-  //   "test message", "test readon 2",
-  //   "test message", "test readon 2",
-  // ];
+  const {clearPopout} = usePopout();
+
   return <div className="disruptiveActionPopup">
     <div className="warningIconBox">
       <IconWarningS/>
@@ -31,11 +28,11 @@ export default function DisruptiveActionPopup({warnings, onConfirm, onCancel}: D
         <div className="buttons">
           <Button onClick={() => {
             onCancel && onCancel();
-            clearComponent();
+            clearPopout();
           }}>Cancel</Button>
           <Button onClick={() => {
             onConfirm();
-            clearComponent();
+            clearPopout();
           }}>Confirm</Button>
         </div>
       </div>
