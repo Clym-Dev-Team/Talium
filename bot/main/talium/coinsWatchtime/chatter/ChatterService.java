@@ -45,4 +45,14 @@ public class ChatterService {
         return dbResult;
     }
 
+    /**
+     * Subtract X amount of coins from user, if the user has at least X coins
+     * @param twitchUserId user to subtract from
+     * @param coins coins to substract
+     * @return true if user had enough coins, and where subtracted, false if user had not enough coins
+     */
+    public boolean payCoinsFromChatter(String twitchUserId, int coins) {
+        return chatterRepo.payCoins(twitchUserId, coins) == 1;
+    }
+
 }
