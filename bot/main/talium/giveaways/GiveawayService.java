@@ -1,7 +1,11 @@
 package talium.giveaways;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import talium.Out;
 import talium.Registrar;
 import talium.coinsWatchtime.chatter.ChatterService;
 import talium.giveaways.persistence.GiveawayDAO;
@@ -17,18 +21,22 @@ import talium.twitchCommands.triggerEngine.TriggerProvider;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Service
 public class GiveawayService {
+    private static final Logger logger = LoggerFactory.getLogger(GiveawayService.class);
     private static GiveawayRepo giveawayRepo;
     private static ChatterService chatterService;
 
     public static void init(GiveawayRepo giveawayRepo, ChatterService chatterService) {
         GiveawayService.giveawayRepo = giveawayRepo;
         GiveawayService.chatterService = chatterService;
+        Registrar.registerTemplate("giveaway.info", "@${sender} has ${senderCoins} Coins. Usage: ${commandPattern} [amount]");
+        Registrar.registerTemplate("giveaway.missingCoins", "@${sender} Not enough Coins for ${buyAmount} Tickets. You have ${senderCoins} Coins. ${giveaway.ticketCost} per Ticket");
         var activeGWs = giveawayRepo.findAllByStatusIsNot(GiveawayStatus.ARCHIVED);
         for (var gw : activeGWs) {
             createGWEnterCommand(gw.id(), gw.command().id);
@@ -119,22 +127,31 @@ public class GiveawayService {
         }
     }
 
-    protected static void subtractCoinsLocking(String userId, int coins) {
-        //TODO handle errors, not enough coins, internal error (interrupt || timeout)
+    protected enum SubtractCoinsResult {
+        SUCCESS,
+        NOT_ENOUGH_COINS,
+        INTERRUPTED,
+        LOCK_TIMEOUT,
+    }
+
+    protected static SubtractCoinsResult subtractCoinsLocking(String userId, int coins) {
         try {
             if (lock.readLock().tryLock(2, TimeUnit.SECONDS)) {
                 try {
-                    System.out.println("Read lock acquired!");
-                    chatterService.payCoinsFromChatter(userId, coins);
+                    if (chatterService.payCoinsFromChatter(userId, coins)) {
+                        return SubtractCoinsResult.SUCCESS;
+                    }
+                    return SubtractCoinsResult.NOT_ENOUGH_COINS;
                 } finally {
                     lock.readLock().unlock();
                 }
             } else {
-                System.out.println("Failed to acquire read lock within timeout");
+                return SubtractCoinsResult.LOCK_TIMEOUT;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.out.println("Thread was interrupted while waiting for read lock");
+            logger.error("Unexpectedly Interrupted while subtracting coins. Interrupts are not part of the normal application flow here", e);
+            return SubtractCoinsResult.INTERRUPTED;
         }
     }
 
@@ -147,19 +164,44 @@ public class GiveawayService {
                 .pattern(commandPattern)
                 .permission(TwitchUserPermission.EVERYONE)
                 .registerActionCommand((triggerId, message) -> {
-                    var gwId = giveawayId;
-                    //TODO do enter in giveaway
-                    // check gw lock, enter loop if set, timout after 1 second, print general error to user
-                    // parsing arguments (ticket amount, no amount is just checking your bought tickets)
-                    // check gw state
-                    // calc cost of tickets to buy
-                    // check if user has at least that many coins
-                    // subtract that many coins if user has
-                    // print success template
-                    // of print, you don't have enought coins template
-                    // or print info and (command) usage template if no amount specified
-                    subtractCoinsLocking(message.user().id(), 0);
-                    System.out.println("ENTERING GW: " + giveawayId + " for user: " + message.user().name());
+                    var text = message.message();
+                    var split = text.split(" ");
+                    var hasAmount = split.length > 1 && NumberUtils.isDigits(split[1]);
+
+                    var gw = giveawayRepo.findById(giveawayId);
+                    if (gw.isEmpty()) {
+                        logger.warn("Tried to enter a non existing Giveaway, ID: {}. Failed to unregister Enter command?", giveawayId);
+                        // gw doesn't exist (anymore), print nothing to the user
+                        return;
+                    }
+
+                    var values = new HashMap<String, Object>();
+                    values.put("sender", message.user().name());
+                    values.put("giveaway" , gw.get());
+                    values.put("commandPattern" , gw.get().command().patterns.getFirst().pattern);
+                    values.put("senderCoins", chatterService.getDataForChatter(message.user().id()).coins);
+                    if (!hasAmount) {
+                        Out.Twitch.sendNamedTemplate("giveaway.info", values);
+                        return;
+                    }
+
+                    if (gw.get().status() != GiveawayStatus.RUNNING) {
+                        // not yet open, this is an expected case, so log nothing, print nothing to the user
+                        return;
+                    }
+                    var ticketsToBuy = Integer.parseInt(split[1]);
+                    var additionalCost = ticketsToBuy * gw.get().ticketCost();
+                    var success = subtractCoinsLocking(message.user().id(), additionalCost);
+                    switch (success) {
+                        case SUCCESS -> { /* print nothing, this is the happy path */}
+                        case NOT_ENOUGH_COINS -> {
+                            values.put("buyAmount", ticketsToBuy);
+                            Out.Twitch.sendNamedTemplate("giveaway.missingCoins", values);
+                        }
+                        // these are error cases, we decided against printing errors to the user
+                        case INTERRUPTED -> logger.error("Acquiring lock to enter GW failed because of interrupt. For User: {}", message.user().name());
+                        case LOCK_TIMEOUT -> logger.error("Acquiring lock to enter GW failed because of lock timeout. For User: {}", message.user().name());
+                    }
                 });
     }
 }
