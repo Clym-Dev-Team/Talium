@@ -35,19 +35,22 @@ public class GiveawayService {
      * @return UUID of created giveaway
      */
     public GiveawayDTO createFromTemplate(String templateId) {
-        //TODO return
         //TODO get giveaway template from DB
-        var template = new GiveawayTemplateDAO();
+        GiveawayTemplateDAO template;
+        if (templateId.equals("goldkette")) {
+            template = GiveawayTemplateDAO.Goldkette();
+        } else {
+            template = GiveawayTemplateDAO.Random();
+        }
         UUID giveawayId = UUID.randomUUID();
-        TriggerEntity commandEntity = createGWEnterCommand(giveawayId, template.commandPattern);
-        var giveaway = new GiveawayDTO(
+        return new GiveawayDTO(
                 giveawayId,
                 template.title,
                 template.notes,
                 Instant.now().toString(),
                 Instant.now().toString(),
                 GiveawayStatus.PAUSED,
-                commandEntity.patterns.getFirst().pattern,
+                template.commandPattern,
                 null,
                 null,
                 template.ticketCost,
@@ -57,10 +60,6 @@ public class GiveawayService {
                 new ArrayList<>(),
                 new ArrayList<>()
         );
-        //TODO reuse for save
-//        var savedId = giveawayRepo.save(giveaway).id();
-//        TriggerProvider.rebuildTriggerCache();
-        return giveaway;
     }
 
     public GiveawayDAO saveNewGiveaway(GiveawaySaveDTO toSave) {

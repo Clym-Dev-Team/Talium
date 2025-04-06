@@ -13,13 +13,37 @@ public class GiveawayTemplateDAO {
     public boolean allowRedrawOfUser;
     public boolean autoAnnounceWinner;
 
-    public GiveawayTemplateDAO() {
-        this.title = RandomStringUtils.randomAlphabetic(10);
-        this.notes = RandomStringUtils.randomAlphabetic(10);
-        this.commandPattern = "!" + RandomStringUtils.randomAlphabetic(10);
-        this.ticketCost = RandomUtils.nextInt(50) * 10;
-        this.maxTickets = RandomUtils.nextInt(50);
-        this.allowRedrawOfUser = false;
-        this.autoAnnounceWinner = false;
+    public GiveawayTemplateDAO(String title, String notes, String commandPattern, int ticketCost, int maxTickets, boolean allowRedrawOfUser, boolean autoAnnounceWinner) {
+        this.title = title;
+        this.notes = notes;
+        this.commandPattern = commandPattern;
+        this.ticketCost = ticketCost;
+        this.maxTickets = maxTickets;
+        this.allowRedrawOfUser = allowRedrawOfUser;
+        this.autoAnnounceWinner = autoAnnounceWinner;
+    }
+
+    public static GiveawayTemplateDAO Random() {
+        return new GiveawayTemplateDAO(
+                RandomStringUtils.randomAlphabetic(10),
+                RandomStringUtils.randomAlphabetic(100),
+                "!" + RandomStringUtils.randomAlphabetic(10),
+                RandomUtils.nextInt(50) * 10,
+                RandomUtils.nextInt(50),
+                false,
+                false
+        );
+    }
+
+    public static GiveawayTemplateDAO Goldkette() {
+        return new GiveawayTemplateDAO(
+                "Goldkette",
+                "Goldketten Gewinnspiel",
+                "!goldkette",
+                500,
+                1,
+                false,
+                false
+        );
     }
 }
