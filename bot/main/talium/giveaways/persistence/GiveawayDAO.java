@@ -5,24 +5,26 @@ import org.springframework.lang.Nullable;
 import talium.giveaways.GiveawayStatus;
 import talium.twitchCommands.persistence.TriggerEntity;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "giveaways")
 public class GiveawayDAO {
     @Id
     UUID id;
-    OffsetDateTime createdAt;
-    OffsetDateTime lastUpdatedAt;
+    Instant createdAt;
+    Instant lastUpdatedAt;
     String title;
     String notes;
     GiveawayStatus status;
     @OneToOne
     @JoinColumn(referencedColumnName = "id")
     TriggerEntity command;
-    @Nullable OffsetDateTime autoStart;
-    @Nullable OffsetDateTime autoEnd;
+    @Nullable Instant autoStart;
+    @Nullable Instant autoEnd;
     int ticketCost;
     int maxTickets;
     boolean allowRedrawOfUser;
@@ -35,7 +37,7 @@ public class GiveawayDAO {
     public GiveawayDAO() {
     }
 
-    public GiveawayDAO(UUID id, OffsetDateTime createdAt, OffsetDateTime lastUpdatedAt, String title, String notes, GiveawayStatus status, TriggerEntity command, @Nullable OffsetDateTime autoStart, @Nullable OffsetDateTime autoEnd, int ticketCost, int maxTickets, boolean allowRedrawOfUser, boolean autoAnnounceWinner, List<EntriesDAO> ticketList, List<WinnersDAO> winners) {
+    public GiveawayDAO(UUID id, Instant createdAt, Instant lastUpdatedAt, String title, String notes, GiveawayStatus status, TriggerEntity command, @Nullable Instant autoStart, @Nullable Instant autoEnd, int ticketCost, int maxTickets, boolean allowRedrawOfUser, boolean autoAnnounceWinner, List<EntriesDAO> ticketList, List<WinnersDAO> winners) {
         this.id = id;
         this.createdAt = createdAt;
         this.lastUpdatedAt = lastUpdatedAt;
@@ -57,11 +59,11 @@ public class GiveawayDAO {
         return id;
     }
 
-    public OffsetDateTime createdAt() {
+    public Instant createdAt() {
         return createdAt;
     }
 
-    public OffsetDateTime lastUpdatedAt() {
+    public Instant lastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -82,12 +84,12 @@ public class GiveawayDAO {
     }
 
     @Nullable
-    public OffsetDateTime autoStart() {
+    public Instant autoStart() {
         return autoStart;
     }
 
     @Nullable
-    public OffsetDateTime autoEnd() {
+    public Instant autoEnd() {
         return autoEnd;
     }
 
@@ -125,8 +127,8 @@ public class GiveawayDAO {
                 ", notes='" + notes + '\'' +
                 ", status=" + status +
                 ", command=" + command +
-                ", autoStart=" + autoStart +
-                ", autoEnd=" + autoEnd +
+                ", autoOpen=" + autoStart +
+                ", autoClose=" + autoEnd +
                 ", ticketCost=" + ticketCost +
                 ", maxTickets=" + maxTickets +
                 ", allowRedrawOfUser=" + allowRedrawOfUser +
