@@ -16,6 +16,7 @@ import GiveawayListPage from "@c/giveaways/listPage/GiveawayListPage.tsx";
 import GiveawayQueryParamLoader from "@c/giveaways/GiveawayQueryParamLoader.tsx";
 import CommandsPage from "@c/Commands/CommandsPage.tsx";
 import MessagePane from "@c/ChatHistory/Pane/MessagePane.tsx";
+import {PopoutProvider} from "@s/popoutProvider/PopoutProvider.tsx";
 import i18n from "./i18n.ts";
 import './index.css'
 import './main.css'
@@ -59,7 +60,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <I18nextProvider i18n={i18n}>
       <TooltipProvider>
-        <RouterProvider router={router}/>
+        <PopoutProvider>
+          <RouterProvider router={router}/>
+        </PopoutProvider>
       </TooltipProvider>
     </I18nextProvider>
   </React.StrictMode>,

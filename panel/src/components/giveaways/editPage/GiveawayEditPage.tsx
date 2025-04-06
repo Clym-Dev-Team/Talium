@@ -15,6 +15,8 @@ import TemplateEditor from "@c/Commands/common/templates/TemplateEditor.tsx";
 import {TicketResultsPanel} from "@c/giveaways/editPage/TicketResultsPanel.tsx";
 import {GwAuditLogs} from "@c/giveaways/editPage/GwAuditLogs.tsx";
 import {GwTitleBar} from "@c/giveaways/editPage/GwTitleBar.tsx";
+import {useComponentOverlay} from "@s/popoutProvider/PopoutProvider.tsx";
+import DisruptiveActionPopup from "@c/giveaways/DisruptiveActionPopup.tsx";
 
 
 interface OpenCloseBtnProps {
@@ -60,7 +62,8 @@ export interface GiveawayEditPageProps {
 }
 
 export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProps) {
-  const {register, watch, setValue, handleSubmit} = useForm<GiveawaySave>({
+  const {showComponent} = useComponentOverlay()
+  const {register, watch, setValue, handleSubmit, getFieldState} = useForm<GiveawaySave>({
     defaultValues: {
       commandPattern: gw.commandPattern,
       allowUserRedraw: gw.allowUserRedraw ? gw.allowUserRedraw : false,
@@ -78,16 +81,39 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
     //TODO check if we are not in create, so that we can actually refresh
   })
 
-  const onSave = useCallback((gw: GiveawaySave) => {
-    //TODO confirmation toast when:
-    // - change ticket cost
-    // - decrement max ticket ammount
-    // - change redraw of same user, after first draw
-    //TODO if autostart/close time is in past, or same minute, then set it to null
-    // (in the request, and in the ui!)
+  const doSave = useCallback(() => {
+    //TODO do actual save bits
+    refresh();
+  })
+
+  const onSave = useCallback((save: GiveawaySave) => {
+    if (gw.status == GiveawayStatus.CREATE) {
+      doSave();
+    }
+
+    const warnings: string[] = [];
+    if (getFieldState("ticketCost").isDirty) {
+      warnings.push("changed Ticket cost");
+    }
+    if (getFieldState("maxTickets").isDirty && gw.maxTickets > save.maxTickets) {
+      warnings.push("decreased Maximum amount of Tickets per person");
+    }
+    if (getFieldState("allowUserRedraw") && gw.winnerList?.length > 0) {
+      warnings.push("changed 'allow redraw of same user' after a user was already drawn")
+    }
+    if (save.autoStartTime != undefined && save.autoStartTime <= new Date()) {
+      save.autoStartTime = undefined;
+    }
+    if (save.autoCloseTime != undefined && save.autoCloseTime <= new Date()) {
+      save.autoCloseTime = undefined;
+    }
+    //TODO display warning message, only continue if confirm
+    showComponent(<DisruptiveActionPopup warnings={warnings} onConfirm={() => {
+      console.log("confirmed!");
+    }}/>)
     console.log("SAVING GW");
-    console.log(gw)
-    //TODO try to refresh data now
+    console.log(save)
+    doSave();
   }, []);
 
 

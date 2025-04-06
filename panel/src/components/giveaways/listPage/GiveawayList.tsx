@@ -10,7 +10,7 @@ export default function GiveawayList() {
 
   return <ScrollArea className="giveawayList">
     <div className="activeList">
-      {!loading ? data.map((preview) => <GiveawayTile preview={preview}/>):<Loader/>}
+      {!loading ? data.map((preview) => <GiveawayTile key={preview.id} preview={preview}/>):<Loader/>}
     </div>
     <Accordion type="single">
       <AccordionItem value="item-1">

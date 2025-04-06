@@ -1,0 +1,67 @@
+
+.disruptiveActionPopup {
+    --chestnut: #A5402D;
+    --princeton: #FF9505;
+    --licorice: #210203;
+    --red-cmyk: #ED1C24;
+
+    --warningTextColor: var(--red-cmyk);
+    background-color: var(--licorice);
+    border-radius: 2rem 2rem 5rem 2rem;
+    display: flex;
+    flex-direction: row;
+    background-image: repeating-linear-gradient(
+            -45deg,
+            black 0px,
+            black 1px,
+            transparent 1px,
+            transparent 10px
+    );
+}
+
+.disruptiveActionPopup > .warningIconBox {
+    color: var(--warningTextColor);
+    padding: 0 0 1rem 1rem;
+    height: 16rem;
+}
+
+.disruptiveActionPopup > .body {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.disruptiveActionPopup > .body > .title {
+    display: flex;
+    flex-direction: column;
+    color: var(--warningTextColor);
+    padding-top: 2rem;
+    padding-right: 2rem;
+}
+.disruptiveActionPopup > .body > .title > h1 {
+    font-size: 2rem;
+}
+
+
+.disruptiveActionPopup > .body > .darkBox {
+    background-color: var(--field-color);
+    flex: 1;
+    border-radius: 1rem 0 2rem 0;
+    padding: 1rem 2rem 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.disruptiveActionPopup > .body > .darkBox > .buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.disruptiveActionPopup > .body > .darkBox > .buttons > button {
+    flex: 1;
+}
