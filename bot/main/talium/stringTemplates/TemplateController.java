@@ -1,17 +1,16 @@
 package talium.stringTemplates;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
+import static talium.TwitchBot.gson;
+
 @RestController
 @RequestMapping(path = "/template", produces = "application/json")
 public class TemplateController {
 
-    private final Gson gson = new GsonBuilder().serializeNulls().create();
     private final TemplateService templateService;
 
     @Autowired

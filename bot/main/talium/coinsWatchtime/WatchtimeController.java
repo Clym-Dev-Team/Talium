@@ -1,7 +1,6 @@
 package talium.coinsWatchtime;
 
 import com.github.twitch4j.helix.domain.User;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +17,13 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static talium.TwitchBot.gson;
+
 @RestController
 @RequestMapping(value = "/watchtime", produces = "application/json")
 public class WatchtimeController {
     private static final Logger logger = LoggerFactory.getLogger(WatchtimeController.class);
     private final ChatterService chatterService;
-    private final Gson gson = new Gson();
 
     @Autowired
     public WatchtimeController(ChatterService chatterService) {

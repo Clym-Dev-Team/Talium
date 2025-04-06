@@ -1,29 +1,33 @@
 package talium;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.PreRemove;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import talium.coinsWatchtime.WIPWatchtimeCommandServer;
+import talium.coinsWatchtime.WatchtimeUpdateService;
+import talium.coinsWatchtime.chatter.ChatterService;
 import talium.giveaways.GiveawayService;
 import talium.giveaways.persistence.GiveawayRepo;
+import talium.inputSystem.BotInput;
+import talium.inputSystem.HealthManager;
+import talium.inputSystem.InputStatus;
+import talium.oauthConnector.OauthAccountRepo;
 import talium.tipeeeStream.DonationRepo;
 import talium.tipeeeStream.TipeeeConfig;
 import talium.tipeeeStream.TipeeeInput;
 import talium.twitch4J.Twitch4JInput;
 import talium.twitch4J.TwitchConfig;
-import talium.oauthConnector.OauthAccountRepo;
-import talium.coinsWatchtime.WIPWatchtimeCommandServer;
-import talium.coinsWatchtime.WatchtimeUpdateService;
-import talium.coinsWatchtime.chatter.ChatterService;
-import talium.inputSystem.BotInput;
-import talium.inputSystem.HealthManager;
-import talium.inputSystem.InputStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import talium.twitchCommands.triggerEngine.TriggerProvider;
+
+import java.time.Instant;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,6 +40,10 @@ public class TwitchBot {
 
     public static boolean requestedShutdown = false;
     private static final Logger logger = LoggerFactory.getLogger(TwitchBot.class);
+    public static final Gson gson = new GsonBuilder()
+            .serializeNulls()
+            .registerTypeAdapter(Instant.class, new InstantTypeAdapter())
+            .create();
 
     public static void main(String[] args) {
         startup();

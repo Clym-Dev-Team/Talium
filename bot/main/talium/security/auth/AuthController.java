@@ -1,22 +1,25 @@
 package talium.security.auth;
 
-import com.google.gson.Gson;
-import org.springframework.http.ResponseEntity;
-import talium.Out;
-import talium.security.auth.persistence.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import talium.Out;
+import talium.security.auth.persistence.PanelUser;
+import talium.security.auth.persistence.PanelUserDTO;
+import talium.security.auth.persistence.PanelUserRepo;
+import talium.security.auth.persistence.Session;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static talium.TwitchBot.gson;
+
 @RestController
 public class AuthController {
     private final PanelUserRepo panelUserRepo;
-    private final Gson gson = new Gson();
 
     @Autowired
     public AuthController(PanelUserRepo panelUserRepo) {

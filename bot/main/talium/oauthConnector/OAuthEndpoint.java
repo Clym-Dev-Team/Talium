@@ -1,19 +1,20 @@
 package talium.oauthConnector;
 
 import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider;
-import com.google.gson.Gson;
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import talium.TwitchBot;
 import talium.UnexpectedShutdownException;
-import org.apache.commons.lang.RandomStringUtils;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static talium.TwitchBot.gson;
 
 /**
  * Abstracts displaying the authorization url to the user, and receiving the redirect with the token.
@@ -142,7 +143,6 @@ public class OAuthEndpoint {
     @GetMapping("/setup/auth/list")
     @ResponseBody
     public String oauthList() {
-        Gson gson = new Gson();
         record OauthDTO(String url, String accName, String service) {}
         var r = requests.stream().map(o -> new OauthDTO(o.url, o.accName, o.service)).toList();
         return gson.toJson(r);
