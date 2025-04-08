@@ -168,10 +168,9 @@ public class GiveawayService {
     private static TriggerEntity createGWEnterCommand(UUID giveawayId, String commandPattern) {
         String commandId = STR."giveaway.\{giveawayId.toString()}.enter";
         return new Registrar
-                .Command(commandId)
+                .Command(commandId, commandPattern)
                 .globalCooldown(new ChatCooldown(CooldownType.SECONDS, 0))
                 .userCooldown(new ChatCooldown(CooldownType.SECONDS, 0))
-                .pattern(commandPattern)
                 .permission(TwitchUserPermission.EVERYONE)
                 .registerActionCommand((triggerId, message) -> {
                     var text = message.message();

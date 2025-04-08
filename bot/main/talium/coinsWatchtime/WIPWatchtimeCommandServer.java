@@ -16,8 +16,8 @@ public class WIPWatchtimeCommandServer {
 
     public static void init(ChatterService chatterService) {
         WIPWatchtimeCommandServer.chatterService = chatterService;
-        new Registrar.Command("watchtime.getwatchtime", "!watchtime").registerActionCommand(WIPWatchtimeCommandServer::triggerGetWatchtime);
-        new Registrar.Command("watchtime.getCoins", "!coins").registerActionCommand(WIPWatchtimeCommandServer::triggerGetCoins);
+        new Registrar.Command("watchtime.getwatchtime", "!watchtime ?.*").registerActionCommand(WIPWatchtimeCommandServer::triggerGetWatchtime);
+        new Registrar.Command("watchtime.getCoins", "!coins ?.*").registerActionCommand(WIPWatchtimeCommandServer::triggerGetCoins);
         Registrar.registerTemplate("coins.coins", "${wt.username} has ${wt.coins} Coins!");
         Registrar.registerTemplate("coins.watchtime", "${wt.username} has ${wt.daysRounded2} Days of watchtime!");
     }

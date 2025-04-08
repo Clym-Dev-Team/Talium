@@ -1,7 +1,9 @@
 package talium.twitchCommands.triggerEngine;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import talium.Registrar;
 import talium.twitchCommands.persistence.MessagePattern;
 import talium.twitchCommands.persistence.TriggerEntity;
 import talium.twitchCommands.persistence.TriggerService;
@@ -91,7 +93,7 @@ public class TriggerProvider {
             if (pattern.isRegex) {
                 regexes.add(Pattern.compile(pattern.pattern));
             } else {
-                regexes.add(Pattern.compile(STR."^\{pattern.pattern}\\b", Pattern.CASE_INSENSITIVE));
+                regexes.add(compilePrefixPattern(pattern.pattern));
             }
         }
         return new RuntimeTrigger(
@@ -104,18 +106,31 @@ public class TriggerProvider {
         );
     }
 
+    private static @NotNull Pattern compilePrefixPattern(String prefixPattern) {
+        return Pattern.compile(STR."^\{prefixPattern} ?.*", Pattern.CASE_INSENSITIVE);
+    }
+
     /**
      * Add the command to an internal list to use while building the final cache of commands.
-     * @param command command
+     *
+     * @param command             command
+     * @param textCommandCallback
      */
-    public static TriggerEntity addCommandRegistration(RuntimeTrigger command) {
-        codeTriggerMap.put(command.id(), command);
-        Optional<TriggerEntity> trigger = triggerService.getTriggersId(command.id());
-        if (trigger.isPresent()) {
-            return trigger.get();
+    public static TriggerEntity addCommandRegistration(Registrar.Command command, TriggerCallback callback) {
+        var messagePatterns = new ArrayList<>(command.regexPattern().stream().map(pattern -> new MessagePattern(pattern.pattern(), true, false, true)).toList());
+        messagePatterns.addAll(command.prefixPattern().stream().map(pattern -> new MessagePattern(pattern, false, false, true)).toList());
+
+
+        command.regexPattern().addAll(command.prefixPattern().stream().map(TriggerProvider::compilePrefixPattern).toList());
+        var trigger = new RuntimeTrigger(command.id(), command.regexPattern(), command.permission(), command.userCooldown(),command.globalCooldown(), callback);
+        codeTriggerMap.put(command.id(), trigger);
+        Optional<TriggerEntity> dbTrigger = triggerService.getTriggersId(command.id());
+        if (dbTrigger.isPresent()) {
+            return dbTrigger.get();
         }
-        var patterns = command.patterns().stream().map(pattern -> new MessagePattern(pattern.pattern(), true, false, true)).toList();
-        TriggerEntity entity = new TriggerEntity(command.id(), "", patterns, command.permission(), command.userCooldown(), command.globalCooldown(), true, null);
+
+
+        TriggerEntity entity = new TriggerEntity(command.id(), "", messagePatterns, command.permission(), command.userCooldown(), command.globalCooldown(), true, null);
         try {
             return triggerService.save(entity);
         } catch (Exception e) {

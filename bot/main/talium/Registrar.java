@@ -2,14 +2,13 @@ package talium;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import talium.twitch4J.TwitchUserPermission;
 import talium.inputSystem.HealthManager;
 import talium.stringTemplates.Template;
 import talium.stringTemplates.TemplateService;
+import talium.twitch4J.TwitchUserPermission;
 import talium.twitchCommands.cooldown.ChatCooldown;
 import talium.twitchCommands.cooldown.CooldownType;
 import talium.twitchCommands.persistence.TriggerEntity;
-import talium.twitchCommands.triggerEngine.RuntimeTrigger;
 import talium.twitchCommands.triggerEngine.TriggerCallback;
 import talium.twitchCommands.triggerEngine.TriggerEngine;
 import talium.twitchCommands.triggerEngine.TriggerProvider;
@@ -52,7 +51,8 @@ public class Registrar {
     public static class Command {
         //set all defaults
         String id;
-        List<Pattern> patterns = new ArrayList<>();
+        List<Pattern> regexPattern = new ArrayList<>();
+        List<String> prefixPattern = new ArrayList<>();
         TwitchUserPermission permission = TwitchUserPermission.EVERYONE;
         ChatCooldown userCooldown = new ChatCooldown(CooldownType.MESSAGES, 0);
         ChatCooldown globalCooldown = new ChatCooldown(CooldownType.MESSAGES, 0);
@@ -62,9 +62,10 @@ public class Registrar {
             this.id = id;
         }
 
-        public Command(String id, String pattern) {
+        public Command(String id, String prefixPattern) {
             checkId(id);
             this.id = id;
+            this.prefixPattern.add(prefixPattern);
         }
 
         private static void checkId(String id) {
@@ -82,15 +83,13 @@ public class Registrar {
             return this;
         }
 
-        public Command patterns(List<String> patterns) {
-            for (String pattern : patterns) {
-                this.patterns.add(Pattern.compile(pattern));
-            }
+        public Command prefixPattern(String prefixPattern) {
+            this.prefixPattern.add(prefixPattern);
             return this;
         }
 
-        public Command pattern(String pattern) {
-            this.patterns.add(Pattern.compile(pattern));
+        public Command regexPattern(String regexPattern) {
+            this.regexPattern.add(Pattern.compile(regexPattern));
             return this;
         }
 
@@ -113,7 +112,7 @@ public class Registrar {
         ///
         /// @return TriggerEntity that was saved to the DB
         public TriggerEntity registerActionCommand(TriggerCallback callback) {
-            return TriggerProvider.addCommandRegistration(new RuntimeTrigger(id, patterns, permission, userCooldown,globalCooldown, callback));
+            return TriggerProvider.addCommandRegistration(this, callback);
         }
 
         /// Registers an automatically generated command without a callback, but with a template
@@ -128,7 +127,31 @@ public class Registrar {
         /// @return TriggerEntity that was saved to the DB
         public TriggerEntity registerTextCommand(String template, String messageColor) {
             templateService.saveIfAbsent(new Template(id, template, messageColor));
-            return TriggerProvider.addCommandRegistration(new RuntimeTrigger(id, patterns, permission, userCooldown,globalCooldown, TriggerEngine.TEXT_COMMAND_CALLBACK));
+            return TriggerProvider.addCommandRegistration(this, TriggerEngine.TEXT_COMMAND_CALLBACK);
+        }
+
+        public String id() {
+            return id;
+        }
+
+        public List<Pattern> regexPattern() {
+            return regexPattern;
+        }
+
+        public List<String> prefixPattern() {
+            return prefixPattern;
+        }
+
+        public TwitchUserPermission permission() {
+            return permission;
+        }
+
+        public ChatCooldown userCooldown() {
+            return userCooldown;
+        }
+
+        public ChatCooldown globalCooldown() {
+            return globalCooldown;
         }
     }
 
