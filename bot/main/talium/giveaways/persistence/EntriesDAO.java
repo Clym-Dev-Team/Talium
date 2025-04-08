@@ -34,6 +34,12 @@ public class EntriesDAO {
 
     protected EntriesDAO() { }
 
+    public EntriesDAO(GiveawayDAO giveaway, String userId, int tickets) {
+        this.giveaway = giveaway;
+        this.userId = userId;
+        this.tickets = tickets;
+    }
+
     public int tickets() {
         return tickets;
     }

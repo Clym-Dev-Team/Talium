@@ -68,14 +68,14 @@ public class WatchtimeController {
         if (twitchUser.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        var chatter = chatterService.getDataForChatter(twitchUser.get().getId());
+        var chatter = chatterService.getChatterDataOrDefault(twitchUser.get().getId());
         return ResponseEntity.ok(gson.toJson(chatter.toChatterDto()));
     }
 
     @PostMapping("/update")
     HttpStatus post(@RequestBody String body) {
         var chatterDto = gson.fromJson(body, ChatterDTO.class);
-        var dbChatter = chatterService.getDataForChatter(chatterDto.twitchUserId());
+        var dbChatter = chatterService.getChatterDataOrDefault(chatterDto.twitchUserId());
         int secondsSinceLastCoinsGain = 0;
         // use 0 as default if user is not yet in DB
         if (dbChatter != null) {

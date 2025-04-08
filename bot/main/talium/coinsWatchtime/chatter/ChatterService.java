@@ -37,7 +37,7 @@ public class ChatterService {
         return chatterRepo.getAllByOrderByWatchtimeSecondsDesc();
     }
 
-    public Chatter getDataForChatter(String userId) {
+    public Chatter getChatterDataOrDefault(String userId) {
         var dbResult = chatterRepo.getByTwitchUserId(userId);
         if (dbResult == null) {
             return new Chatter(userId);
@@ -45,14 +45,18 @@ public class ChatterService {
         return dbResult;
     }
 
-    /**
-     * Subtract X amount of coins from user, if the user has at least X coins
-     * @param twitchUserId user to subtract from
-     * @param coins coins to substract
-     * @return true if user had enough coins, and where subtracted, false if user had not enough coins
-     */
-    public boolean payCoinsFromChatter(String twitchUserId, int coins) {
-        return chatterRepo.payCoins(twitchUserId, coins) == 1;
+    public static class MissingDataException extends Exception {
+        public MissingDataException(String message) {
+            super(message);
+        }
+    }
+
+    public Chatter getChatterDataSecure(String userId) throws MissingDataException {
+        var dbResult = chatterRepo.getByTwitchUserId(userId);
+        if (dbResult == null) {
+            throw new MissingDataException("Failed to get ChatterData for chatter: " + userId);
+        }
+        return dbResult;
     }
 
 }

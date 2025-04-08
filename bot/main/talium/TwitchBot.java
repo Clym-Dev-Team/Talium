@@ -13,8 +13,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import talium.coinsWatchtime.WIPWatchtimeCommandServer;
 import talium.coinsWatchtime.WatchtimeUpdateService;
+import talium.coinsWatchtime.chatter.ChatterRepo;
 import talium.coinsWatchtime.chatter.ChatterService;
 import talium.giveaways.GiveawayService;
+import talium.giveaways.TicketUpdater;
 import talium.giveaways.persistence.GiveawayRepo;
 import talium.inputSystem.BotInput;
 import talium.inputSystem.HealthManager;
@@ -84,7 +86,12 @@ public class TwitchBot {
         // This section is used to pass the execution/control to different parts of the bot to do some initialisation
         WatchtimeUpdateService.init(ctx.getBean(ChatterService.class));
         WIPWatchtimeCommandServer.init(ctx.getBean(ChatterService.class));
-        GiveawayService.init(ctx.getBean(GiveawayRepo.class), ctx.getBean(ChatterService.class));
+        GiveawayService.init(
+                ctx.getBean(GiveawayRepo.class),
+                ctx.getBean(ChatterService.class),
+                ctx.getBean(ChatterRepo.class),
+                ctx.getBean(TicketUpdater.class)
+        );
 
         TriggerProvider.rebuildTriggerCache();
         //TODO remove all templates that were once registered automatically, but are no longer

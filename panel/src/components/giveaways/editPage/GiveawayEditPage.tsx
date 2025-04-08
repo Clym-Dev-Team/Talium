@@ -91,6 +91,11 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
         method: "POST",
         body: JSON.stringify(save),
       }).then(() => refresh());
+    } else {
+      fetchWithAuth("/giveaway/save/" + gw.id, {
+        method: "POST",
+        body: JSON.stringify(save),
+      }).then(() => refresh());
     }
     refresh();
   }, [])
@@ -117,12 +122,16 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
       save.autoCloseTime = null;
     }
     //TODO display warning message, only continue if confirm
-    showPopout(<DisruptiveActionPopup warnings={warnings} onConfirm={() => {
-      console.log("confirmed!");
-    }}/>)
-    console.log("SAVING GW");
-    console.log(save)
-    doSave(save);
+    if (warnings.length > 0) {
+      showPopout(<DisruptiveActionPopup warnings={warnings} onConfirm={() => {
+        console.log("confirmed!");
+        doSave(save);
+      }}/>)
+    } else {
+      console.log("SAVING GW");
+      console.log(save)
+      doSave(save);
+    }
   }, []);
 
 

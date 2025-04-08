@@ -1,12 +1,12 @@
 package talium.giveaways;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import talium.Out;
 import talium.Registrar;
+import talium.coinsWatchtime.chatter.ChatterRepo;
 import talium.coinsWatchtime.chatter.ChatterService;
 import talium.giveaways.persistence.GiveawayDAO;
 import talium.giveaways.persistence.GiveawayRepo;
@@ -31,10 +31,14 @@ public class GiveawayService {
     private static final Logger logger = LoggerFactory.getLogger(GiveawayService.class);
     private static GiveawayRepo giveawayRepo;
     private static ChatterService chatterService;
+    private static ChatterRepo chatterRepo;
+    private static TicketUpdater ticketUpdater;
 
-    public static void init(GiveawayRepo giveawayRepo, ChatterService chatterService) {
+    public static void init(GiveawayRepo giveawayRepo, ChatterService chatterService, ChatterRepo chatterRepo, TicketUpdater ticketUpdater) {
         GiveawayService.giveawayRepo = giveawayRepo;
         GiveawayService.chatterService = chatterService;
+        GiveawayService.chatterRepo = chatterRepo;
+        GiveawayService.ticketUpdater = ticketUpdater;
         Registrar.registerTemplate("giveaway.info", "@${sender} has ${senderCoins} Coins. Usage: ${commandPattern} [amount]");
         Registrar.registerTemplate("giveaway.missingCoins", "@${sender} Not enough Coins for ${buyAmount} Tickets. You have ${senderCoins} Coins. ${giveaway.ticketCost} per Ticket");
         var activeGWs = giveawayRepo.findAllByStatusIsNot(GiveawayStatus.ARCHIVED);
@@ -102,43 +106,49 @@ public class GiveawayService {
         return giveawayRepo.save(giveaway);
     }
 
-    public GiveawayDAO updateGiveaway(GiveawaySaveDTO toUpdate) {
-        //TODO save all to DB
-        //TODO update command for GW
-        //TODO trigger possible correction of amount and ticket amounts
-        // for this i need a primitive lock
-        // set lock, then change ticket cost in DB
-        // adjust all previously bought tickets
-        // release lock
-        // all enter commands would check for lock, if lock set, enter sleep loop
-        // until lock no longer set, if enter command is in sleep because of lock for more than 1 second
-        // then cancel entry request and emit error
-        // lock can be global for all GWs and only local in memory, this operation will not be performed very often
-        //TODO trigger update of autostart/close timers
-        throw new NotImplementedException();
-    }
-
-    private void updateTicketsLocking() {
-        lock.writeLock().lock();
-        try {
-            //TODO do transaction
-        } finally {
-            lock.writeLock().unlock();
+    public void updateGiveaway(GiveawaySaveDTO toUpdate, GiveawayDAO old) throws ChatterService.MissingDataException {
+        if (!toUpdate.commandPattern().equals(old.command().patterns.getFirst().pattern)) {
+            //TODO update command for GW
         }
+        var maxTicketsDecr = toUpdate.maxTickets() < old.maxTickets();
+        var ticketCostChanged = toUpdate.ticketCost() != old.ticketCost();
+        if (ticketCostChanged || maxTicketsDecr) {
+            UUID gwId = old.id();
+            lock.writeLock().lock();
+            try {
+                ticketUpdater.updateTicketsTransaction(gwId, toUpdate);
+            } finally {
+                lock.writeLock().unlock();
+            }
+        } else {
+            giveawayRepo.update(
+                    old.id(),
+                    toUpdate.title(),
+                    toUpdate.notes(),
+                    toUpdate.autoOpen(),
+                    toUpdate.autoClose(),
+                    toUpdate.ticketCost(),
+                    toUpdate.maxTickets(),
+                    toUpdate.allowRedrawOfUser(),
+                    toUpdate.autoAnnounceWinner()
+            );
+        }
+        //TODO update autoOpen/Close
     }
 
-    protected enum SubtractCoinsResult {
+
+    private enum SubtractCoinsResult {
         SUCCESS,
         NOT_ENOUGH_COINS,
         INTERRUPTED,
         LOCK_TIMEOUT,
     }
 
-    protected static SubtractCoinsResult subtractCoinsLocking(String userId, int coins) {
+    private static SubtractCoinsResult subtractCoinsLocking(String userId, int coins) {
         try {
             if (lock.readLock().tryLock(2, TimeUnit.SECONDS)) {
                 try {
-                    if (chatterService.payCoinsFromChatter(userId, coins)) {
+                    if (chatterRepo.addCoins(userId, -coins) == 1) {
                         return SubtractCoinsResult.SUCCESS;
                     }
                     return SubtractCoinsResult.NOT_ENOUGH_COINS;
@@ -177,9 +187,9 @@ public class GiveawayService {
 
                     var values = new HashMap<String, Object>();
                     values.put("sender", message.user().name());
-                    values.put("giveaway" , gw.get());
-                    values.put("commandPattern" , gw.get().command().patterns.getFirst().pattern);
-                    values.put("senderCoins", chatterService.getDataForChatter(message.user().id()).coins);
+                    values.put("giveaway", gw.get());
+                    values.put("commandPattern", gw.get().command().patterns.getFirst().pattern);
+                    values.put("senderCoins", chatterService.getChatterDataOrDefault(message.user().id()).coins);
                     if (!hasAmount) {
                         Out.Twitch.sendNamedTemplate("giveaway.info", values);
                         return;
@@ -199,8 +209,10 @@ public class GiveawayService {
                             Out.Twitch.sendNamedTemplate("giveaway.missingCoins", values);
                         }
                         // these are error cases, we decided against printing errors to the user
-                        case INTERRUPTED -> logger.error("Acquiring lock to enter GW failed because of interrupt. For User: {}", message.user().name());
-                        case LOCK_TIMEOUT -> logger.error("Acquiring lock to enter GW failed because of lock timeout. For User: {}", message.user().name());
+                        case INTERRUPTED ->
+                                logger.error("Acquiring lock to enter GW failed because of interrupt. For User: {}", message.user().name());
+                        case LOCK_TIMEOUT ->
+                                logger.error("Acquiring lock to enter GW failed because of lock timeout. For User: {}", message.user().name());
                     }
                 });
     }

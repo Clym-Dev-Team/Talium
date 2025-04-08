@@ -54,10 +54,13 @@ public class GiveawayController {
         var toSave = gson.fromJson(body, GiveawaySaveDTO.class);
         var old = giveawayRepo.findById(gwId);
         if (old.isEmpty()) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Giveaway with that id not found, cannot update");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Giveaway with that id not found, cannot update");
         }
-        System.out.println("Giveaway");
-        System.out.println(toSave);
+        try {
+            giveawayService.updateGiveaway(toSave, old.get());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not update giveaway");
+        }
         return ResponseEntity.ok("");
     }
 

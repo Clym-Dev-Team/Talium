@@ -1,10 +1,10 @@
 package talium.coinsWatchtime;
 
-import talium.Registrar;
-import talium.twitch4J.ChatMessage;
 import talium.Out;
+import talium.Registrar;
 import talium.coinsWatchtime.chatter.Chatter;
 import talium.coinsWatchtime.chatter.ChatterService;
+import talium.twitch4J.ChatMessage;
 
 import java.util.HashMap;
 
@@ -44,14 +44,14 @@ public class WIPWatchtimeCommandServer {
 
     public static void triggerGetWatchtime(String triggerId, ChatMessage message) {
         var values = new HashMap<String, Object>();
-        var wt = chatterService.getDataForChatter(message.user().id());
+        var wt = chatterService.getChatterDataOrDefault(message.user().id());
         values.put("wt", new WatchtimeContext(wt, message.user().name()));
         Out.Twitch.sendNamedTemplate("coins.watchtime", values);
     }
 
     public static void triggerGetCoins(String triggerId, ChatMessage message) {
         var values = new HashMap<String, Object>();
-        var wt = chatterService.getDataForChatter(message.user().id());
+        var wt = chatterService.getChatterDataOrDefault(message.user().id());
         values.put("wt", new WatchtimeContext(wt, message.user().name()));
         Out.Twitch.sendNamedTemplate("coins.coins", values);
     }

@@ -17,8 +17,19 @@ public interface ChatterRepo extends CrudRepository<Chatter, String> {
 
     Chatter getByTwitchUserId(String twitchUserId);
 
+    /**
+     * This Method is specifically for entering giveaways, and it should not be used by anything else.
+     * If in the future some other system needs to decrease the amount of coins a user has, the lock in the giveaway system needs to be exposed.
+     * All decreases to a chatters coins need to get this ReadLock for the duration of the edit, because otherwise,
+     * the coin & giveaway data may become corrupted/out of sync. This would lead to extra coins being given out, or to many
+     * coins getting paid.
+     * @apiNote THIS FUNCTION SHOULD ONLY BE USED FOR GIVEAWAY TICKETS. All calls to this function must abide by the Giveaway Lock.
+     * @param twitchUserId
+     * @param coins
+     * @return
+     */
     @Modifying
     @Transactional
-    @Query("UPDATE Chatter SET coins = coins - ?1 WHERE coins >= ?1 AND twitchUserId = ?2")
-    int payCoins(String twitchUserId, int coins);
+    @Query("UPDATE Chatter SET coins = coins + ?1 WHERE coins >= ?1 AND twitchUserId = ?2")
+    int addCoins(String twitchUserId, long coins);
 }
