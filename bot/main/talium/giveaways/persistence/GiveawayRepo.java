@@ -17,6 +17,11 @@ public interface GiveawayRepo extends ListCrudRepository<GiveawayDAO, UUID> {
 
     @Modifying
     @Transactional
+    @Query("UPDATE GiveawayDAO SET status = ?2 WHERE id = ?1")
+    void updateStatusById(UUID id, GiveawayStatus status);
+
+    @Modifying
+    @Transactional
     @Query("UPDATE GiveawayDAO SET title = ?2, notes = ?3, autoStart = ?4, autoEnd = ?5, ticketCost = ?6, maxTickets = ?7, allowRedrawOfUser = ?8, autoAnnounceWinner = ?9 WHERE id = ?1")
     void update(
             UUID id,

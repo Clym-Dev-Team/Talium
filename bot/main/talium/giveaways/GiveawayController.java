@@ -86,44 +86,69 @@ public class GiveawayController {
         return gson.toJson(giveawayRepo.findAllByStatusIsNot(GiveawayStatus.ARCHIVED).stream().map(GiveawayPreview::new).toList());
     }
 
-    @PostMapping("/openClose/{gwId}")
-    public ResponseEntity<String> openClose(@PathVariable UUID gwId) {
-        //TODO open close GW
-        // check is not archived
-        return ResponseEntity.ok("");
-    }
-
-    @PostMapping("/draw/{gwId}")
-    public ResponseEntity<String> draw(@PathVariable UUID gwId) {
-        //TODO draw endpoint
-        // check:
-        // - not archived
-        // - has ticket
-        // - there are sill tickets to draw
-        return ResponseEntity.ok("");
-    }
-
-    @PostMapping("/refundAllLTickets/{gwId}")
-    public ResponseEntity<String> refundAllLTickets(@PathVariable UUID gwId) {
-        //TODO refund all tickets
-        // check:
-        // - not archived
-        // - has tickets
-        return ResponseEntity.ok("");
-    }
-
-    @PostMapping("/archive/{gwId}")
-    public ResponseEntity<String> archive(@RequestParam UUID gwId) {
-        //TODO archive endpoint
-        // check is not running
+    @PostMapping("/action/{gwId}/{action}")
+    public ResponseEntity<String> action(@PathVariable UUID gwId, @PathVariable String action) {
+        var gwOption = giveawayRepo.findById(gwId);
+        if (gwOption.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Giveaway with that id not found, cannot action");
+        }
+        var gw = gwOption.get();
+        switch (action) {
+            case "open" -> {
+                if (gw.status() != GiveawayStatus.RUNNING) {
+                    giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.RUNNING);
+                }
+                return ResponseEntity.ok("");
+            }
+            case "close" -> {
+                if (gw.status() == GiveawayStatus.ARCHIVED) {
+                    return ResponseEntity.badRequest().body("Giveaway cannot be set to Closed, unarchive first");
+                }
+                if (gw.status() == GiveawayStatus.RUNNING) {
+                    giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.PAUSED);
+                }
+                return ResponseEntity.ok("");
+            }
+            case "draw" -> {
+                if (gw.status() == GiveawayStatus.ARCHIVED) {
+                    return ResponseEntity.badRequest().body("Unable to draw winner, unarchive first");
+                }
+                if (gw.status() == GiveawayStatus.RUNNING) {
+                    giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.PAUSED);
+                }
+                //todo do actual draw
+                return ResponseEntity.ok("");
+            }
+            case "refundAll" -> {
+                if (gw.status() != GiveawayStatus.PAUSED) {
+                    return ResponseEntity.badRequest().body("Unable to refund tickets, pause giveaway first");
+                }
+                //todo do actual refund
+            }
+            case "archive" -> {
+                if (gw.status() != GiveawayStatus.PAUSED) {
+                    return ResponseEntity.badRequest().body("Unable to unarchive giveaway, pause giveaway first");
+                }
+                giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.ARCHIVED);
+            }
+            case "unarchive" -> {
+                if (gw.status() != GiveawayStatus.ARCHIVED) {
+                    return ResponseEntity.badRequest().body("Unable to unarchive giveaway. Giveaway is not archived");
+                }
+                giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.PAUSED);
+            }
+            case "delete" -> {
+                if (gw.status() != GiveawayStatus.ARCHIVED && gw.ticketList().isEmpty()) {
+                    return ResponseEntity.badRequest().body("Can only delete archived giveaways without tickets");
+                }
+                //todo do actual delete (delete gw object, and unregister all commands and timers)
+            }
+            default -> {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid action for this endpoint: " + action);
+            }
+        }
         return ResponseEntity.ok("");
     }
 
     //TODO winner save endpoint
-
-    /* GW actions that do not originate from the panel:
-        - automatic actions like: autostart/close
-        - entering a giveaway
-
-    */
 }
