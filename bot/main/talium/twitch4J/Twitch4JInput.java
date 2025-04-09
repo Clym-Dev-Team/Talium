@@ -10,18 +10,18 @@ import com.github.twitch4j.chat.events.TwitchEvent;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.helix.TwitchHelix;
 import org.apache.commons.lang.RandomStringUtils;
-import talium.Registrar;
-import talium.oauthConnector.OAuthEndpoint;
-import talium.oauthConnector.OauthAccount;
-import talium.oauthConnector.OauthAccountRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import talium.Out;
+import talium.Registrar;
 import talium.eventSystem.EventDispatcher;
 import talium.eventSystem.Subscriber;
 import talium.inputSystem.BotInput;
 import talium.inputSystem.HealthManager;
 import talium.inputSystem.InputStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import talium.oauthConnector.OAuthEndpoint;
+import talium.oauthConnector.OauthAccount;
+import talium.oauthConnector.OauthAccountRepo;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -74,19 +74,45 @@ public class Twitch4JInput implements BotInput {
             logger.warn(STR."Head to \{OAuthEndpoint.getOauthSetupUrl()} to Setup a new Oauth connection");
             HealthManager.reportStatus(Twitch4JInput.class, InputStatus.INJURED);
             creds = createNewOauth();
-        }
-        //check if still empty after oauth
-        if (creds.isEmpty()) {
-            logger.error("Could neither load old credentials, nor create new once, aborting input startup!");
-            HealthManager.reportStatus(Twitch4JInput.class, InputStatus.DEAD);
-            return;
-        } else {
-            logger.warn("Created new Oauth. Warning resolved!");
-            HealthManager.reportStatus(Twitch4JInput.class, InputStatus.STARTING);
+            //check if still empty after oauth
+            if (creds.isEmpty()) {
+                logger.error("Could neither load old credentials, nor create new once, aborting input startup!");
+                HealthManager.reportStatus(Twitch4JInput.class, InputStatus.DEAD);
+                return;
+            } else {
+                logger.warn("Created new Oauth. Warning resolved!");
+                HealthManager.reportStatus(Twitch4JInput.class, InputStatus.STARTING);
+            }
         }
         oAuth2Credential = creds.get();
 
+        Optional<Boolean> credentialValid = iProvider.isCredentialValid(oAuth2Credential);
+        if (credentialValid.isEmpty()) {
+            logger.error("Failed to check if credential is valid");
+            HealthManager.reportStatus(Twitch4JInput.class, InputStatus.DEAD);
+            return;
+        }
+        if (!credentialValid.get()) {
+            logger.warn("Oauth credential is not valid");
+            Optional<OAuth2Credential> newCredential = iProvider.refreshCredential(oAuth2Credential);
+            if (newCredential.isEmpty()) {
+                logger.error("Failed to refresh credential for unknown reason");
+                HealthManager.reportStatus(Twitch4JInput.class, InputStatus.DEAD);
+                return;
+            }
+            oAuth2Credential = newCredential.get();
+        }
+        if (iProvider.getAdditionalCredentialInformation(oAuth2Credential).isEmpty()) {
+            logger.warn("Oauth additional credentials could not be found: {}", oAuth2Credential);
+            HealthManager.reportStatus(Twitch4JInput.class, InputStatus.DEAD);
+            return;
+        }
+
+        logger.info("Using Valid Credential: {}", oAuth2Credential);
         TwitchClient twitchClient = TwitchClientBuilder.builder()
+                .withClientId(config.app_clientID())
+                .withClientSecret(config.app_clientSecret())
+                .withRedirectUrl(OAuthEndpoint.getRedirectUrl("twitch"))
                 .withEnableHelix(true)
                 .withEnableChat(true)
                 .withDefaultAuthToken(oAuth2Credential)
@@ -173,7 +199,7 @@ public class Twitch4JInput implements BotInput {
         try {
             EventDispatcher.dispatch(ChatMessage.fromChannelMessageEvent(messageEvent));
         } catch (ChatMessage.ChatMessageMalformedExceptions e) {
-           logger.error("Error converting Twitch message", e);
+            logger.error("Error converting Twitch message", e);
         }
     }
 }

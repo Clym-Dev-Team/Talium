@@ -2,6 +2,7 @@ package talium;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.PreRemove;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import talium.tipeeeStream.DonationRepo;
 import talium.tipeeeStream.TipeeeConfig;
@@ -22,6 +23,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import talium.twitchCommands.triggerEngine.TriggerProvider;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
 @SpringBootApplication
 @EnableJpaRepositories
 public class TwitchBot {
@@ -31,6 +37,13 @@ public class TwitchBot {
 
     public static void main(String[] args) {
         startup();
+    }
+
+    private static final ScheduledExecutorService TWITCH4J_PERIODIC_RESTART_EXECUTOR;
+
+    static {
+        ThreadFactory namedThreadFactory = new BasicThreadFactory.Builder().namingPattern("TWITCH4J_PERIODIC_RESTART_EXECUTOR").build();
+        TWITCH4J_PERIODIC_RESTART_EXECUTOR = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
     }
 
     private static ConfigurableApplicationContext ctx;
@@ -66,6 +79,11 @@ public class TwitchBot {
         //TODO remove all templates that were once registered automatically, but are no longer
 
         time.close();
+
+        TWITCH4J_PERIODIC_RESTART_EXECUTOR.scheduleAtFixedRate(() -> {
+            logger.info("Starting periodic Twitch reconnect");
+            reconnectTwitch();
+        }, 120, 120, TimeUnit.MINUTES);
     }
 
     @PreDestroy
@@ -98,17 +116,17 @@ public class TwitchBot {
     }
 
     public static boolean reconnectTwitch() {
-        twitch.shutdown();
-        var twitch = new Twitch4JInput(
-                ctx.getBean(TwitchConfig.class),
-                ctx.getBean(OauthAccountRepo.class)
-        );
         try {
+            twitch.shutdown();
+            var twitch = new Twitch4JInput(
+                    ctx.getBean(TwitchConfig.class),
+                    ctx.getBean(OauthAccountRepo.class)
+            );
             twitch.startup();
             TwitchBot.twitch = twitch;
             return true;
         } catch (Exception e) {
-            TwitchBot.twitch = twitch;
+            logger.error("Exception reconnecting twitch: {}", e.getMessage());
             return false;
         }
     }

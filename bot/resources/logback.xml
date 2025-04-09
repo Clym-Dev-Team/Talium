@@ -14,9 +14,8 @@
     </appender>
 
     <logger name="logback" level="INFO"/>
-    <logger name="talium.inputs" level="WARN"/>
-    <logger name="talium.system" level="INFO"/>
-    <logger name="talium.coinsWatchtime" level="WARN"/>
+    <logger name="talium.twitch4J" level="INFO"/>
+    <logger name="talium.coinsWatchtime" level="INFO"/>
     <logger name="talium.ASCIIProgressbar" level="INFO"/>
 
     <logger name="talium.TwitchBot" level="INFO" additivity="false">
