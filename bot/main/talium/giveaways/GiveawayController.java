@@ -93,7 +93,7 @@ public class GiveawayController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Giveaway with that id not found, cannot action");
         }
         var gw = gwOption.get();
-        switch (action) {
+        switch (action.toLowerCase()) {
             case "open" -> {
                 if (gw.status() != GiveawayStatus.RUNNING) {
                     giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.RUNNING);
@@ -119,7 +119,7 @@ public class GiveawayController {
                 giveawayService.draw(gw);
                 return ResponseEntity.ok("");
             }
-            case "refundAll" -> {
+            case "refundall" -> {
                 if (gw.status() != GiveawayStatus.PAUSED) {
                     return ResponseEntity.badRequest().body("Unable to refund tickets, pause giveaway first");
                 }

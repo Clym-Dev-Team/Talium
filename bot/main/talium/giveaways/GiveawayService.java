@@ -49,6 +49,7 @@ public class GiveawayService {
         GiveawayService.ticketUpdater = ticketUpdater;
         Registrar.registerTemplate("giveaway.info", "@${sender} has ${senderCoins} Coins. Usage: ${commandPattern} [amount]");
         Registrar.registerTemplate("giveaway.missingCoins", "@${sender} Not enough Coins for ${buyAmount} Tickets. You have ${senderCoins} Coins. ${giveaway.ticketCost} per Ticket");
+        Registrar.registerTemplate("giveaway.retryableError", "@${sender} Failed to enter Giveaway. Please try again later");
         var activeGWs = giveawayRepo.findAllByStatusIsNot(GiveawayStatus.ARCHIVED);
         for (var gw : activeGWs) {
             createGWEnterCommand(gw.id(), gw.command().id);
@@ -256,10 +257,14 @@ public class GiveawayService {
                             Out.Twitch.sendNamedTemplate("giveaway.missingCoins", values);
                         }
                         // these are error cases, we decided against printing errors to the user
-                        case INTERRUPTED ->
-                                logger.error("Acquiring lock to enter GW failed because of interrupt. For User: {}", message.user().name());
-                        case LOCK_TIMEOUT ->
-                                logger.error("Acquiring lock to enter GW failed because of lock timeout. For User: {}", message.user().name());
+                        case INTERRUPTED -> {
+                            logger.error("Acquiring lock to enter GW failed because of interrupt. For User: {}", message.user().name());
+                            Out.Twitch.sendNamedTemplate("giveaway.retryableError", values);
+                        }
+                        case LOCK_TIMEOUT -> {
+                            logger.error("Acquiring lock to enter GW failed because of lock timeout. For User: {}", message.user().name());
+                            Out.Twitch.sendNamedTemplate("giveaway.retryableError", values);
+                        }
                     }
                 });
     }
