@@ -1,13 +1,16 @@
 package talium.giveaways;
 
+import jakarta.persistence.LockTimeoutException;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import talium.Out;
 import talium.Registrar;
 import talium.coinsWatchtime.chatter.ChatterRepo;
 import talium.coinsWatchtime.chatter.ChatterService;
+import talium.giveaways.persistence.EntriesRepo;
 import talium.giveaways.persistence.GiveawayDAO;
 import talium.giveaways.persistence.GiveawayRepo;
 import talium.giveaways.persistence.GiveawayTemplateDAO;
@@ -33,6 +36,11 @@ public class GiveawayService {
     private static ChatterService chatterService;
     private static ChatterRepo chatterRepo;
     private static TicketUpdater ticketUpdater;
+    private final EntriesRepo entriesRepo;
+
+    public GiveawayService(EntriesRepo entriesRepo) {
+        this.entriesRepo = entriesRepo;
+    }
 
     public static void init(GiveawayRepo giveawayRepo, ChatterService chatterService, ChatterRepo chatterRepo, TicketUpdater ticketUpdater) {
         GiveawayService.giveawayRepo = giveawayRepo;
@@ -102,11 +110,11 @@ public class GiveawayService {
                 new ArrayList<>()
         );
         TriggerProvider.rebuildTriggerCache();
-        //TODO register autostart/close if necessary
+        // register autostart/close if necessary
         return giveawayRepo.save(giveaway);
     }
 
-    public void updateGiveaway(GiveawaySaveDTO toUpdate, GiveawayDAO old) throws ChatterService.MissingDataException {
+    public void updateGiveaway(GiveawaySaveDTO toUpdate, GiveawayDAO old) throws ChatterService.MissingDataException, InterruptedException {
         if (!toUpdate.commandPattern().equals(old.command().patterns.getFirst().pattern)) {
             //TODO update command for GW
         }
@@ -114,9 +122,17 @@ public class GiveawayService {
         var ticketCostChanged = toUpdate.ticketCost() != old.ticketCost();
         if (ticketCostChanged || maxTicketsDecr) {
             UUID gwId = old.id();
-            lock.writeLock().lock();
             try {
-                ticketUpdater.updateTicketsTransaction(gwId, toUpdate);
+                if (lock.writeLock().tryLock(20, TimeUnit.SECONDS)) {
+                    ticketUpdater.updateTicketsTransaction(gwId, toUpdate);
+                } else {
+                    logger.error("Failed to acquire lock to update giveaway, ID: {}, until timeout", gwId);
+                    throw new LockTimeoutException("Failed to acquire lock to update giveaway, ID: " + gwId + ", until timeout");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.error("Unexpectedly Interrupted while updating Giveaways. Interrupts are not part of the normal application flow here", e);
+                throw e;
             } finally {
                 lock.writeLock().unlock();
             }
@@ -133,9 +149,42 @@ public class GiveawayService {
                     toUpdate.autoAnnounceWinner()
             );
         }
-        //TODO update autoOpen/Close
+        // update autoOpen/Close
     }
 
+    @Transactional
+    public void refundAllTickets(GiveawayDAO giveaway) throws InterruptedException {
+        try {
+            if (lock.writeLock().tryLock(20, TimeUnit.SECONDS)) {
+                var tickets = giveaway.ticketList();
+                for (var ticket : tickets) {
+                    entriesRepo.subtractTicketsByGiveawayId(giveaway.id(), ticket.tickets());
+                    chatterRepo.addCoins(ticket.userId(), (long) ticket.tickets() * giveaway.ticketCost());
+                }
+            } else {
+                logger.error("Failed to acquire lock to refund all tickets for giveaway, ID: {}, until timeout", giveaway.id());
+                throw new LockTimeoutException("Failed to acquire lock to refund all tickets for giveaway, ID: " + giveaway.id() + ", until timeout");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("Unexpectedly Interrupted while refunding all tickets. Interrupts are not part of the normal application flow here", e);
+            throw e;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    public void draw(GiveawayDAO giveaway) {
+        //TODO
+    }
+
+    public void unregisterToArchive(GiveawayDAO giveaway) {
+        //TODO unregister commands and shit
+    }
+
+    public void deleteArchived(GiveawayDAO giveaway) {
+        //TODO
+    }
 
     private enum SubtractCoinsResult {
         SUCCESS,
@@ -147,21 +196,20 @@ public class GiveawayService {
     private static SubtractCoinsResult subtractCoinsLocking(String userId, int coins) {
         try {
             if (lock.readLock().tryLock(2, TimeUnit.SECONDS)) {
-                try {
-                    if (chatterRepo.addCoins(userId, -coins) == 1) {
-                        return SubtractCoinsResult.SUCCESS;
-                    }
-                    return SubtractCoinsResult.NOT_ENOUGH_COINS;
-                } finally {
-                    lock.readLock().unlock();
+                if (chatterRepo.addCoins(userId, -coins) == 1) {
+                    return SubtractCoinsResult.SUCCESS;
                 }
+                return SubtractCoinsResult.NOT_ENOUGH_COINS;
             } else {
+                logger.error("Failed to acquire lock to subtract Coins for user {} until timeout", userId);
                 return SubtractCoinsResult.LOCK_TIMEOUT;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error("Unexpectedly Interrupted while subtracting coins. Interrupts are not part of the normal application flow here", e);
             return SubtractCoinsResult.INTERRUPTED;
+        } finally {
+            lock.readLock().unlock();
         }
     }
 

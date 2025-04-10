@@ -116,20 +116,26 @@ public class GiveawayController {
                 if (gw.status() == GiveawayStatus.RUNNING) {
                     giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.PAUSED);
                 }
-                //todo do actual draw
+                giveawayService.draw(gw);
                 return ResponseEntity.ok("");
             }
             case "refundAll" -> {
                 if (gw.status() != GiveawayStatus.PAUSED) {
                     return ResponseEntity.badRequest().body("Unable to refund tickets, pause giveaway first");
                 }
-                //todo do actual refund
+                try {
+                    giveawayService.refundAllTickets(gw);
+                } catch (Exception e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to refund tickets");
+                }
+                return ResponseEntity.ok("");
             }
             case "archive" -> {
                 if (gw.status() != GiveawayStatus.PAUSED) {
                     return ResponseEntity.badRequest().body("Unable to unarchive giveaway, pause giveaway first");
                 }
                 giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.ARCHIVED);
+                giveawayService.unregisterToArchive(gw);
             }
             case "unarchive" -> {
                 if (gw.status() != GiveawayStatus.ARCHIVED) {
@@ -141,7 +147,7 @@ public class GiveawayController {
                 if (gw.status() != GiveawayStatus.ARCHIVED && gw.ticketList().isEmpty()) {
                     return ResponseEntity.badRequest().body("Can only delete archived giveaways without tickets");
                 }
-                //todo do actual delete (delete gw object, and unregister all commands and timers)
+                giveawayService.deleteArchived(gw);
             }
             default -> {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid action for this endpoint: " + action);
