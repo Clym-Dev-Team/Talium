@@ -19,7 +19,7 @@ export default function GiveawayTemplateList({handleCreateGw}: GiveawayTemplateL
   const {loading, data, sendData} = useData<TemplateItem[]>("/giveaway/templates", "Giveaway Templates", [])
 
   const onCreate = useCallback((id: string) => {
-    sendData("/giveaway/fromTemplate/" + encodeURIComponent(id), "Successfully created Giveaway from template", {method: "POST"})
+    sendData("/giveaway/fromTemplate/" + encodeURIComponent(id), undefined, {method: "POST"})
       .then(res => {
         const gw = parseJsonToGiveaway(res as GiveawayJSON);
         // hardcode CREATED, BE doesn't know this state, so it just sets PAUSED

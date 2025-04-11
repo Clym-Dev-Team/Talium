@@ -18,6 +18,7 @@ import {GwTitleBar} from "@c/giveaways/editPage/GwTitleBar.tsx";
 import {usePopout} from "@s/popoutProvider/PopoutProvider.tsx";
 import DisruptiveActionPopup from "@c/giveaways/DisruptiveActionPopup.tsx";
 import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
+import {useToast} from "@shadcn/use-toast.ts";
 
 
 interface OpenCloseBtnProps {
@@ -62,7 +63,14 @@ export interface GiveawayEditPageProps {
   initialData: Giveaway,
 }
 
+/**
+ * Shows an editor to edit the giveaway in the props.
+ * The giveaway data does not need to exist in the DB, if it does not exist, it will be created.
+ *
+ * After the giveaway is saved, the page is reloaded!
+ */
 export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProps) {
+  const {toast} = useToast();
   const {showPopout} = usePopout()
   const {register, watch, setValue, handleSubmit, getFieldState} = useForm<GiveawaySave>({
     defaultValues: {
@@ -78,31 +86,34 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
     }
   });
 
-  const refresh = useCallback(() => {
-    //TODO check if we are not in create, so that we can actually refresh
-  }, [])
-
   const doSave = useCallback((save: GiveawaySave) => {
-    //TODO do actual save bit
     if (gw.status == GiveawayStatus.CREATE) {
-      console.log("doing create save!")
-
       fetchWithAuth("/giveaway/create", {
         method: "POST",
         body: JSON.stringify(save),
-      }).then(() => refresh());
+      }).then(() => location.reload())
+        .catch(reason => toast({
+          className: "toast toast-failure",
+          title: "ERROR creating Giveaway",
+          description: reason.toString()
+        }));
     } else {
       fetchWithAuth("/giveaway/save/" + gw.id, {
         method: "POST",
         body: JSON.stringify(save),
-      }).then(() => refresh());
+      }).then(() => location.reload())
+        .catch(reason => toast({
+          className: "toast toast-failure",
+          title: "ERROR saving giveaway",
+          description: reason.toString()
+        }));
     }
-    refresh();
   }, [])
 
   const onSave = useCallback((save: GiveawaySave) => {
     if (gw.status == GiveawayStatus.CREATE) {
       doSave(save);
+      return
     }
 
     const warnings: string[] = [];
@@ -121,15 +132,11 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
     if (save.autoCloseTime != null && save.autoCloseTime <= new Date()) {
       save.autoCloseTime = null;
     }
-    //TODO display warning message, only continue if confirm
     if (warnings.length > 0) {
       showPopout(<DisruptiveActionPopup warnings={warnings} onConfirm={() => {
-        console.log("confirmed!");
         doSave(save);
       }}/>)
     } else {
-      console.log("SAVING GW");
-      console.log(save)
       doSave(save);
     }
   }, []);

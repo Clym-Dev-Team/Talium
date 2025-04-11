@@ -38,11 +38,11 @@ export default function useData<T>(urlPath: string, objectName: string, initialV
     get()
   }, [get]);
 
-  const sendData = useCallback((urlPath: string, successToast: string, init?: RequestInit) => {
+  const sendData = useCallback((urlPath: string, successToast?: string, init?: RequestInit) => {
     return fetchWithAuth(urlPath, init)
       .then(response => response.json())
       .then(value => {
-        toast({className: "toast toast-success", title: successToast});
+        successToast && toast({className: "toast toast-success", title: successToast});
         get();
         return value;
       })
