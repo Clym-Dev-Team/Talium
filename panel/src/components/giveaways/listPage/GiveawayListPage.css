@@ -58,28 +58,6 @@
     font-style: normal;
     font-size: 2rem;
 }
-/* TILE */
-
-.tile.CREATED {
-    background-color: #e3e3e3;
-    color: var(--text-color-dark);
-}
-
-.tile.RUNNING {
-    background-color: green;
-}
-
-.tile.PAUSED {
-    background-color: darkorange;
-}
-
-.tile.AWAITING_CONFIRMATION {
-    background-color: teal;
-}
-
-.tile.ARCHIVED {
-    background-color: gray;
-}
 
 .columnRight {
     flex: 1;

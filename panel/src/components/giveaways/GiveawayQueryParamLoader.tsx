@@ -7,7 +7,6 @@ import Loader from "@s/loadingSpinner/Loader.tsx";
 export default function GiveawayQueryParamLoader() {
   let {gwId} = useParams();
   const {data, loading} = useData<GiveawayJSON | undefined>("/giveaway/get/" + gwId, "Giveaway", undefined)
-    //TODO load gw from id in url path
   if (loading) {
     return <Loader/>
   }

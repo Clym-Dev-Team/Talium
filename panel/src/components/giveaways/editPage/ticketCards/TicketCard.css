@@ -7,7 +7,6 @@
 }
 
 .winnerCard {
-    background-color: green;
     border-radius: .5rem;
     flex-direction: row;
 }

@@ -1,0 +1,20 @@
+root {
+    --eminence: #7E3F8F;
+}
+
+.status-CREATE {
+    background-color: #e3e3e3;
+    color: var(--text-color-dark)
+}
+
+.status-RUNNING {
+    background-color: var(--base-green);
+}
+
+.status-PAUSED {
+    background-color: hsl(var(--destructive));
+}
+
+.status-ARCHIVED {
+    background-color: #8C86AA;
+}

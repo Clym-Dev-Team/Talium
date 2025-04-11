@@ -39,7 +39,7 @@
 }
 
 .healthTile.HEALTHY {
-    background-color: green;
+    background-color: var(--base-green);
 }
 
 .healthTile.STARTING {
@@ -51,5 +51,5 @@
 }
 
 .healthTile.DEAD {
-    background-color: darkred;
+    background-color: hsl(var(--destructive));
 }

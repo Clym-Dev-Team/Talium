@@ -21,42 +21,14 @@ import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
 import {useToast} from "@shadcn/use-toast.ts";
 
 
-interface OpenCloseBtnProps {
-  status: GiveawayStatus,
-  autoStart: Date | null,
-  onClick: () => void
-}
-
-function OpenCloseBtn({status, autoStart, onClick}: OpenCloseBtnProps) {
-  let text = "";
-  let isEnabled = true;
-
-  switch (status) {
-    case GiveawayStatus.CREATE:
-      text = "Open NOW";
-      break;
-    case GiveawayStatus.PAUSED:
-      if (autoStart != null) {
-        text = "Open NOW";
-      } else {
-        text = "Open";
-      }
-      break;
-    case GiveawayStatus.RUNNING:
-      if (autoStart == null) {
-        text = "Close";
-      } else {
-        text = "Close NOW";
-      }
-      break;
-    case GiveawayStatus.ARCHIVED:
-      isEnabled = false;
-      break;
-  }
-  if (!isEnabled) {
-    return ""
-  }
-  return <Button variant="default" onClick={onClick}>{text}</Button>;
+enum GiveawayAction {
+  OPEN,
+  CLOSE,
+  DRAW,
+  REFUNDALL,
+  ARCHIVE,
+  UNARCHIVE,
+  DELETE
 }
 
 export interface GiveawayEditPageProps {
@@ -141,27 +113,22 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
     }
   }, []);
 
-
-  const onArchive = useCallback(() => {
-    //TODO find if to archive or unarchive, and do that
+  const onAction = useCallback((action: GiveawayAction) => {
+    const actionString = (GiveawayAction as any)[action] as GiveawayAction;
+    fetchWithAuth("/giveaway/action/" + gw.id + "/" + actionString, {
+      method: "POST",
+    }).then(() => location.reload())
+      .catch(reason => toast({
+        className: "toast toast-failure",
+        title: "ERROR executing action: " + action,
+        description: reason.toString()
+      }));
   }, []);
-
-  const onOpenClose = useCallback(() => {
-    //TODO find if to open or close, and do that
-  }, []);
-
-  const onRefund = useCallback(() => {
-    //TODO check if refund is currently possible/allowed, and request refund
-  }, [])
-
-  const onDraw = useCallback(() => {
-    //TODO check if is currently possible to draw, and do that
-  }, [])
 
   return <div className="giveawayEditPage">
     <GwTitleBar onSave={handleSubmit(onSave)} title={gw.title} id={gw.id} lastUpdatedAt={gw.lastUpdatedAt}
-                createdAt={gw.createdAt}/>
-    <ScrollArea className="contentBorder">
+                createdAt={gw.createdAt} status={gw.status}/>
+    <ScrollArea className={"contentBorder status-" + ((GiveawayStatus as any)[gw.status] as GiveawayStatus)}>
       <div className="formContent">
         <div className="column">
           <InputVL i18nFieldId="giveaway.edit.title" {...register("title")}/>
@@ -214,16 +181,20 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
             <GwAuditLogs/>
           </ComingSoon>
           <div className="dangerArea">
-            <OpenCloseBtn onClick={onOpenClose} autoStart={gw.autoStartTime} status={gw.status}/>
-            {gw.status == GiveawayStatus.RUNNING || gw.status == GiveawayStatus.PAUSED ? <>
-              <Button onClick={onDraw} variant="default">Draw</Button>
-              <Button onClick={onRefund} variant="destructive">Refund All Tickets</Button>
-              {/*TODO show but disable these buttons if there are no tickets bought */}
-            </> : ""}
-            {gw.status != GiveawayStatus.CREATE ?
-              <Button onClick={onArchive}
-                      variant="default">{gw.status == GiveawayStatus.ARCHIVED ? "Unarchive" : "Archive"}</Button>
-              : ""}
+            <Button variant="default" onClick={() => onAction(gw.status == GiveawayStatus.RUNNING ? GiveawayAction.CLOSE : GiveawayAction.OPEN)}>
+              {gw.status == GiveawayStatus.RUNNING ? "Close" : "Open"}
+            </Button>
+            {(gw.status == GiveawayStatus.RUNNING || gw.status == GiveawayStatus.PAUSED) &&
+              <>
+                <Button onClick={() => onAction(GiveawayAction.DRAW)} variant="default" disabled={gw.ticketList.length === 0}>Draw</Button>
+                <Button onClick={() => onAction(GiveawayAction.REFUNDALL)} variant="destructive" disabled={gw.ticketList.length === 0}>Refund All
+                  Tickets</Button>
+                {/*TODO show but disable these buttons if there are no tickets bought */}
+              </>}
+            {gw.status != GiveawayStatus.CREATE && <Button
+              onClick={() => onAction(gw.status == GiveawayStatus.ARCHIVED ? GiveawayAction.UNARCHIVE : GiveawayAction.ARCHIVE)}
+              variant="default">{gw.status == GiveawayStatus.ARCHIVED ? "Unarchive" : "Archive"}</Button>
+            }
             <Button onClick={handleSubmit(onSave)} variant="default">Save</Button>
           </div>
         </div>

@@ -23,7 +23,7 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.3s ease-in-out;
-    background-color: green;
+    background-color: var(--base-green);
     z-index: 1;
 }
 

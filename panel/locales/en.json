@@ -1,6 +1,9 @@
 {
   "giveaway": {
     "edit": {
+      "status": {
+        "label": "Giveaway Status"
+      },
       "gwId": {
         "label": "ID",
         "tooltip": "Internal unique Giveaway Identifier. You wil always be able to uniquely find this Giveaway under this ID, even if other Giveaways have the same title. Although, you will rarely need to use this"

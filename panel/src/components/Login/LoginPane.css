@@ -14,9 +14,9 @@
     width: 100%;
     padding: 10px;
     border-radius: 1rem;
-    background-color: green;
+    background-color: var(--base-green);
 }
 
 .loginForm-login:hover {
-    background-color: seagreen;
+    background-color: var(--base-green);
 }
