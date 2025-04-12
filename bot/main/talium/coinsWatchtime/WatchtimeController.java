@@ -32,21 +32,16 @@ public class WatchtimeController {
 
     @GetMapping("/top")
     String getTop() {
-//        var t = new TimingSequence();
         var chatters = chatterService.getTopWatchtime();
-//        t.step("DB");
         var dto = new ArrayList<LeaderboardDTO>();
         var userIdList = chatters.stream().map(chatter -> chatter.twitchUserId).toList();
-//        t.step("TRANSFORM LIST");
         var twitchUserList = Out.Twitch.api.getUserById(userIdList);
-//        t.step("TWITCH API");
 
         Map<String, String> usernameMap = new TreeMap<>();
 
         for (User user : twitchUserList) {
-            usernameMap.put(user.getId(), user.getId());
+            usernameMap.put(user.getId(), user.getDisplayName());
         }
-//        t.step("TRANSFORM SET");
         for (Chatter chatter : chatters) {
             var username = usernameMap.get(chatter.twitchUserId);
             if (username == null) {
@@ -55,11 +50,7 @@ public class WatchtimeController {
             }
             dto.add(new LeaderboardDTO(username, chatter.watchtimeSeconds, chatter.coins));
         }
-//        t.step("MAP");
-        String json = gson.toJson(dto);
-//        t.step("json");
-//        t.print();
-        return json;
+        return gson.toJson(dto);
     }
 
     @GetMapping("/username/{username}")

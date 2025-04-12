@@ -10,10 +10,7 @@ import talium.Out;
 import talium.Registrar;
 import talium.coinsWatchtime.chatter.ChatterRepo;
 import talium.coinsWatchtime.chatter.ChatterService;
-import talium.giveaways.persistence.EntriesRepo;
-import talium.giveaways.persistence.GiveawayDAO;
-import talium.giveaways.persistence.GiveawayRepo;
-import talium.giveaways.persistence.GiveawayTemplateDAO;
+import talium.giveaways.persistence.*;
 import talium.giveaways.transit.GiveawayDTO;
 import talium.giveaways.transit.GiveawaySaveDTO;
 import talium.twitch4J.TwitchUserPermission;
@@ -46,7 +43,8 @@ public class GiveawayService {
         GiveawayService.chatterService = chatterService;
         GiveawayService.chatterRepo = chatterRepo;
         GiveawayService.ticketUpdater = ticketUpdater;
-        Registrar.registerTemplate("giveaway.info", "@${sender} has ${senderCoins} Coins. Usage: ${commandPattern} [amount]");
+        Registrar.registerTemplate("giveaway.info", "@${sender} has ${senderCoins} Coins and ${senderTickets} Tickets. Usage: ${commandPattern} [amount]");
+        Registrar.registerTemplate("giveaway.notOpen", "@${sender} the Giveaway ${commandPattern} is not yet open");
         Registrar.registerTemplate("giveaway.missingCoins", "@${sender} Not enough Coins for ${buyAmount} Tickets. You have ${senderCoins} Coins. ${giveaway.ticketCost} per Ticket");
         Registrar.registerTemplate("giveaway.retryableError", "@${sender} Failed to enter Giveaway. Please try again later");
         var activeGWs = giveawayRepo.findAllByStatusIsNot(GiveawayStatus.ARCHIVED);
@@ -218,10 +216,10 @@ public class GiveawayService {
         LOCK_TIMEOUT,
     }
 
-    private static SubtractCoinsResult subtractCoinsLocking(String userId, int coins) {
+    private static SubtractCoinsResult enterGwLocking(String userId, UUID gwId, int additionalCost, int ticketsToAdd) {
         try {
             if (lock.readLock().tryLock(2, TimeUnit.SECONDS)) {
-                if (chatterRepo.addCoins(userId, -coins) == 1) {
+                if (ticketUpdater.addTicketTransaction(gwId, userId, additionalCost, ticketsToAdd)) {
                     return SubtractCoinsResult.SUCCESS;
                 }
                 return SubtractCoinsResult.NOT_ENOUGH_COINS;
@@ -262,6 +260,14 @@ public class GiveawayService {
                     values.put("giveaway", gw.get());
                     values.put("commandPattern", gw.get().command().patterns.getFirst().pattern);
                     values.put("senderCoins", chatterService.getChatterDataOrDefault(message.user().id()).coins);
+                    values.put("senderTickets", gw
+                            .get()
+                            .ticketList()
+                            .stream()
+                            .filter(entriesDAO -> entriesDAO.userId().equals(message.user().id()))
+                            .map(EntriesDAO::tickets)
+                            .findFirst()
+                            .orElse(0));
                     if (!hasAmount) {
                         Out.Twitch.sendNamedTemplate("giveaway.info", values);
                         return;
@@ -269,11 +275,12 @@ public class GiveawayService {
 
                     if (gw.get().status() != GiveawayStatus.RUNNING) {
                         // not yet open, this is an expected case, so log nothing, print nothing to the user
+                        Out.Twitch.sendNamedTemplate("giveaway.notOpen", values);
                         return;
                     }
                     var ticketsToBuy = Integer.parseInt(split[1]);
                     var additionalCost = ticketsToBuy * gw.get().ticketCost();
-                    var success = subtractCoinsLocking(message.user().id(), additionalCost);
+                    var success = enterGwLocking(message.user().id(), giveawayId, additionalCost, ticketsToBuy);
                     switch (success) {
                         case SUCCESS -> { /* print nothing, this is the happy path */}
                         case NOT_ENOUGH_COINS -> {

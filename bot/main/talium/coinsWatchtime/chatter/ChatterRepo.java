@@ -30,6 +30,6 @@ public interface ChatterRepo extends CrudRepository<Chatter, String> {
      */
     @Modifying
     @Transactional
-    @Query("UPDATE Chatter SET coins = coins + ?1 WHERE coins >= ?1 AND twitchUserId = ?2")
+    @Query("UPDATE Chatter SET coins = coins + ?2 WHERE coins >= ?2 AND twitchUserId = ?1")
     int addCoins(String twitchUserId, long coins);
 }

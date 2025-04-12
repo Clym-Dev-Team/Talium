@@ -67,4 +67,14 @@ public class TicketUpdater {
         );
     }
 
+    @Transactional
+    protected boolean addTicketTransaction(UUID gwId, String userId, int additionalCost, int ticketsToAdd) {
+        if (chatterRepo.addCoins(userId, -additionalCost) == 0) {
+            return false;
+        }
+//        var entriesRepo.existsById(gwId, userId);v
+        //TODO either update old value, or add new entry
+        return true;
+    }
+
 }
