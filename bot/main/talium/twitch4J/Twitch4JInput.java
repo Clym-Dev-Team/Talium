@@ -108,7 +108,7 @@ public class Twitch4JInput implements BotInput {
             return;
         }
 
-        logger.info("Using Valid Credential: {}", oAuth2Credential);
+        logger.info("Credential, receivedAt: {}, expiresIn: {}", oAuth2Credential.getReceivedAt(), oAuth2Credential.getExpiresIn());
         TwitchClient twitchClient = TwitchClientBuilder.builder()
                 .withClientId(config.app_clientID())
                 .withClientSecret(config.app_clientSecret())

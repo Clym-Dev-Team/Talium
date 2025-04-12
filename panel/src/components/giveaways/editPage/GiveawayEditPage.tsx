@@ -166,7 +166,7 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
             <VLabel i18nFieldId="giveaway.edit.timerTemplate">
               <TemplateEditor register={undefined} varSchema=""/>
             </VLabel>
-            {/* TODO add template color field*/}
+            {/* add template color field*/}
             <h1>Public Website</h1>
             <InputVL i18nFieldId="giveaway.edit.imageUrl" type="url"/>
             <TextareaVL i18nFieldId="giveaway.edit.publicDescription"/>
@@ -189,7 +189,6 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
                 <Button onClick={() => onAction(GiveawayAction.DRAW)} variant="default" disabled={gw.ticketList.length === 0}>Draw</Button>
                 <Button onClick={() => onAction(GiveawayAction.REFUNDALL)} variant="destructive" disabled={gw.ticketList.length === 0}>Refund All
                   Tickets</Button>
-                {/*TODO show but disable these buttons if there are no tickets bought */}
               </>}
             {gw.status != GiveawayStatus.CREATE && <Button
               onClick={() => onAction(gw.status == GiveawayStatus.ARCHIVED ? GiveawayAction.UNARCHIVE : GiveawayAction.ARCHIVE)}

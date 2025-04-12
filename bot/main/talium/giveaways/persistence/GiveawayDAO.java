@@ -1,9 +1,10 @@
 package talium.giveaways.persistence;
 
 import jakarta.persistence.*;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.lang.Nullable;
 import talium.giveaways.GiveawayStatus;
-import talium.twitchCommands.persistence.TriggerEntity;
+import talium.twitchCommands.persistence.CommandEntity;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,7 +23,8 @@ public class GiveawayDAO {
     GiveawayStatus status;
     @OneToOne
     @JoinColumn(referencedColumnName = "id")
-    TriggerEntity command;
+    @Nullable
+    CommandEntity command;
     @Nullable Instant autoStart;
     @Nullable Instant autoEnd;
     int ticketCost;
@@ -37,7 +39,7 @@ public class GiveawayDAO {
     public GiveawayDAO() {
     }
 
-    public GiveawayDAO(UUID id, Instant createdAt, Instant lastUpdatedAt, String title, String notes, GiveawayStatus status, TriggerEntity command, @Nullable Instant autoStart, @Nullable Instant autoEnd, int ticketCost, int maxTickets, boolean allowRedrawOfUser, boolean autoAnnounceWinner, List<EntriesDAO> ticketList, List<WinnersDAO> winners) {
+    public GiveawayDAO(UUID id, Instant createdAt, Instant lastUpdatedAt, String title, String notes, GiveawayStatus status, @NotNull CommandEntity command, @Nullable Instant autoStart, @Nullable Instant autoEnd, int ticketCost, int maxTickets, boolean allowRedrawOfUser, boolean autoAnnounceWinner, List<EntriesDAO> ticketList, List<WinnersDAO> winners) {
         this.id = id;
         this.createdAt = createdAt;
         this.lastUpdatedAt = lastUpdatedAt;
@@ -79,7 +81,8 @@ public class GiveawayDAO {
         return status;
     }
 
-    public TriggerEntity command() {
+    @Nullable
+    public CommandEntity command() {
         return command;
     }
 
@@ -115,6 +118,16 @@ public class GiveawayDAO {
 
     public List<WinnersDAO> winners() {
         return winners;
+    }
+
+    public GiveawayDAO command(@Nullable CommandEntity command) {
+        this.command = command;
+        return this;
+    }
+
+    public GiveawayDAO status(GiveawayStatus status) {
+        this.status = status;
+        return this;
     }
 
     @Override

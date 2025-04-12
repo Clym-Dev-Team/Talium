@@ -27,10 +27,10 @@ import talium.tipeeeStream.TipeeeConfig;
 import talium.tipeeeStream.TipeeeInput;
 import talium.twitch4J.Twitch4JInput;
 import talium.twitch4J.TwitchConfig;
-import talium.twitchCommands.triggerEngine.TriggerProvider;
+import talium.twitchCommands.persistence.TriggerService;
+import talium.twitchCommands.triggerEngine.CommandWithCallbackCache;
 
 import java.time.Instant;
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -73,6 +73,8 @@ public class TwitchBot {
         var serverPort = ctx.getEnvironment().getProperty("server.port");
         logger.info("Server started on Port: {}", serverPort);
 
+        CommandWithCallbackCache.init(ctx.getBean(TriggerService.class));
+
         // Start initializing system components, the order of operations is very important!
         twitch = startInput(new Twitch4JInput(
                 ctx.getBean(TwitchConfig.class),
@@ -92,9 +94,6 @@ public class TwitchBot {
                 ctx.getBean(ChatterRepo.class),
                 ctx.getBean(TicketUpdater.class)
         );
-
-        TriggerProvider.rebuildTriggerCache();
-        //TODO remove all templates that were once registered automatically, but are no longer
 
         time.close();
 

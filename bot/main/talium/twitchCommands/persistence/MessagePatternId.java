@@ -4,9 +4,9 @@ import java.io.Serializable;
 
 public class MessagePatternId implements Serializable {
     String pattern;
-    TriggerEntity parentTrigger;
+    CommandEntity parentTrigger;
 
-    public MessagePatternId(String pattern, TriggerEntity parentTrigger) {
+    public MessagePatternId(String pattern, CommandEntity parentTrigger) {
         this.pattern = pattern;
         this.parentTrigger = parentTrigger;
     }

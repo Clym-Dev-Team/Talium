@@ -8,6 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 public interface MessagePatternRepo extends CrudRepository<MessagePattern, MessagePatternId> {
 
     @Transactional
-    void deleteAllByParentTrigger(TriggerEntity parentTrigger);
+    void deleteAllByParentTrigger(CommandEntity parentTrigger);
 
 }

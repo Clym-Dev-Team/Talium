@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
-import talium.twitchCommands.persistence.TriggerEntity;
+import talium.Registrar;
+import talium.twitchCommands.persistence.CommandEntity;
 import talium.twitchCommands.persistence.TriggerService;
 
 import static talium.TwitchBot.gson;
@@ -23,20 +24,20 @@ public class CommandController {
     @GetMapping("/userAll")
     String getAllUserCommands(@RequestParam @Nullable String search) {
         if (search == null || search.isEmpty()) {
-            var list = triggerService.getAllUserTriggers().stream().map(TriggerEntity::toTriggerDTO).toList();
+            var list = triggerService.getAllUserTriggers().stream().map(CommandEntity::toTriggerDTO).toList();
             return gson.toJson(list);
         }
-        var list = triggerService.searchUserBy(search).stream().map(TriggerEntity::toTriggerDTO).toList();
+        var list = triggerService.searchUserBy(search).stream().map(CommandEntity::toTriggerDTO).toList();
         return gson.toJson(list);
     }
 
     @GetMapping("/all")
     String getAllCommands(@RequestParam @Nullable String search) {
         if (search == null || search.isEmpty()) {
-            var list = triggerService.getAllTriggers().stream().map(TriggerEntity::toTriggerDTO).toList();
+            var list = triggerService.getAllTriggers().stream().map(CommandEntity::toTriggerDTO).toList();
             return gson.toJson(list);
         }
-        var list = triggerService.searchBy(search).stream().map(TriggerEntity::toTriggerDTO).toList();
+        var list = triggerService.searchBy(search).stream().map(CommandEntity::toTriggerDTO).toList();
         return gson.toJson(list);
     }
 
@@ -72,8 +73,7 @@ public class CommandController {
     @PostMapping("/save")
     HttpStatus saveCommand(@RequestBody String body) {
         TriggerDTO command = gson.fromJson(body, TriggerDTO.class);
-        TriggerEntity entity = new TriggerEntity(command);
-        triggerService.save(entity);
+        Registrar.Command.upsert(new CommandEntity(command));
         return HttpStatus.OK;
     }
 

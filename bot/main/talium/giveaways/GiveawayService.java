@@ -19,8 +19,7 @@ import talium.giveaways.transit.GiveawaySaveDTO;
 import talium.twitch4J.TwitchUserPermission;
 import talium.twitchCommands.cooldown.ChatCooldown;
 import talium.twitchCommands.cooldown.CooldownType;
-import talium.twitchCommands.persistence.TriggerEntity;
-import talium.twitchCommands.triggerEngine.TriggerProvider;
+import talium.twitchCommands.persistence.CommandEntity;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -110,14 +109,15 @@ public class GiveawayService {
                 new ArrayList<>(),
                 new ArrayList<>()
         );
-        TriggerProvider.rebuildTriggerCache();
         // register autostart/close if necessary
         return giveawayRepo.save(giveaway);
     }
 
     public void updateGiveaway(GiveawaySaveDTO toUpdate, GiveawayDAO old) throws ChatterService.MissingDataException, InterruptedException {
         if (!toUpdate.commandPattern().equals(old.command().patterns.getFirst().pattern)) {
-            //TODO update command for GW
+            var command = old.command();
+            command.patterns.getFirst().pattern = toUpdate.commandPattern();
+            Registrar.Command.upsert(command);
         }
         var maxTicketsDecr = toUpdate.maxTickets() < old.maxTickets();
         var ticketCostChanged = toUpdate.ticketCost() != old.ticketCost();
@@ -180,11 +180,21 @@ public class GiveawayService {
     }
 
     public void unregisterToArchive(GiveawayDAO giveaway) {
-        //TODO unregister commands and shit
+        String commandId = null;
+        CommandEntity command = giveaway.command();
+        if (command != null) {
+            commandId = command.id;
+        }
+        giveaway.status(GiveawayStatus.ARCHIVED);
+        giveaway.command(null);
+        giveawayRepo.save(giveaway);
+        if (commandId != null) {
+            Registrar.Command.delete(commandId);
+        }
     }
 
     public void deleteArchived(GiveawayDAO giveaway) {
-        //TODO
+        giveawayRepo.delete(giveaway);
     }
 
     private enum SubtractCoinsResult {
@@ -214,7 +224,7 @@ public class GiveawayService {
         }
     }
 
-    private static TriggerEntity createGWEnterCommand(UUID giveawayId, String commandPattern) {
+    private static CommandEntity createGWEnterCommand(UUID giveawayId, String commandPattern) {
         String commandId = STR."giveaway.\{giveawayId.toString()}.enter";
         return new Registrar
                 .Command(commandId, commandPattern)

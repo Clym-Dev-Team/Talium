@@ -4,13 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import talium.twitch4J.ChatMessage;
 import talium.Out;
 import talium.eventSystem.Subscriber;
 import talium.stringTemplates.TemplateService;
+import talium.twitch4J.ChatMessage;
 
-import static talium.twitchCommands.triggerEngine.TriggerProvider.triggers;
 import static talium.twitchCommands.cooldown.CooldownService.*;
+import static talium.twitchCommands.triggerEngine.CommandWithCallbackCache.triggers;
 
 //TODO reference triggerId guidelines
 
@@ -47,7 +47,16 @@ public class TriggerEngine {
      * @param trigger the trigger to check for
      * @param message the message to check against
      */
-    private static void processTrigger(RuntimeTrigger trigger, ChatMessage message) {
+    private static void processTrigger(RunnableCommand trigger, ChatMessage message) {
+        if (trigger == null) {
+            logger.error("Trigger is null! Skipping trigger");
+            return;
+        }
+        if (message == null) {
+            logger.error("Message is null! Skipping trigger");
+            return;
+        }
+
         // if ordinal of user is smaller than the command/trigger, than the user has fewer permissions and is not allowed to execute
         if (message.user().permission().ordinal() < trigger.permission().ordinal()) {
             logger.debug("User {} with {}, missing {} permission for command {}", message.user().name(), message.user().permission(), trigger.permission(), trigger.id());

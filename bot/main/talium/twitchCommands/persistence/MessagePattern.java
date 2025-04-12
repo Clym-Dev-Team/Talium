@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import talium.twitchCommands.controller.MessagePatternDTO;
 
 /**
- * A pattern that a message needs to match against in a {@link TriggerEntity}
+ * A pattern that a message needs to match against in a {@link CommandEntity}
  */
 @Entity
 @Table(name = "sys-chatTrigger-patterns")
@@ -12,7 +12,7 @@ import talium.twitchCommands.controller.MessagePatternDTO;
 public class MessagePattern {
     @Id @ManyToOne(fetch = FetchType.EAGER) @JoinColumn(name = "parent_trigger_id", nullable = false)
     @PrimaryKeyJoinColumn
-    public TriggerEntity parentTrigger;
+    public CommandEntity parentTrigger;
 
     @Id
     public String pattern;
