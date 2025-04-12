@@ -28,13 +28,17 @@ export default function AccountsPage() {
     return <Loader/>
 
   return <div>
-    <form onSubmit={() => onSubmit()}>
-      <Input value={newUsername} onChange={event => setNewUsername(event.target.value)}/>
+    <form onSubmit={() => onSubmit()} style={{ display: "flex" }}>
       <Button><SaveIcon/></Button>
+      <Input value={newUsername} onChange={event => setNewUsername(event.target.value)} placeholder="Twitch User(name) to add" />
     </form>
     <ScrollArea>
+      <div style={{ display: "flex", width: "10%", justifyContent: "space-between", fontWeight: "bolder" }}>
+        <div>Twitch User Name</div>
+        <div>Revoke access</div>
+      </div>
       {data.map((account: Account) =>
-        <div key={account.userId}>
+        <div key={account.userId} style={{ display: "flex", width: "10%", justifyContent: "space-between"}}>
           <div>{account.username}</div>
           <Button onClick={() => onDelete(account.userId, account.username)}><DeleteIcon/></Button>
         </div>
