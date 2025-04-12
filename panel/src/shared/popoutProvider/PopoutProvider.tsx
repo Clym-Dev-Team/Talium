@@ -11,7 +11,11 @@ const PopoutContext = createContext<PopoutContextType>({
   clearPopout: () => {},
 });
 
-export const PopoutProvider = ({children}) => {
+interface PopoutProps {
+  children: React.ReactNode;
+}
+
+export const PopoutProvider = ({children}: PopoutProps) => {
   const [component, setComponent] = useState<React.ReactNode | null>(null);
 
   const showPopout = useCallback((comp: React.ReactNode) => {

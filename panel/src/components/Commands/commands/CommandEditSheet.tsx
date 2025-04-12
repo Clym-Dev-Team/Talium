@@ -12,7 +12,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@sh
 import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
 import VLabel from "@s/VLabel.tsx";
-import InputUnit from "@s/InputUnit/InputUnit.tsx";
+import InputUnit from "@s/inputUnit/InputUnit.tsx";
 import CheckBox from "@s/CheckBox.tsx";
 import IconX from "@i/IconX.tsx";
 import TemplateEditor from "@c/Commands/common/templates/TemplateEditor.tsx";

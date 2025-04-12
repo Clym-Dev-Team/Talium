@@ -1,4 +1,4 @@
-import IconCheckBox from "@s/IconCheckBox/IconCheckBox.tsx";
+import IconCheckBox from "@s/iconCheckBox/IconCheckBox.tsx";
 import IconPowerOn from "@i/IconPowerOn.tsx";
 import IconPowerOff from "@i/IconPowerOff.tsx";
 

@@ -13,11 +13,11 @@ export function TicketResultsPanel() {
             <span>Actions</span>
           </span>
         </div>
-        <WinnerCard username="testUser82834834"/>
-        <WinnerCard username="hdh82"/>
-        <WinnerCard username="cookie"/>
-        <WinnerCard username="supie"/>
-        <WinnerCard username="clym"/>
+        <WinnerCard userId="" username="testUser82834834"/>
+        <WinnerCard userId="" username="hdh82"/>
+        <WinnerCard userId="" username="cookie"/>
+        <WinnerCard userId="" username="supie"/>
+        <WinnerCard userId="" username="clym"/>
       </div>
       <hr/>
       <div className="ticketList">

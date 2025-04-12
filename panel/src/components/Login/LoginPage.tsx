@@ -2,11 +2,11 @@ import {PropsWithChildren} from "react";
 import LoginPane from "./LoginPane.tsx"
 import {BOT_BACKEND_ADDR} from "@/main.tsx";
 
-export default function LoginPage(props: PropsWithChildren<Record<never, never>>) {
+export default function LoginPage({children}: PropsWithChildren<Record<never, never>>) {
   if (localStorage.getItem("accessToken") == null) {
     return <LoginPane/>;
   }
-  return props.children;
+  return children;
 }
 
 export async function fetchWithAuth(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {

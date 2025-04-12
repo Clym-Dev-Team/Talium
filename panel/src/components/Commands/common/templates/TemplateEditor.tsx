@@ -5,7 +5,7 @@ import "./TemplateEditor.css"
 
 export interface TemplateEditorProps {
   varSchema: string,
-  register: UseFormRegisterReturn<string>
+  register: UseFormRegisterReturn<string> | undefined
 }
 
 function getVarsFromJson(varJsonSchema: string) {
