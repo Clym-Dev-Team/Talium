@@ -5,7 +5,7 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@sh
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@shadcn/sheet.tsx";
 import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
-import WarningBox from "@s/warning/WarningBox.tsx";
+import InfoBox from "@s/infoBox/InfoBox.tsx";
 import useData from "@s/useData.ts";
 import Loader from "@s/loadingSpinner/Loader.tsx";
 import TemplateForm from "./TemplateForm.tsx";
@@ -27,9 +27,9 @@ export default function TemplateList() {
   }
 
   return <div className="commandList">
-    <WarningBox>This Page lists all templates/strings/texts that the bot uses to generate output text/messages. Templates are triggered by commands, giveaways, timers, alerts, etc... and are used to construct the messages that are hen send into the twitch chat (or to other platforms like discord) <br/>
+    <InfoBox>This Page lists all templates/strings/texts that the bot uses to generate output text/messages. Templates are triggered by commands, giveaways, timers, alerts, etc... and are used to construct the messages that are hen send into the twitch chat (or to other platforms like discord) <br/>
       If you delete a template that was registered automatically it will be regenerated with the next startup. But you can void the output of a template by deleting the content of the template.
-    </WarningBox>
+    </InfoBox>
     <div className="actionBar">
       <div className="searchBox">
         <Input placeholder="Search for a Template" value={searchBox} onChange={event => setSearchBox(event.target.value)}/>

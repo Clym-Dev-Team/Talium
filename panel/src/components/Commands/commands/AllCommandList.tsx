@@ -5,7 +5,7 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@sh
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@shadcn/sheet.tsx";
 import {Input} from "@shadcn/input.tsx";
 import {Button} from "@shadcn/button.tsx";
-import WarningBox from "@s/warning/WarningBox.tsx";
+import InfoBox from "@s/infoBox/InfoBox.tsx";
 import useData from "@s/useData.ts";
 import Loader from "@s/loadingSpinner/Loader.tsx";
 import IsVisibleCheckBox from "@c/Commands/common/IsVisibleCheckbox.tsx";
@@ -30,14 +30,14 @@ export default function AllCommandList() {
   }
 
   return <div className="commandList">
-    <WarningBox>This Page lists all commands that are registered in the Bot, this includes internal command that are
+    <InfoBox>This Page lists all commands that are registered in the Bot, this includes internal command that are
       used for various other features like giveaways and management features for mods. <br/>
       Most of these Commands don't have a template (text output), instead they call an internal function of the Bot that
       can then process the command action and may then respond with different or multiple templates. <br/>
       If you delete a command that was registered automatically it will be regenerated with the next startup. Instead,
       if you want to disable the command disable all its patterns. You can still use the same patterns in other
       commands.
-    </WarningBox>
+    </InfoBox>
     <div className="actionBar">
       <div className="searchBox">
         <Input placeholder="Search for a Command" value={searchBox} onChange={event => setSearchBox(event.target.value)}/>
