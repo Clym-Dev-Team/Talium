@@ -1,4 +1,4 @@
-.commandTabList {
+div.commandTabList {
     box-sizing: border-box;
     justify-content: space-around;
     height: max-content;
@@ -7,7 +7,7 @@
     border-radius: 0;
 }
 
-.commandTabList > button {
+div.commandTabList > button {
     box-sizing: border-box;
     flex: 1;
     font-size: 2em;
