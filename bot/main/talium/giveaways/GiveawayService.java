@@ -55,7 +55,7 @@ public class GiveawayService {
         }
     }
 
-    private static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
      * @param templateId ID of template to copy values from
@@ -64,10 +64,13 @@ public class GiveawayService {
     public GiveawayDTO createFromTemplate(String templateId) {
         //TODO get giveaway template from DB
         GiveawayTemplateDAO template;
-        if (templateId.equals("goldkette")) {
+        if (templateId.equalsIgnoreCase("goldkette")) {
             template = GiveawayTemplateDAO.Goldkette();
-        } else {
+        }  else if (templateId.equalsIgnoreCase("random")) {
             template = GiveawayTemplateDAO.Random();
+        }
+        else {
+            template = GiveawayTemplateDAO.Blank();
         }
         UUID giveawayId = UUID.randomUUID();
         return new GiveawayDTO(

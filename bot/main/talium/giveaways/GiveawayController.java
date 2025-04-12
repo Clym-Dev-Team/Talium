@@ -32,7 +32,8 @@ public class GiveawayController {
     public String getGiveawayTemplates() {
         return gson.toJson(List.of(
                 new GiveawayTemplateDTO("BLANK", "blank"),
-                new GiveawayTemplateDTO("Goldkette", "goldkette"))
+                new GiveawayTemplateDTO("Goldkette", "goldkette"),
+                 new GiveawayTemplateDTO("Random", "random"))
         );
     }
 

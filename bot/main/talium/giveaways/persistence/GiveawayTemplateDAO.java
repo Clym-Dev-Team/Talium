@@ -35,6 +35,18 @@ public class GiveawayTemplateDAO {
         );
     }
 
+    public static GiveawayTemplateDAO Blank() {
+        return new GiveawayTemplateDAO(
+                "",
+                "",
+                "",
+                0,
+                1,
+                false,
+                false
+        );
+    }
+
     public static GiveawayTemplateDAO Goldkette() {
         return new GiveawayTemplateDAO(
                 "Goldkette",
