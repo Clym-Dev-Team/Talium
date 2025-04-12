@@ -19,17 +19,7 @@ import {usePopout} from "@s/popoutProvider/PopoutProvider.tsx";
 import DisruptiveActionPopup from "@c/giveaways/DisruptiveActionPopup.tsx";
 import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
 import {useToast} from "@shadcn/use-toast.ts";
-
-
-enum GiveawayAction {
-  OPEN,
-  CLOSE,
-  DRAW,
-  REFUNDALL,
-  ARCHIVE,
-  UNARCHIVE,
-  DELETE
-}
+import {PANEL_BASE_URL} from "@/main.tsx";
 
 export interface GiveawayEditPageProps {
   initialData: Giveaway,
@@ -113,11 +103,27 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
     }
   }, []);
 
+  enum GiveawayAction {
+    OPEN,
+    CLOSE,
+    DRAW,
+    REFUNDALL,
+    ARCHIVE,
+    UNARCHIVE,
+    DELETE
+  }
+
   const onAction = useCallback((action: GiveawayAction) => {
     const actionString = (GiveawayAction as any)[action] as GiveawayAction;
     fetchWithAuth("/giveaway/action/" + gw.id + "/" + actionString, {
       method: "POST",
-    }).then(() => location.reload())
+    }).then(() => {
+      if (action == GiveawayAction.DELETE) {
+        location.assign(PANEL_BASE_URL + "/giveaways")
+      } else {
+        location.reload();
+      }
+    })
       .catch(reason => toast({
         className: "toast toast-failure",
         title: "ERROR executing action: " + action,
@@ -184,6 +190,8 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
             <Button variant="default" onClick={() => onAction(gw.status == GiveawayStatus.RUNNING ? GiveawayAction.CLOSE : GiveawayAction.OPEN)}>
               {gw.status == GiveawayStatus.RUNNING ? "Close" : "Open"}
             </Button>
+            {gw.status == GiveawayStatus.ARCHIVED && gw.ticketList?.length == 0 && gw.winnerList?.length == 0 &&
+              <Button onClick={() => onAction(GiveawayAction.DELETE)} variant="destructive">Delete</Button>}
             {(gw.status == GiveawayStatus.RUNNING || gw.status == GiveawayStatus.PAUSED) &&
               <>
                 <Button onClick={() => onAction(GiveawayAction.DRAW)} variant="default" disabled={gw.ticketList.length === 0}>Draw</Button>

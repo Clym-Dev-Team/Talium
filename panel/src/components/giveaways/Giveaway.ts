@@ -76,7 +76,7 @@ export function parseJsonToGiveaway(data: GiveawayJSON): Giveaway {
     allowUserRedraw: data.allowUserRedraw,
     announceWinnerInChat: data.announceWinnerInChat,
     id: data.id,
-    ticketList: data.ticketList,
-    winnerList: data.winnerList,
+    ticketList: data.ticketList ? data.ticketList : [],
+    winnerList: data.winnerList ? data.winnerList : [],
   } as Giveaway;
 }

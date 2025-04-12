@@ -1,8 +1,7 @@
-import {useNavigate} from "react-router-dom";
+import {PANEL_BASE_URL} from "@/main.tsx";
 
 export default function TokenRemover() {
-  const nav = useNavigate()
-  const query  = new URLSearchParams(document.location.hash.substring(1))
+  const query = new URLSearchParams(document.location.hash.substring(1))
   const state = query.get("state")
   const token = query.get("access_token")
   const scope = query.get("scope")
@@ -13,7 +12,7 @@ export default function TokenRemover() {
   if (error == null && token != null) {
     //TODO check state
     localStorage.setItem("accessToken", token)
-    setTimeout(() => nav("/"), 1)
+    setTimeout(() => location.assign(PANEL_BASE_URL), 1)
   }
   //TODO error handling
 
