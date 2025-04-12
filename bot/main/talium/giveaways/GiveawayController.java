@@ -71,7 +71,7 @@ public class GiveawayController {
             return new ResponseEntity<>("No Giveaway with Id: " + gwId + " could be found", HttpStatus.NOT_FOUND);
         }
         var gw = entity.get();
-        var dto = new GiveawayDTO(gw.id(), gw.title(), gw.notes(), gw.createdAt().toString(), gw.lastUpdatedAt().toString(), gw.status(), gw.command().patterns.getFirst().pattern, gw.autoStart() != null ? gw.autoStart().toString() : null, gw.autoEnd() != null ? gw.autoEnd().toString() : null, gw.ticketCost(), gw.maxTickets(), gw.allowRedrawOfUser(), gw.autoAnnounceWinner(), gw.ticketList().stream().map(ent -> {
+        var dto = new GiveawayDTO(gw.id(), gw.title(), gw.notes(), gw.createdAt().toString(), gw.lastUpdatedAt().toString(), gw.status(), gw.commandPattern(), gw.autoStart() != null ? gw.autoStart().toString() : null, gw.autoEnd() != null ? gw.autoEnd().toString() : null, gw.ticketCost(), gw.maxTickets(), gw.allowRedrawOfUser(), gw.autoAnnounceWinner(), gw.ticketList().stream().map(ent -> {
             var name = Out.Twitch.api.getUserById(ent.userId()).map(User::getId).orElse(ent.userId());
             return new EntryDTO(ent.userId(), name, ent.tickets());
         }).toList(), gw.winners().stream().map(win -> {
@@ -134,14 +134,13 @@ public class GiveawayController {
                 if (gw.status() != GiveawayStatus.PAUSED) {
                     return ResponseEntity.badRequest().body("Unable to unarchive giveaway, pause giveaway first");
                 }
-                giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.ARCHIVED);
-                giveawayService.unregisterToArchive(gw);
+                giveawayService.archive(gw);
             }
             case "unarchive" -> {
                 if (gw.status() != GiveawayStatus.ARCHIVED) {
                     return ResponseEntity.badRequest().body("Unable to unarchive giveaway. Giveaway is not archived");
                 }
-                giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.PAUSED);
+                giveawayService.unarchive(gw);
             }
             case "delete" -> {
                 if (gw.status() != GiveawayStatus.ARCHIVED && gw.ticketList().isEmpty()) {

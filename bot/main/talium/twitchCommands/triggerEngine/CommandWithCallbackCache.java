@@ -86,7 +86,7 @@ public class CommandWithCallbackCache {
     }
 
     private static @NotNull Pattern compilePrefixPattern(String prefixPattern) {
-        return Pattern.compile(STR."^\{prefixPattern} ?.*", Pattern.CASE_INSENSITIVE);
+        return Pattern.compile(STR."^\{prefixPattern}(?: |$).*", Pattern.CASE_INSENSITIVE);
     }
 
     /**

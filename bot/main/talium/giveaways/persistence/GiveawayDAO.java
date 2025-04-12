@@ -21,6 +21,7 @@ public class GiveawayDAO {
     String title;
     String notes;
     GiveawayStatus status;
+    String commandPattern;
     @OneToOne
     @JoinColumn(referencedColumnName = "id")
     @Nullable
@@ -39,13 +40,14 @@ public class GiveawayDAO {
     public GiveawayDAO() {
     }
 
-    public GiveawayDAO(UUID id, Instant createdAt, Instant lastUpdatedAt, String title, String notes, GiveawayStatus status, @NotNull CommandEntity command, @Nullable Instant autoStart, @Nullable Instant autoEnd, int ticketCost, int maxTickets, boolean allowRedrawOfUser, boolean autoAnnounceWinner, List<EntriesDAO> ticketList, List<WinnersDAO> winners) {
+    public GiveawayDAO(UUID id, Instant createdAt, Instant lastUpdatedAt, String title, String notes, GiveawayStatus status, String commandPattern, @NotNull CommandEntity command, @Nullable Instant autoStart, @Nullable Instant autoEnd, int ticketCost, int maxTickets, boolean allowRedrawOfUser, boolean autoAnnounceWinner, List<EntriesDAO> ticketList, List<WinnersDAO> winners) {
         this.id = id;
         this.createdAt = createdAt;
         this.lastUpdatedAt = lastUpdatedAt;
         this.title = title;
         this.notes = notes;
         this.status = status;
+        this.commandPattern = commandPattern;
         this.command = command;
         this.autoStart = autoStart;
         this.autoEnd = autoEnd;
@@ -118,6 +120,15 @@ public class GiveawayDAO {
 
     public List<WinnersDAO> winners() {
         return winners;
+    }
+
+    public String commandPattern() {
+        return commandPattern;
+    }
+
+    public GiveawayDAO commandPattern(String commandPattern) {
+        this.commandPattern = commandPattern;
+        return this;
     }
 
     public GiveawayDAO command(@Nullable CommandEntity command) {

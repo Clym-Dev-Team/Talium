@@ -51,7 +51,7 @@ public class GiveawayService {
         Registrar.registerTemplate("giveaway.retryableError", "@${sender} Failed to enter Giveaway. Please try again later");
         var activeGWs = giveawayRepo.findAllByStatusIsNot(GiveawayStatus.ARCHIVED);
         for (var gw : activeGWs) {
-            createGWEnterCommand(gw.id(), gw.command().id);
+            createGWEnterCommand(gw.id(), gw.command().patterns.getFirst().pattern);
         }
     }
 
@@ -99,6 +99,7 @@ public class GiveawayService {
                 toSave.title(),
                 toSave.notes(),
                 GiveawayStatus.PAUSED,
+                toSave.commandPattern(),
                 command,
                 toSave.autoOpen(),
                 toSave.autoClose(),
@@ -114,10 +115,13 @@ public class GiveawayService {
     }
 
     public void updateGiveaway(GiveawaySaveDTO toUpdate, GiveawayDAO old) throws ChatterService.MissingDataException, InterruptedException {
-        if (!toUpdate.commandPattern().equals(old.command().patterns.getFirst().pattern)) {
-            var command = old.command();
-            command.patterns.getFirst().pattern = toUpdate.commandPattern();
-            Registrar.Command.upsert(command);
+        CommandEntity oldCommand = old.command();
+        if (oldCommand != null) {
+        if (!toUpdate.commandPattern().equals(oldCommand.patterns.getFirst().pattern)) {
+            oldCommand.patterns.getFirst().pattern = toUpdate.commandPattern();
+            Registrar.Command.upsert(oldCommand);
+        }} else {
+            createGWEnterCommand(old.id(), toUpdate.commandPattern());
         }
         var maxTicketsDecr = toUpdate.maxTickets() < old.maxTickets();
         var ticketCostChanged = toUpdate.ticketCost() != old.ticketCost();
@@ -179,7 +183,7 @@ public class GiveawayService {
         //TODO
     }
 
-    public void unregisterToArchive(GiveawayDAO giveaway) {
+    public void archive(GiveawayDAO giveaway) {
         String commandId = null;
         CommandEntity command = giveaway.command();
         if (command != null) {
@@ -191,6 +195,13 @@ public class GiveawayService {
         if (commandId != null) {
             Registrar.Command.delete(commandId);
         }
+    }
+
+
+    public void unarchive(GiveawayDAO giveaway) {
+        giveaway.command(createGWEnterCommand(giveaway.id(), giveaway.commandPattern()));
+        giveaway.status(GiveawayStatus.PAUSED);
+        giveawayRepo.save(giveaway);
     }
 
     public void deleteArchived(GiveawayDAO giveaway) {
