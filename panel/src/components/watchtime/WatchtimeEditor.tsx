@@ -7,6 +7,7 @@ import VLabel from "@s/VLabel.tsx";
 import IconSave from "@i/IconSave.tsx";
 import IconCloudDown from "@i/IconCloudDown.tsx";
 import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
+import {usePublicConfig} from "@s/PublicConfigProvider.tsx";
 
 interface ChatterDTO {
   userId: string,
@@ -15,13 +16,14 @@ interface ChatterDTO {
 }
 
 export default function WatchtimeEditor() {
+  const {serverBaseUrl} = usePublicConfig();
   const {toast} = useToast();
   const [loadedUser, setLoadedUser] = useState(false);
   const [userName, setUserName] = useState<string>()
   const {handleSubmit, register, reset} = useForm<ChatterDTO>({disabled: !loadedUser});
 
   function loadData() {
-    fetchWithAuth("/watchtime/username/" + userName)
+    fetchWithAuth(serverBaseUrl, "/watchtime/username/" + userName)
       .then(response => response.json())
       .then(value => reset(value))
       .then(() => setLoadedUser(true))
@@ -43,7 +45,7 @@ export default function WatchtimeEditor() {
   }
 
   function submit(chatter: ChatterDTO) {
-    fetchWithAuth("/watchtime/update", {method: "POST", body: JSON.stringify(chatter)})
+    fetchWithAuth(serverBaseUrl, "/watchtime/update", {method: "POST", body: JSON.stringify(chatter)})
       .then(() => toast({className: "toast toast-success", title: "Saved Watchtime!"}))
       .then(() => setLoadedUser(false))
       .catch(reason => toast({

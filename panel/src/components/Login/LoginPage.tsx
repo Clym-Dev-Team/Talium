@@ -1,6 +1,5 @@
 import {PropsWithChildren} from "react";
 import LoginPane from "./LoginPane.tsx"
-import {BOT_BACKEND_ADDR} from "@/main.tsx";
 
 export default function LoginPage({children}: PropsWithChildren<Record<never, never>>) {
   if (localStorage.getItem("accessToken") == null) {
@@ -9,7 +8,7 @@ export default function LoginPage({children}: PropsWithChildren<Record<never, ne
   return children;
 }
 
-export async function fetchWithAuth(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+export async function fetchWithAuth(serverBaseUrl: string, input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const accessToken = localStorage.getItem("accessToken");
 
   if (accessToken == null) {
@@ -26,7 +25,7 @@ export async function fetchWithAuth(input: RequestInfo | URL, init?: RequestInit
     init.headers = headers;
   }
 
-  const res = await fetch(BOT_BACKEND_ADDR + input, init);
+  const res = await fetch(serverBaseUrl + input, init);
   if (res.ok) {
     return res;
   } else if (res.status == 401) {

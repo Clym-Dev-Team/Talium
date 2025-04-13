@@ -9,6 +9,7 @@ import IconX from "@i/IconX.tsx";
 import IconSave from "@i/IconSave.tsx";
 import IconCheck from "@i/IconCheck.tsx";
 import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
+import {usePublicConfig} from "@s/PublicConfigProvider.tsx";
 
 export interface WinnerCardProps {
   username: string,
@@ -22,6 +23,7 @@ interface WinnerState {
 }
 
 export default function WinnerCard({userId, username}: WinnerCardProps) {
+  const {serverBaseUrl} = usePublicConfig();
   const { toast } = useToast();
   const [isCommentEdit, setIsCommentEdit] = useState(false)
   const {register, getValues, setValue, formState, reset, handleSubmit} = useForm<WinnerState>({
@@ -34,7 +36,7 @@ export default function WinnerCard({userId, username}: WinnerCardProps) {
 
   const submit = useCallback((state: WinnerState) => {
     //TODO make endpoint                 \/
-    fetchWithAuth("/!TODO!", {method: "POST", body: JSON.stringify(state)})
+    fetchWithAuth(serverBaseUrl, "/!TODO!", {method: "POST", body: JSON.stringify(state)})
       .then(() => toast({className: "toast toast-success", title: "Saved Winner!"}))
       .catch(reason => toast({
         className: "toast toast-failure",

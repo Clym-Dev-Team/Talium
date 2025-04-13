@@ -8,8 +8,6 @@ RUN npm install
 
 COPY . .
 
-RUN ls -l
-
 RUN npm run build
 
 # Stage 2: Serve with Nginx

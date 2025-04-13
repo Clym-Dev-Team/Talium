@@ -1,6 +1,7 @@
-import {PANEL_BASE_URL} from "@/main.tsx";
+import {usePublicConfig} from "@s/PublicConfigProvider.tsx";
 
 export default function TokenRemover() {
+  const {panelBaseUrl} = usePublicConfig();
   const query = new URLSearchParams(document.location.hash.substring(1))
   const state = query.get("state")
   const token = query.get("access_token")
@@ -12,7 +13,7 @@ export default function TokenRemover() {
   if (error == null && token != null) {
     //TODO check state
     localStorage.setItem("accessToken", token)
-    setTimeout(() => location.assign(PANEL_BASE_URL), 1)
+    setTimeout(() => location.assign(panelBaseUrl), 1)
   }
   //TODO error handling
 

@@ -1,6 +1,6 @@
-import React, {createContext, useEffect, useState} from "react";
+import React, {createContext, useContext, useEffect, useState} from "react";
 
-export const ENV_TWITCH_CLIENT_ID: string = import.meta.env.VITE_TWITCH_CLIENT_ID
+export const ENV_TWITCH_CLIENT_ID: string | undefined = import.meta.env.VITE_TWITCH_CLIENT_ID
 
 interface PublicConfig {
   panelBaseUrl: string;
@@ -60,6 +60,10 @@ export default function PublicConfigProvider({children}: PublicConfigProps) {
     }
   }, []);
 
+  if (!config) {
+    return null;
+  }
+
   return <PublicConfigContext.Provider value={config!}>
     {children}
   </PublicConfigContext.Provider>
@@ -91,3 +95,8 @@ function parsePropertiesToMap(content: string): Map<string, string> {
 
   return map;
 }
+
+export const usePublicConfig = () => {
+  console.log("gotContext")
+  return useContext(PublicConfigContext)
+};

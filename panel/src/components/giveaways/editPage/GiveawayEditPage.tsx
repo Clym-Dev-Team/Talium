@@ -19,7 +19,7 @@ import {usePopout} from "@s/popoutProvider/PopoutProvider.tsx";
 import DisruptiveActionPopup from "@c/giveaways/DisruptiveActionPopup.tsx";
 import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
 import {useToast} from "@shadcn/use-toast.ts";
-import {PANEL_BASE_URL} from "@/main.tsx";
+import {usePublicConfig} from "@s/PublicConfigProvider.tsx";
 
 export interface GiveawayEditPageProps {
   initialData: Giveaway,
@@ -32,6 +32,7 @@ export interface GiveawayEditPageProps {
  * After the giveaway is saved, the page is reloaded!
  */
 export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProps) {
+  const {panelBaseUrl, serverBaseUrl} = usePublicConfig();
   const {toast} = useToast();
   const {showPopout} = usePopout()
   const {register, watch, setValue, handleSubmit, getFieldState} = useForm<GiveawaySave>({
@@ -50,7 +51,7 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
 
   const doSave = useCallback((save: GiveawaySave) => {
     if (gw.status == GiveawayStatus.CREATE) {
-      fetchWithAuth("/giveaway/create", {
+      fetchWithAuth(serverBaseUrl, "/giveaway/create", {
         method: "POST",
         body: JSON.stringify(save),
       }).then(() => location.reload())
@@ -60,7 +61,7 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
           description: reason.toString()
         }));
     } else {
-      fetchWithAuth("/giveaway/save/" + gw.id, {
+      fetchWithAuth(serverBaseUrl, "/giveaway/save/" + gw.id, {
         method: "POST",
         body: JSON.stringify(save),
       }).then(() => location.reload())
@@ -115,11 +116,11 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
 
   const onAction = useCallback((action: GiveawayAction) => {
     const actionString = (GiveawayAction as any)[action] as GiveawayAction;
-    fetchWithAuth("/giveaway/action/" + gw.id + "/" + actionString, {
+    fetchWithAuth(serverBaseUrl, "/giveaway/action/" + gw.id + "/" + actionString, {
       method: "POST",
     }).then(() => {
       if (action == GiveawayAction.DELETE) {
-        location.assign(PANEL_BASE_URL + "/giveaways")
+        location.assign(panelBaseUrl + "/giveaways")
       } else {
         location.reload();
       }

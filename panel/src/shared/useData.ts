@@ -1,8 +1,10 @@
 import {useCallback, useEffect, useState} from "react";
 import {useToast} from "@shadcn/use-toast.ts";
 import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
+import {usePublicConfig} from "@s/PublicConfigProvider.tsx";
 
 export default function useData<T>(urlPath: string, objectName: string, initialValue: T, init?: RequestInit) {
+  const {serverBaseUrl} = usePublicConfig()
   const {toast} = useToast();
   const [data, setData] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,7 @@ export default function useData<T>(urlPath: string, objectName: string, initialV
       return;
     }
     let ignore = false;
-    fetchWithAuth(urlPath, init).then()
+    fetchWithAuth(serverBaseUrl, urlPath, init).then()
       .then(response => response.json())
       .then(json => {
         if (!ignore) {
@@ -39,7 +41,7 @@ export default function useData<T>(urlPath: string, objectName: string, initialV
   }, [get]);
 
   const sendData = useCallback((urlPath: string, successToast?: string, init?: RequestInit) => {
-    return fetchWithAuth(urlPath, init)
+    return fetchWithAuth(serverBaseUrl, urlPath, init)
       .then(response => response.json())
       .then(value => {
         successToast && toast({className: "toast toast-success", title: successToast});

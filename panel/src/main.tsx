@@ -23,10 +23,6 @@ import './main.css'
 import "./i18n";
 import PublicConfigProvider from "@s/PublicConfigProvider.tsx";
 
-export const PANEL_BASE_URL: string = import.meta.env.VITE_PANEL_BASE_URL;
-export const BOT_BACKEND_ADDR: string = import.meta.env.VITE_BOT_BACKEND_ADDR
-export const HISTORY_BACKEND_ADDR: string = import.meta.env.VITE_HISTORY_BACKEND_ADDR
-export const TWITCH_CLIENT_ID: string = import.meta.env.VITE_TWITCH_CLIENT_ID
 
 const router = createBrowserRouter(
   createRoutesFromChildren(
