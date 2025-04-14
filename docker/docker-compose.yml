@@ -1,0 +1,61 @@
+name: talium-long_run_test
+services:
+  # If you want to use an external Database you would remove this service, and update the database url in the .properties files
+  taliumDB:
+    image: mariadb:11.1.2
+    environment:
+      # Configure Database name, username und password
+      MYSQL_DATABASE: 'talium'
+      MYSQL_USER: 'taliumBot'
+      # CHANGE PASSWORDS!!
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+      TZ: Europe/Berlin
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "9770:3306"
+    expose:
+      - 3306
+    volumes:
+      - ./db/data:/var/lib/mysql
+
+  taliumBot:
+    image: orciument/talium:latest
+    depends_on: 
+      taliumDB:
+        condition: service_healthy
+        restart: true
+    environment:
+      - TZ=Europe/Berlin
+    expose: 
+      - 4771
+    ports:
+      - "9771:4771"
+    volumes:
+      # Bind in our config files into the container, so that we just need to restart the service
+      - ./config:/home/config
+
+  taliumPanel:
+    image: orciument/talium_panel:latest
+    depends_on:
+      taliumDB:
+        condition: service_healthy
+        restart: true
+    environment:
+      - TZ=Europe/Berlin
+    expose: 
+      - 4772
+    ports:
+      - "9772:4772"
+    volumes:
+      # Bind in our config files into the container, so that we just need to restart the service
+      - ./config/public.properties:/usr/share/nginx/html/public.properties
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+
+volumes:
+    TaliumData:
