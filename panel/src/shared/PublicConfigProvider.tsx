@@ -96,7 +96,4 @@ function parsePropertiesToMap(content: string): Map<string, string> {
   return map;
 }
 
-export const usePublicConfig = () => {
-  console.log("gotContext")
-  return useContext(PublicConfigContext)
-};
+export const usePublicConfig = () => useContext(PublicConfigContext);
