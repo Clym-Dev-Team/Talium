@@ -49,7 +49,7 @@ public class GiveawayService {
         Registrar.registerTemplate("giveaway.retryableError", "@${sender} Failed to enter Giveaway. Please try again later");
         var activeGWs = giveawayRepo.findAllByStatusIsNot(GiveawayStatus.ARCHIVED);
         for (var gw : activeGWs) {
-            createGWEnterCommand(gw.id(), gw.command().patterns.getFirst().pattern);
+            createGWEnterCommand(gw.id(), gw.commandPattern());
         }
     }
 

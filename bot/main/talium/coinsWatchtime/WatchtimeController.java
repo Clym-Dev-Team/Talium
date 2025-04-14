@@ -35,6 +35,9 @@ public class WatchtimeController {
         var chatters = chatterService.getTopWatchtime();
         var dto = new ArrayList<LeaderboardDTO>();
         var userIdList = chatters.stream().map(chatter -> chatter.twitchUserId).toList();
+        if (userIdList.isEmpty()) {
+            return "[]";
+        }
         var twitchUserList = Out.Twitch.api.getUserById(userIdList);
 
         Map<String, String> usernameMap = new TreeMap<>();
