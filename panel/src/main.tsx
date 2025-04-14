@@ -23,6 +23,10 @@ import './main.css'
 import "./i18n";
 import PublicConfigProvider from "@s/PublicConfigProvider.tsx";
 
+export const COMMIT_SHA = import.meta.env.VITE_COMMIT_SHA;
+export const VERSION = import.meta.env.VITE_VERSION;
+export const CREATED_AT = import.meta.env.VITE_CREATED_AT;
+export const PLATFORM = import.meta.env.VITE_PLATFORM;
 
 const router = createBrowserRouter(
   createRoutesFromChildren(
@@ -56,13 +60,13 @@ const router = createBrowserRouter(
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <I18nextProvider i18n={i18n}>
-        <TooltipProvider>
-          <PopoutProvider>
-            <PublicConfigProvider>
+      <TooltipProvider>
+        <PopoutProvider>
+          <PublicConfigProvider>
             <RouterProvider router={router}/>
-            </PublicConfigProvider>
-          </PopoutProvider>
-        </TooltipProvider>
+          </PublicConfigProvider>
+        </PopoutProvider>
+      </TooltipProvider>
     </I18nextProvider>
   </React.StrictMode>,
 )

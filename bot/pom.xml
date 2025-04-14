@@ -9,12 +9,13 @@
     </parent>
     <groupId>de.orciument</groupId>
     <artifactId>TaliumBot</artifactId>
-    <version>1</version>
-    <name>Talium</name>
-    <description>Talium, a Java Twitch Bot</description>
     <properties>
         <java.version>21</java.version>
+        <revision>1.0.0-SNAPSHOT</revision>
     </properties>
+    <version>${revision}</version>
+    <name>Talium</name>
+    <description>Talium, a Java Twitch Bot</description>
 
     <dependencies>
         <!-- Spring Boot -->
@@ -44,13 +45,6 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-
 
         <!-- Basic Libraries -->
         <dependency>
