@@ -1,5 +1,6 @@
 package talium.giveaways;
 
+import com.github.twitch4j.helix.domain.User;
 import jakarta.persistence.LockTimeoutException;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
@@ -12,16 +13,16 @@ import talium.coinsWatchtime.chatter.ChatterRepo;
 import talium.coinsWatchtime.chatter.ChatterService;
 import talium.giveaways.persistence.*;
 import talium.giveaways.transit.GiveawayDTO;
+import talium.giveaways.transit.GiveawayDrawDTO;
 import talium.giveaways.transit.GiveawaySaveDTO;
+import talium.giveaways.transit.WinnerDTO;
 import talium.twitch4J.TwitchUserPermission;
 import talium.twitchCommands.cooldown.ChatCooldown;
 import talium.twitchCommands.cooldown.CooldownType;
 import talium.twitchCommands.persistence.CommandEntity;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -32,17 +33,21 @@ public class GiveawayService {
     private static ChatterService chatterService;
     private static ChatterRepo chatterRepo;
     private static TicketUpdater ticketUpdater;
+    private static WinnerRepo winnerRepo;
+    private static String winnerWebhook;
     private final EntriesRepo entriesRepo;
 
     public GiveawayService(EntriesRepo entriesRepo) {
         this.entriesRepo = entriesRepo;
     }
 
-    public static void init(GiveawayRepo giveawayRepo, ChatterService chatterService, ChatterRepo chatterRepo, TicketUpdater ticketUpdater) {
+    public static void init(GiveawayRepo giveawayRepo, ChatterService chatterService, ChatterRepo chatterRepo, TicketUpdater ticketUpdater, WinnerRepo winnerRepo, String winnerWebhook) {
         GiveawayService.giveawayRepo = giveawayRepo;
         GiveawayService.chatterService = chatterService;
         GiveawayService.chatterRepo = chatterRepo;
         GiveawayService.ticketUpdater = ticketUpdater;
+        GiveawayService.winnerRepo = winnerRepo;
+        GiveawayService.winnerWebhook = winnerWebhook;
         Registrar.registerTemplate("giveaway.info", "@${sender} has ${senderCoins} Coins and ${senderTickets} Tickets. Usage: ${commandPattern} [amount]");
         Registrar.registerTemplate("giveaway.notOpen", "@${sender} the Giveaway ${commandPattern} is not yet open");
         Registrar.registerTemplate("giveaway.missingCoins", "@${sender} Not enough Coins for ${buyAmount} Tickets. You have ${senderCoins} Coins. ${giveaway.ticketCost} per Ticket");
@@ -167,6 +172,7 @@ public class GiveawayService {
                     entriesRepo.subtractTicketsByGiveawayId(giveaway.id(), ticket.tickets());
                     chatterRepo.addCoins(ticket.userId(), (long) ticket.tickets() * giveaway.ticketCost());
                 }
+                entriesRepo.removeEntriesWithZeroTicketsByGiveawayId(giveaway.id());
             } else {
                 logger.error("Failed to acquire lock to refund all tickets for giveaway, ID: {}, until timeout", giveaway.id());
                 throw new LockTimeoutException("Failed to acquire lock to refund all tickets for giveaway, ID: " + giveaway.id() + ", until timeout");
@@ -180,8 +186,44 @@ public class GiveawayService {
         }
     }
 
-    public void draw(GiveawayDAO giveaway) {
-        //TODO
+    public GiveawayDrawDTO draw(GiveawayDAO giveaway) {
+        List<String> tickets = new ArrayList<>();
+        for (var ticket : giveaway.ticketList()) {
+            //skip users that have already won, if allowRedrawOfUser is disabled
+            if (!giveaway.allowRedrawOfUser() && giveaway.winners().stream().anyMatch(winnersDAO -> Objects.equals(winnersDAO.userId(), ticket.userId()))) {
+                continue;
+            }
+            for (int i = 0; i < ticket.tickets(); i++) {
+                tickets.add(ticket.userId());
+            }
+        }
+        if (tickets.isEmpty()) {
+            throw new RuntimeException("There are no possible winners, because there are no eligeble Tickets " + giveaway.id());
+        }
+        int random = (int) (Math.random() * tickets.size());
+        String winnerId = tickets.get(random);
+        EntriesDAO winnerEntry = giveaway.ticketList().stream()
+                .filter(entriesDAO -> entriesDAO.userId().equals(winnerId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Could not find WinnerId in list of Ticket entries!"));
+
+        if (winnerEntry.tickets() == 1) {
+            entriesRepo.removeEntry(giveaway.id(), winnerEntry.userId());
+        } else {
+            entriesRepo.subtractTicketForEntry(giveaway.id(), winnerEntry.userId(), 1);
+        }
+        winnerRepo.addWinner(giveaway.id(), winnerId);
+
+        var winnerUser = Out.Twitch.api.getUserById(winnerId).map(User::getDisplayName).orElse(winnerId);
+        Out.Discord.sendWebhookMessage(winnerWebhook, "**Verlosung:** " + giveaway.commandPattern() + "  ||  Gewinner:in: `" + winnerUser + "`");
+
+        var winners = winnerRepo.getWinnersByGiveaway(giveaway.id());
+        var dto = new ArrayList<WinnerDTO>(winners.size());
+        for (var winner : winners) {
+            var userName = Out.Twitch.api.getUserById(winner.userId()).map(User::getDisplayName).orElseGet(winner::userId);
+            dto.add(new WinnerDTO(userName, winner.userId(), winner.rejected(), winner.comment()));
+        }
+        return new GiveawayDrawDTO(dto);
     }
 
     public void archive(GiveawayDAO giveaway) {
@@ -206,6 +248,7 @@ public class GiveawayService {
     }
 
     public void deleteArchived(GiveawayDAO giveaway) {
+        //TODO only if zero entries
         giveawayRepo.delete(giveaway);
     }
 

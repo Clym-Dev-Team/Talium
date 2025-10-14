@@ -72,8 +72,12 @@ public class TicketUpdater {
         if (chatterRepo.addCoins(userId, -additionalCost) == 0) {
             return false;
         }
-//        var entriesRepo.existsById(gwId, userId);v
-        //TODO either update old value, or add new entry
+        var tickets = entriesRepo.getTicketsByGiveawayIdAndUserId(gwId, userId);
+        if (tickets.isEmpty()) {
+            entriesRepo.createEntry(gwId, userId, ticketsToAdd);
+        } else {
+            entriesRepo.addTicketsForUser(gwId, userId, ticketsToAdd);
+        }
         return true;
     }
 

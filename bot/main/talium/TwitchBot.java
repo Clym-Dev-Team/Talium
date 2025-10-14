@@ -5,11 +5,13 @@ import com.google.gson.GsonBuilder;
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.PreRemove;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import talium.coinsWatchtime.WIPWatchtimeCommandServer;
 import talium.coinsWatchtime.WatchtimeUpdateService;
@@ -18,6 +20,7 @@ import talium.coinsWatchtime.chatter.ChatterService;
 import talium.giveaways.GiveawayService;
 import talium.giveaways.TicketUpdater;
 import talium.giveaways.persistence.GiveawayRepo;
+import talium.giveaways.persistence.WinnerRepo;
 import talium.inputSystem.BotInput;
 import talium.inputSystem.HealthManager;
 import talium.inputSystem.InputStatus;
@@ -70,8 +73,9 @@ public class TwitchBot {
         System.out.println("DateFormat: DayNumber-Hour:Minute:Second:Millis");
         System.out.println("DDD-HH:mm:ss.SSS |LEVEL| [THREAD]        LOGGER (Source Class)               - MSG");
         System.out.println("-----------------|-----|-[-------------]---------------------------------------------------------------------------------------------------------------------------------------------");
-        var serverPort = ctx.getEnvironment().getProperty("server.port");
+        var serverPort = getPropertyThrowing(ctx.getEnvironment(),"server.port");
         logger.info("Server started on Port: {}", serverPort);
+        var giveawayWinnerAlertChannel = getPropertyThrowing(ctx.getEnvironment(),"giveawayWinnerAlertChannel");
 
         CommandWithCallbackCache.init(ctx.getBean(TriggerService.class));
 
@@ -92,7 +96,9 @@ public class TwitchBot {
                 ctx.getBean(GiveawayRepo.class),
                 ctx.getBean(ChatterService.class),
                 ctx.getBean(ChatterRepo.class),
-                ctx.getBean(TicketUpdater.class)
+                ctx.getBean(TicketUpdater.class),
+                ctx.getBean(WinnerRepo.class),
+                giveawayWinnerAlertChannel
         );
 
         time.close();
@@ -146,5 +152,18 @@ public class TwitchBot {
             logger.error("Exception reconnecting twitch: {}", e.getMessage());
             return false;
         }
+    }
+
+    private static @NotNull String getPropertyThrowing(ConfigurableEnvironment env, String key) {
+        class MissingConfigException extends RuntimeException {
+            public MissingConfigException(String key) {
+                super("Missing configuration property: " + key);
+            }
+        }
+        var value = env.getProperty(key);
+        if (value == null) {
+            throw new MissingConfigException(key);
+        }
+        return value;
     }
 }

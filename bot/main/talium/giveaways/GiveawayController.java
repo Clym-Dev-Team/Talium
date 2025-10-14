@@ -1,6 +1,7 @@
 package talium.giveaways;
 
 import com.github.twitch4j.helix.domain.User;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,7 +70,7 @@ public class GiveawayController {
     public ResponseEntity<String> getGiveaway(@PathVariable UUID gwId) {
         var entity = giveawayRepo.findById(gwId);
         if (entity.isEmpty()) {
-            return new ResponseEntity<>("No Giveaway with Id: " + gwId + " could be found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No Giveaway with Id: " + StringEscapeUtils.escapeHtml(gwId.toString()) + " could be found", HttpStatus.NOT_FOUND);
         }
         var gw = entity.get();
         var dto = new GiveawayDTO(gw.id(), gw.title(), gw.notes(), gw.createdAt().toString(), gw.lastUpdatedAt().toString(), gw.status(), gw.commandPattern(), gw.autoStart() != null ? gw.autoStart().toString() : null, gw.autoEnd() != null ? gw.autoEnd().toString() : null, gw.ticketCost(), gw.maxTickets(), gw.allowRedrawOfUser(), gw.autoAnnounceWinner(), gw.ticketList().stream().map(ent -> {
@@ -94,12 +95,13 @@ public class GiveawayController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Giveaway with that id not found, cannot action");
         }
         var gw = gwOption.get();
+        // after the gw is used by one of these methods they gw has to be considered poisoned and used up.
+        // Then only the id is safe to use, a new instance has to be created from the DB
         switch (action.toLowerCase()) {
             case "open" -> {
                 if (gw.status() != GiveawayStatus.RUNNING) {
                     giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.RUNNING);
                 }
-                return ResponseEntity.ok("");
             }
             case "close" -> {
                 if (gw.status() == GiveawayStatus.ARCHIVED) {
@@ -108,17 +110,23 @@ public class GiveawayController {
                 if (gw.status() == GiveawayStatus.RUNNING) {
                     giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.PAUSED);
                 }
-                return ResponseEntity.ok("");
             }
             case "draw" -> {
                 if (gw.status() == GiveawayStatus.ARCHIVED) {
                     return ResponseEntity.badRequest().body("Unable to draw winner, unarchive first");
                 }
                 if (gw.status() == GiveawayStatus.RUNNING) {
+                    //maybe lock, but i will leave this out for simplicity, because normally this shouldn't matter
                     giveawayRepo.updateStatusById(gw.id(), GiveawayStatus.PAUSED);
+                    gw = giveawayRepo.findById(gw.id()).get();
                 }
-                giveawayService.draw(gw);
-                return ResponseEntity.ok("");
+                try {
+                    var winners = giveawayService.draw(gw);
+                    var body = gson.toJson(winners);
+                    return ResponseEntity.ok(body);
+                } catch (Exception e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+                }
             }
             case "refundall" -> {
                 if (gw.status() != GiveawayStatus.PAUSED) {
@@ -129,7 +137,6 @@ public class GiveawayController {
                 } catch (Exception e) {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to refund tickets");
                 }
-                return ResponseEntity.ok("");
             }
             case "archive" -> {
                 if (gw.status() != GiveawayStatus.PAUSED) {
@@ -150,7 +157,8 @@ public class GiveawayController {
                 giveawayService.deleteArchived(gw);
             }
             default -> {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid action for this endpoint: " + action);
+                String escapedAction = StringEscapeUtils.escapeHtml(action);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid action for this endpoint: " + escapedAction);
             }
         }
         return ResponseEntity.ok("");

@@ -3,14 +3,20 @@ package talium;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import talium.twitch4J.TwitchAPINoop;
-import talium.twitch4J.TwitchApi;
 import talium.stringTemplates.Template;
 import talium.stringTemplates.TemplateService;
-import talium.templateParser.exeptions.*;
 import talium.templateParser.TemplateParser;
+import talium.templateParser.exeptions.InterpretationException;
+import talium.templateParser.exeptions.ParsingException;
 import talium.templateParser.statements.Statement;
+import talium.twitch4J.TwitchAPINoop;
+import talium.twitch4J.TwitchApi;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -70,6 +76,24 @@ public class Out {
     }
 
     public static class Discord {
+        public static void sendWebhookMessage(String webhook, String message) {
+            try (var client = HttpClient.newHttpClient()) {
+                var request = HttpRequest
+                        .newBuilder(URI.create(webhook))
+                        .setHeader("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString("{ \"content\": \"" + message + "\"}"))
+                        .build();
+                var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                    //TODO do some clever error handling so that the giveaway winner isn't eaten
+                    return;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static class Alert {
