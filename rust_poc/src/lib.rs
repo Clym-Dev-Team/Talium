@@ -4,6 +4,7 @@ use tokio::runtime::Runtime;
 
 mod servers;
 mod oauth_service;
+mod authentication_service;
 
 pub(crate) static PANEL_BASE_URL: &'static str = "http://localhost:5173";
 

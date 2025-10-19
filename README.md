@@ -82,3 +82,5 @@ You can of course compile the code for yourself, (besides --preview-enabled beca
 ## License
 Standart MIT License see -> [License](LICENSE)
 
++273 Stunden, Wakatime
++273 Stunden, Wakatime

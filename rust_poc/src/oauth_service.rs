@@ -1,3 +1,4 @@
+use serde::Serialize;
 use std::sync::mpsc::{channel, Sender};
 use std::sync::Mutex;
 
@@ -51,4 +52,22 @@ pub fn return_oauth(service: String, state: String, scope: String, code: String)
 
     guard.remove(index);
     Ok(())
+}
+
+#[derive(Serialize)]
+pub struct OauthRequestDisplay {
+    account_name: String,
+    service_name: String,
+    url: String,
+}
+
+pub fn get_active_requests() -> Vec<OauthRequestDisplay> {
+    let mut guard = ACTIVE_REQUESTS.lock().unwrap();
+    guard.iter().map(|r| {
+        OauthRequestDisplay {
+            service_name: r.service_name.clone(),
+            account_name: r.account_name.clone(),
+            url: r.url.clone(),
+        }
+    }).collect()
 }

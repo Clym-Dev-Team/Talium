@@ -1,10 +1,12 @@
-use crate::oauth_service::{return_oauth, OauthReturnError};
+use crate::authentication_service::{authenticate, Moderator, User};
+use crate::oauth_service::{get_active_requests, return_oauth, OauthReturnError};
 use crate::PANEL_BASE_URL;
 use axum::body::Body;
-use axum::extract::{Path, Query};
-use axum::response::IntoResponse;
+use axum::extract::{FromRequestParts, Path, Query};
+use axum::http::request::Parts;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get};
-use axum::Router;
+use axum::{Json, Router};
 use rocket::serde::Deserialize;
 use url::form_urlencoded;
 
@@ -54,6 +56,41 @@ async fn receive_oauth(
     }))
 }
 
-async fn list_oauth() -> impl IntoResponse {
+async fn list_oauth(_: Moderator) -> impl IntoResponse {
+    Json(get_active_requests())
+}
 
+pub enum AuthFailure {
+    AuthenticationFailure,
+    AuthorizationFailure,
+}
+impl IntoResponse for AuthFailure {
+    fn into_response(self) -> Response {
+        // this is not the correct status code
+        Body::new(match self {
+            AuthFailure::AuthenticationFailure => "Authentication failure",
+            AuthFailure::AuthorizationFailure => "Authorization failure",
+        }.to_string()).into_response()
+    }
+}
+
+impl<S> FromRequestParts<S> for Moderator
+where
+    S: Send + Sync,
+{
+    type Rejection = AuthFailure;
+
+    fn from_request_parts(parts: &mut Parts, _: &S) -> impl Future<Output=Result<Self, Self::Rejection>> + Send {
+        async {
+            println!("headers: {:?}", parts.headers);
+            let access_token = parts.headers.get("token").map(|value| value.to_str().unwrap().to_string());
+            let user_agent = parts.headers.get("User-Agent").map(|value| value.to_str().unwrap().to_string());
+            let user = authenticate(access_token, user_agent).ok_or(AuthFailure::AuthenticationFailure)?;
+            #[allow(unreachable_patterns)]
+            match user {
+                User::Moderator(m) => Ok(m),
+                _ => Err(AuthFailure::AuthorizationFailure)
+            }
+        }
+    }
 }
