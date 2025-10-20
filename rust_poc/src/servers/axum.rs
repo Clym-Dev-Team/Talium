@@ -1,19 +1,23 @@
 use crate::authentication_service::{authenticate, Moderator, User};
-use crate::oauth_service::{get_active_requests, return_oauth, OauthReturnError};
+use crate::oauth_service::{OAuthService, OauthReturnError};
 use crate::PANEL_BASE_URL;
 use axum::body::Body;
-use axum::extract::{FromRequestParts, Path, Query};
+use axum::extract::{FromRequestParts, Path, Query, State};
 use axum::http::request::Parts;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get};
 use axum::{Json, Router};
 use rocket::serde::Deserialize;
+use std::sync::Arc;
 use url::form_urlencoded;
 
-pub async fn axum(on_port: u16) {
+type AxumState = Arc<OAuthService>;
+
+pub async fn axum(on_port: u16, oauth_service: AxumState) {
     let app = Router::new()
         .route("/auth/{service}", any(receive_oauth))
-        .route("/setup/auth/list", get(list_oauth));
+        .route("/setup/auth/list", get(list_oauth))
+        .with_state(oauth_service);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", on_port)).await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -21,6 +25,18 @@ pub async fn axum(on_port: u16) {
 
 fn url_encode<'a>(input: &str) -> String {
     form_urlencoded::byte_serialize(input.as_bytes()).collect()
+}
+
+/// Get redirect url for a particular service. The url is fully formed with the host accessible from the outside.
+///
+/// `service_name` is the string name/id of the service that you use to in [OAuthService::new_oauth_request]
+pub fn get_redirect_url(bot_base_url_config: String, service_name: &str) -> String {
+    bot_base_url_config + "/auth/" + service_name
+}
+
+/// Get the public url to the panel oauth setup page
+pub fn get_oauth_setup_url(bot_base_url_config: String) -> String {
+    bot_base_url_config + "/auth"
 }
 
 #[derive(Deserialize)]
@@ -33,6 +49,7 @@ struct ReceiveOAuthQuery {
 }
 
 async fn receive_oauth(
+    State(state): State<AxumState>,
     Path(service): Path<String>,
     Query(query): Query<ReceiveOAuthQuery>,
 ) -> impl IntoResponse {
@@ -46,7 +63,7 @@ async fn receive_oauth(
     if query.code.is_none() {
         return Body::new(format!("{}?success=false&error={}", PANEL_BASE_URL, url_encode("Query param code is required for non error Oauth response")))
     }
-    Body::new(format!("{PANEL_BASE_URL}{}", match return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap()) {
+    Body::new(format!("{PANEL_BASE_URL}{}", match state.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap()) {
         Ok(()) => format!("{}?success=true", PANEL_BASE_URL),
         Err(OauthReturnError::NotRequested) => format!("{}?success=false&error={}", PANEL_BASE_URL, url_encode("This oauth was never requested from the bot")),
         Err(OauthReturnError::ReturnChannelClosed) => {
@@ -56,8 +73,8 @@ async fn receive_oauth(
     }))
 }
 
-async fn list_oauth(_: Moderator) -> impl IntoResponse {
-    Json(get_active_requests())
+async fn list_oauth(_: Moderator, State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.get_active_requests())
 }
 
 pub enum AuthFailure {

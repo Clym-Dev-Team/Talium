@@ -20,3 +20,10 @@
 3. Integration different controlflow directions (webserver + inputs)
 4. Implementing Reduced modes
 5. Implementing automatic upgrade of mode once available
+
+# Solutions & References
+https://www.arewewebyet.org/topics/templating
+  - for out templating language
+  - checked tera and handlebars
+  - both support runtime created templates
+  - didn't check any other once's
