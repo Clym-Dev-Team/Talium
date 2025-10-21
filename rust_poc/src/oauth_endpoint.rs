@@ -1,31 +1,12 @@
-use crate::authentication_service::{authenticate, Moderator, User};
-use crate::oauth_service::{OAuthService, OauthReturnError};
+use crate::authentication_service::Moderator;
+use crate::axum::{url_encode, AxumState};
+use crate::oauth_service::OauthReturnError;
 use crate::PANEL_BASE_URL;
 use axum::body::Body;
-use axum::extract::{FromRequestParts, Path, Query, State};
-use axum::http::request::Parts;
-use axum::response::{IntoResponse, Response};
-use axum::routing::{any, get};
-use axum::{Json, Router};
+use axum::extract::{Path, Query, State};
+use axum::response::IntoResponse;
+use axum::Json;
 use rocket::serde::Deserialize;
-use std::sync::Arc;
-use url::form_urlencoded;
-
-type AxumState = Arc<OAuthService>;
-
-pub async fn axum(on_port: u16, oauth_service: AxumState) {
-    let app = Router::new()
-        .route("/auth/{service}", any(receive_oauth))
-        .route("/setup/auth/list", get(list_oauth))
-        .with_state(oauth_service);
-
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", on_port)).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
-}
-
-fn url_encode<'a>(input: &str) -> String {
-    form_urlencoded::byte_serialize(input.as_bytes()).collect()
-}
 
 /// Get redirect url for a particular service. The url is fully formed with the host accessible from the outside.
 ///
@@ -40,7 +21,7 @@ pub fn get_oauth_setup_url(bot_base_url_config: String) -> String {
 }
 
 #[derive(Deserialize)]
-struct ReceiveOAuthQuery {
+pub struct ReceiveOAuthQuery {
     state: String,
     scope: Option<String>,
     code: Option<String>,
@@ -48,7 +29,7 @@ struct ReceiveOAuthQuery {
     error_description: Option<String>,
 }
 
-async fn receive_oauth(
+pub async fn receive_oauth(
     State(state): State<AxumState>,
     Path(service): Path<String>,
     Query(query): Query<ReceiveOAuthQuery>,
@@ -73,41 +54,6 @@ async fn receive_oauth(
     }))
 }
 
-async fn list_oauth(_: Moderator, State(state): State<AxumState>) -> impl IntoResponse {
+pub async fn list_oauth(_: Moderator, State(state): State<AxumState>) -> impl IntoResponse {
     Json(state.get_active_requests())
-}
-
-pub enum AuthFailure {
-    AuthenticationFailure,
-    AuthorizationFailure,
-}
-impl IntoResponse for AuthFailure {
-    fn into_response(self) -> Response {
-        // this is not the correct status code
-        Body::new(match self {
-            AuthFailure::AuthenticationFailure => "Authentication failure",
-            AuthFailure::AuthorizationFailure => "Authorization failure",
-        }.to_string()).into_response()
-    }
-}
-
-impl<S> FromRequestParts<S> for Moderator
-where
-    S: Send + Sync,
-{
-    type Rejection = AuthFailure;
-
-    fn from_request_parts(parts: &mut Parts, _: &S) -> impl Future<Output=Result<Self, Self::Rejection>> + Send {
-        async {
-            println!("headers: {:?}", parts.headers);
-            let access_token = parts.headers.get("token").map(|value| value.to_str().unwrap().to_string());
-            let user_agent = parts.headers.get("User-Agent").map(|value| value.to_str().unwrap().to_string());
-            let user = authenticate(access_token, user_agent).ok_or(AuthFailure::AuthenticationFailure)?;
-            #[allow(unreachable_patterns)]
-            match user {
-                User::Moderator(m) => Ok(m),
-                _ => Err(AuthFailure::AuthorizationFailure)
-            }
-        }
-    }
 }
