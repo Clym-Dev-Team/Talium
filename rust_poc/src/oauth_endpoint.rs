@@ -1,12 +1,12 @@
-use crate::authentication_service::Moderator;
 use crate::axum::{url_encode, AxumState};
 use crate::oauth_service::OauthReturnError;
+use crate::webserver_authentication::Moderator;
 use crate::PANEL_BASE_URL;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
 use axum::Json;
-use rocket::serde::Deserialize;
+use serde::Deserialize;
 
 /// Get redirect url for a particular service. The url is fully formed with the host accessible from the outside.
 ///
@@ -44,7 +44,7 @@ pub async fn receive_oauth(
     if query.code.is_none() {
         return Body::new(format!("{}?success=false&error={}", PANEL_BASE_URL, url_encode("Query param code is required for non error Oauth response")))
     }
-    Body::new(format!("{PANEL_BASE_URL}{}", match state.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap()) {
+    Body::new(format!("{PANEL_BASE_URL}{}", match state.oauth_service.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap()) {
         Ok(()) => format!("{}?success=true", PANEL_BASE_URL),
         Err(OauthReturnError::NotRequested) => format!("{}?success=false&error={}", PANEL_BASE_URL, url_encode("This oauth was never requested from the bot")),
         Err(OauthReturnError::ReturnChannelClosed) => {
@@ -55,5 +55,5 @@ pub async fn receive_oauth(
 }
 
 pub async fn list_oauth(_: Moderator, State(state): State<AxumState>) -> impl IntoResponse {
-    Json(state.get_active_requests())
+    Json(state.oauth_service.get_active_requests())
 }

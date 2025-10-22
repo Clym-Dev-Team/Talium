@@ -72,8 +72,9 @@ impl OAuthService {
         res.map_err(|_| OauthReturnError::ReturnChannelClosed)
     }
 
+    #[cfg(test)]
     pub fn corrupt_lock(&self) {
-        let mut guard = self.active_requests.write().unwrap();
+        let _guard = self.active_requests.write().unwrap();
         panic!("Purposely panic while holding guard");
     }
 

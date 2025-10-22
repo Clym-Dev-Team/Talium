@@ -1,5 +1,6 @@
 use talium::start;
 
-fn main() {
-    start()
+#[tokio::main]
+async fn main() {
+    start().await
 }

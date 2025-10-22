@@ -1,11 +1,11 @@
 use crate::oauth_endpoint::{list_oauth, receive_oauth};
-use crate::oauth_service::OAuthService;
+use crate::AppState;
 use axum::routing::{any, get};
 use axum::Router;
 use std::sync::Arc;
 use url::form_urlencoded;
 
-pub type AxumState = Arc<OAuthService>;
+pub type AxumState = Arc<AppState>;
 
 pub async fn axum(on_port: u16, oauth_service: AxumState) {
     let app = Router::new()
