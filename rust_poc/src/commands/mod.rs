@@ -1,2 +1,0 @@
-mod cooldown_service;
-mod command_executor_service;

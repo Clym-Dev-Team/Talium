@@ -1,3 +1,4 @@
+use crate::commands::twitch_service::TwitchService;
 use crate::db::ProdDB;
 use crate::oauth_service::OAuthService;
 use crate::session_service::SessionService;
@@ -34,6 +35,7 @@ pub async fn start() {
     let app_state = Arc::new(AppState {
         session_service: SessionService::default(),
         oauth_service: OAuthService::default(),
+        twitch_service: TwitchService,
         prod_db,
         webserver_config: RwLock::new(WebserverConfig {
             panel_base_url: Url::from_str("http://localhost:5173").unwrap(),
@@ -69,7 +71,8 @@ struct AppState {
     pub prod_db: ProdDB,
     pub session_service: SessionService,
     pub oauth_service: OAuthService,
-    pub webserver_config: RwLock<WebserverConfig>
+    pub webserver_config: RwLock<WebserverConfig>,
+    pub twitch_service: TwitchService,
 }
 
 #[allow(dead_code)]

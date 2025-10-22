@@ -16,7 +16,7 @@ pub struct PanelUserEntity {
 
 impl PanelUserService {
     pub async fn find_by_id(connection: &ProdDB, twitch_user_id: String) -> anyhow::Result<Option<PanelUser>> {
-        Ok(query_as!(PanelUserEntity, "SELECT * FROM sys_paneluser WHERE twitch_user_id = ?", twitch_user_id)
+        Ok(query_as!(PanelUserEntity, "SELECT * FROM `sys_paneluser` WHERE twitch_user_id = ?", twitch_user_id)
             // let res : Option<PanelUserEntity> = query_as("SELECT * FROM sys_paneluser WHERE twitch_user_id = $1")
             //     .bind(twitch_user_id)
             .fetch_optional(connection.deref())
