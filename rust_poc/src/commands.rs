@@ -1,3 +1,4 @@
+use crate::cooldown_service::CooldownService;
 use crate::AppState;
 use regex::Regex;
 use std::ops::Deref;
@@ -5,7 +6,6 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::broadcast::Receiver;
-
 // ChatMessage
 
 #[derive(Clone, Ord, PartialOrd, PartialEq, Eq)]
@@ -23,20 +23,23 @@ pub enum TwitchUserPermission {
     System,
 }
 
+pub type TwitchUserId = str;
+
 #[derive(Clone)]
 pub struct TwitchUser {
-    pub id: String,
+    pub id: Box<TwitchUserId>,
     pub name: String,
     pub permission: TwitchUserPermission,
     pub subscriber_months: u16,
     pub subscription_tier: u16,
 }
 
+// official id, uuid
+pub type TwitchMessageId = String;
+
 #[derive(Clone)]
 pub struct ChatMessage {
-    pub message_id: String,
-    pub user_message_index: u32,
-    pub global_message_index: u32,
+    pub message_id: TwitchMessageId,
     pub message: String,
     pub user: TwitchUser,
     pub is_highlighted_message: bool,
@@ -51,26 +54,21 @@ pub struct ChatMessage {
 
 // Triggers
 
-type TriggerId<'a> = &'a str;
-type TriggerCallback = fn(&AppState, TriggerId, &ChatMessage) -> ();
+pub type TriggerId = str;
+pub type TriggerCallback = fn(&AppState, &TriggerId, &ChatMessage) -> ();
 
-pub enum CooldownType {
-    SECONDS,
-    MESSAGES
-}
-
-pub struct ChatCooldown {
-    cooldown_type: CooldownType,
-    amount: u16,
+pub enum ChatCooldown {
+    SECONDS(u32),
+    MESSAGES(u16)
 }
 
 pub struct CommandTrigger {
-    id: String,
-    patterns: Vec<Regex>,
-    permission: TwitchUserPermission,
-    user_cooldown: ChatCooldown,
-    global_cooldown: ChatCooldown,
-    callback: Box<TriggerCallback>,
+    pub id: Box<TriggerId>,
+    pub patterns: Vec<Regex>,
+    pub permission: TwitchUserPermission,
+    pub user_cooldown: ChatCooldown,
+    pub global_cooldown: ChatCooldown,
+    pub callback: Box<TriggerCallback>,
 }
 
 static TEXT_COMMAND_CALLBACK: TriggerCallback = |_app_state , _trigger_id, _chat_message| {
@@ -88,6 +86,7 @@ static TEXT_COMMAND_CALLBACK: TriggerCallback = |_app_state , _trigger_id, _chat
 
 pub struct CommandService {
     triggers: Vec<CommandTrigger>,
+    cooldown_service: CooldownService,
 }
 
 struct ReceiverClosed;
@@ -104,13 +103,13 @@ impl CommandService {
                 }
             };
             for trigger in self.triggers.iter() {
-                CommandService::execute_trigger_if_matching(app_state.deref(), trigger, &message)
+                self.execute_trigger_if_matching(app_state.deref(), trigger, &message)
             }
         }
         Ok(())
     }
 
-    fn execute_trigger_if_matching(app_state: &AppState, trigger: &CommandTrigger, chat_message: &ChatMessage) {
+    fn execute_trigger_if_matching(&self, app_state: &AppState, trigger: &CommandTrigger, chat_message: &ChatMessage) {
         if chat_message.user.permission < trigger.permission {
             // logger.debug("User {} with {}, missing {} permission for command {}", message.user().name(), message.user().permission(), trigger.permission(), trigger.id());
             return;
@@ -120,17 +119,14 @@ impl CommandService {
             return;
         }
 
-        // if (inGlobalCooldown(message, trigger.id(), trigger.globalCooldown())) {
-        //     logger.debug("Call to command {} from {} rejected because of global cooldowns", trigger.id(), message.user().name());
-        //     return;
-        // }
-        // if (inUserCooldown(message, trigger.id(), trigger.userCooldown())) {
-        //     logger.debug("Call to command {} from {} rejected because of user cooldowns", trigger.id(), message.user().name());
-        //     return;
-        // }
-        // updateCooldownState(message, trigger.id(), trigger.globalCooldown(), trigger.userCooldown());
+        let cooldown_res = self.cooldown_service.check_update_cooldown(chat_message, trigger.id.as_ref(), &trigger.user_cooldown, &trigger.global_cooldown);
+        if cooldown_res.is_some() {
+            // logger.debug("Call to command {} from {} rejected because of global cooldowns", trigger.id(), message.user().name());
+            // logger.debug("Call to command {} from {} rejected because of user cooldowns", trigger.id(), message.user().name());
+            return;
+        }
 
-        (trigger.callback)(app_state, trigger.id.as_str(), chat_message);
+        (trigger.callback)(app_state, trigger.id.as_ref(), chat_message);
     }
 }
 
