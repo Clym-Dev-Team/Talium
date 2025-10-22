@@ -16,6 +16,7 @@ mod db;
 mod session_service;
 mod panel_user;
 mod panel_user_service;
+mod commands;
 
 pub(crate) static PANEL_BASE_URL: &'static str = "http://localhost:5173";
 
@@ -48,6 +49,7 @@ struct AppState {
     pub session_service: SessionService,
     pub oauth_service: OAuthService,
 }
+
 #[allow(dead_code)]
 mod _services {
     struct SetupWebserver;
