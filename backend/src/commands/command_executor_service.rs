@@ -6,13 +6,14 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
+use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::broadcast::Receiver;
 
 // ChatMessage
 
 #[allow(dead_code)]
-#[derive(Clone, Copy,  Ord, PartialOrd, PartialEq, Eq)]
+#[derive(Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Deserialize)]
 pub enum TwitchUserPermission {
     Everyone,
     PredictionsBlue,
@@ -63,6 +64,7 @@ pub type TriggerId = str;
 // pub type TriggerCallback = fn(&AppState, &TriggerId, &ChatMessage) ;
 pub type TriggerCallback = fn(Arc<AppState>, Box<TriggerId>, ChatMessage) -> Pin<Box<dyn Future<Output=()>>>;
 
+#[derive(Deserialize)]
 pub enum ChatCooldown {
     SECONDS(u32),
     MESSAGES(u16)

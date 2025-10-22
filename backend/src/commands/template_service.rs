@@ -3,10 +3,11 @@ use crate::db::ProdDB;
 use anyhow::Context;
 use sqlx::{query_as, FromRow};
 use std::ops::Deref;
+use serde::Deserialize;
 
 pub struct TemplateService;
 
-#[derive(FromRow)]
+#[derive(Deserialize, FromRow)]
 pub struct StringTemplate {
     pub id: String,
     pub template: String,
