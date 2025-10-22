@@ -20,7 +20,6 @@ mod session_service;
 mod panel_user;
 mod panel_user_service;
 mod commands;
-mod cooldown_service;
 
 pub async fn start() {
     //check if all mandatory configuration values are set

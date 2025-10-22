@@ -1,4 +1,4 @@
-use crate::commands::{ChatCooldown, ChatMessage, TriggerId, TwitchUserId};
+use super::command_executor_service::{ChatCooldown, ChatMessage, TriggerId, TwitchUserId};
 use std::collections::BTreeMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering::Relaxed;

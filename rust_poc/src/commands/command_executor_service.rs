@@ -1,4 +1,4 @@
-use crate::cooldown_service::CooldownService;
+use super::cooldown_service::CooldownService;
 use crate::AppState;
 use regex::Regex;
 use std::ops::Deref;
@@ -8,6 +8,7 @@ use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::broadcast::Receiver;
 // ChatMessage
 
+#[allow(dead_code)]
 #[derive(Clone, Ord, PartialOrd, PartialEq, Eq)]
 pub enum TwitchUserPermission {
     Everyone,
@@ -25,6 +26,7 @@ pub enum TwitchUserPermission {
 
 pub type TwitchUserId = str;
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub struct TwitchUser {
     pub id: Box<TwitchUserId>,
@@ -84,20 +86,20 @@ static TEXT_COMMAND_CALLBACK: TriggerCallback = |_app_state , _trigger_id, _chat
 
 // Service
 
-pub struct CommandService {
+pub struct CommandExecutorService {
     triggers: Vec<CommandTrigger>,
     cooldown_service: CooldownService,
 }
 
-struct ReceiverClosed;
 
-impl CommandService {
-    pub async fn receive_commands(&self, app_state: Arc<AppState>, mut receiver: Receiver<ChatMessage>) -> Result<(), ReceiverClosed> {
+impl CommandExecutorService {
+    #[allow(dead_code)]
+    pub async fn receive_commands(&self, app_state: Arc<AppState>, mut receiver: Receiver<ChatMessage>){
         loop {
             let message = match receiver.recv().await {
                 Ok(m) => m,
-                Err(RecvError::Closed) => return Err(ReceiverClosed),
-                Err(RecvError::Lagged(s)) => {
+                Err(RecvError::Closed) => return,
+                Err(RecvError::Lagged(_s)) => {
                     // log skip
                     continue;
                 }
@@ -106,7 +108,6 @@ impl CommandService {
                 self.execute_trigger_if_matching(app_state.deref(), trigger, &message)
             }
         }
-        Ok(())
     }
 
     fn execute_trigger_if_matching(&self, app_state: &AppState, trigger: &CommandTrigger, chat_message: &ChatMessage) {
