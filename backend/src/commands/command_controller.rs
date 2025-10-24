@@ -11,6 +11,7 @@ use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use sqlx::Type;
 use std::str::FromStr;
+use crate::commands::command_repo::SaveCommandError;
 
 #[derive(Deserialize, Serialize)]
 pub struct MessagePattern {
@@ -38,12 +39,11 @@ pub struct Command {
 #[derive(Deserialize, Serialize, Type, FromPrimitive)]
 #[repr(u8)]
 pub enum CooldownType {
-    Seconds = 0,
-    Messages = 1,
+    SECONDS = 0,
+    MESSAGES = 1,
 }
 
 //TODO use new return type that only returns enough information to render commands table, request the entire object on edit open
-//TODO update command_executor
 pub async fn get_all_user_commands(
     State(state): State<AxumState>,
     Query(search): Query<String>,
@@ -89,7 +89,7 @@ pub async fn set_enabled(
 ) -> AxResult<impl IntoResponse> {
     //TODO move into query parameter
     let enabled = bool::from_str(body.as_ref()).map_err(|_| StatusCode::BAD_REQUEST)?;
-    command_repo::set_enabled(&state.prod_db, trigger_id.as_ref(), enabled)
+    command_repo::set_enabled(state, trigger_id.as_ref(), enabled)
         .await
         .map_err(|_| {
             // log
@@ -104,8 +104,8 @@ pub async fn set_visible(
     Query(trigger_id): Query<String>,
     body: String
 ) -> AxResult<impl IntoResponse> {
-    let visible = bool::from_str(body.as_ref()).map_err(|_| StatusCode::BAD_REQUEST)?;
-    command_repo::set_visible(&state.prod_db, trigger_id.as_ref(), visible)
+    let visible = bool::from_str(body.as_str()).map_err(|_| StatusCode::BAD_REQUEST)?;
+    command_repo::set_visible(&state.prod_db, trigger_id.as_str(), visible)
         .await
         .map_err(|_| {
             // log
@@ -118,19 +118,26 @@ pub async fn set_visible(
 pub async fn save(
     State(state): State<AxumState>,
     Json(to_save): Json<Command>,
-) -> AxResult<impl IntoResponse> {
-    command_repo::save(&state.prod_db, &to_save).await.map_err(|_| {
-        // log
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-    Ok(())
+) -> impl IntoResponse {
+    match command_repo::save(state, &to_save).await {
+        Ok(()) => StatusCode::OK,
+        Err(SaveCommandError::DbError(db_error)) => {
+            // log
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+        Err(SaveCommandError::RegexError(r)) => {
+            // log, but actually more return. This error needs to reach the user in the panel
+            //TODO figure out how to return this error to the user
+            StatusCode::BAD_REQUEST
+        }
+    }
 }
 
 pub async fn delete_by_id(
     State(state): State<AxumState>,
     Path(trigger_id): Path<String>,
 ) -> AxResult<impl IntoResponse> {
-    command_repo::delete_by_id(&state.prod_db, trigger_id.as_ref()).await.map_err(|_| {
+    command_repo::delete_by_id(state, trigger_id.as_ref()).await.map_err(|_| {
         // log
         StatusCode::INTERNAL_SERVER_ERROR
     })?;

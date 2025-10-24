@@ -1,12 +1,13 @@
+use crate::axum::AxumState;
 use crate::commands::command_controller::{Command, CooldownType, MessagePattern};
 use crate::commands::command_executor_service::{TriggerId, TwitchUserPermission};
 use crate::commands::template_service::StringTemplate;
 use crate::db::ProdDB;
-use anyhow::{Context, Error};
+use anyhow::Context;
 use num_traits::FromPrimitive;
-use sqlx::{query, query_as, AnyExecutor, Execute, MySql, MySqlConnection, MySqlExecutor, Transaction};
-use std::ops::{Deref, DerefMut};
 use sqlx::mysql::MySqlQueryResult;
+use sqlx::{query, query_as, MySql, MySqlExecutor, Transaction};
+use std::ops::{Deref, DerefMut};
 
 pub struct CommandTable {
     id: String,
@@ -195,15 +196,18 @@ async fn get_patterns(prod_db: &ProdDB, d: Vec<CommandTable>) -> anyhow::Result<
     Ok(commands)
 }
 
-pub(crate) async fn set_enabled(prod_db: &ProdDB, trigger_id: &TriggerId, enabled: bool) -> anyhow::Result<Option<()>> {
+pub(crate) async fn set_enabled(state: AxumState, trigger_id: &TriggerId, enabled: bool) -> anyhow::Result<Option<()>> {
+    let mut transaction = state.prod_db.begin().await?;
     let affected = query!("UPDATE `sys-chat_trigger-patterns` SET is_enabled = ? WHERE parent_trigger_id = ?", enabled, trigger_id)
-        .execute(prod_db.deref())
+        .execute(transaction.deref_mut())
         .await
         .context("failed to set enabled on command patterns")?
         .rows_affected();
     if affected == 0 {
         return Ok(None)
     }
+    state.command_executor_service.refresh_patterns(&state.prod_db, trigger_id);
+    transaction.commit().await?;
     Ok(Some(()))
 }
 
@@ -219,8 +223,25 @@ pub(crate) async fn set_visible(prod_db: &ProdDB, trigger_id: &TriggerId, visibl
     Ok(Some(()))
 }
 
-pub(crate) async fn save(prod_db: &ProdDB, command: &Command) -> anyhow::Result<()> {
-    let mut transaction = prod_db.begin().await?;
+pub(crate) enum SaveCommandError {
+    DbError(anyhow::Error),
+    RegexError(regex::Error),
+}
+
+pub(crate) async fn save(state: AxumState, command: &Command) -> Result<(), SaveCommandError> {
+    let mut transaction = state.prod_db.begin().await.context("failed to start save command transaction")
+        .map_err(|e| SaveCommandError::DbError(e))?;
+    save_command(&command, &mut transaction).await
+        .map_err(|e| SaveCommandError::DbError(e))?;
+
+    state.command_executor_service.upsert_command(&command)
+        .map_err(|e| SaveCommandError::RegexError(e))?;
+    transaction.commit().await.context("failed to commit save command transaction")
+        .map_err(|e| SaveCommandError::DbError(e))?;
+    Ok(())
+}
+
+async fn save_command<'a>(command: &Command, transaction: &mut Transaction<'a, MySql>) -> anyhow::Result<()> {
     if let Some(template) = &command.template {
         save_template(transaction.deref_mut(), template).await?;
     }
@@ -233,14 +254,13 @@ pub(crate) async fn save(prod_db: &ProdDB, command: &Command) -> anyhow::Result<
             id = ?, is_auto_generated = ?, description = ?, global_cooldown_amount = ?, global_cooldown_type = ?, permission = ?, user_cooldown_amount = ?, user_cooldown_type = ?, template_id = ?
             "#, command.id, command.is_auto_generated, command.description, command.global_cooldown_amount, command.global_cooldown_type, command.permission, command.user_cooldown_amount, command.user_cooldown_type, template_id,
         command.id, command.is_auto_generated, command.description, command.global_cooldown_amount, command.global_cooldown_type, command.permission, command.user_cooldown_amount, command.user_cooldown_type, template_id,
-    )
-        .execute(prod_db.deref())
+    ).execute(transaction.deref_mut())
         .await
         .context("failed to set visible on command patterns")?;
     Ok(())
 }
 
-async fn save_pattern<'a, E: MySqlExecutor<'a>>(prod_db: E, pattern: &MessagePattern, command_id: &str) -> Result<MySqlQueryResult, Error> {
+async fn save_pattern<'a, E: MySqlExecutor<'a>>(prod_db: E, pattern: &MessagePattern, command_id: &str) -> Result<MySqlQueryResult, anyhow::Error> {
     query!(r#"INSERT `sys-chat_trigger-patterns` (pattern, is_enabled, is_regex, is_visible, parent_trigger_id)
                 VALUE (?, ?, ?, ? , ?) ON DUPLICATE KEY UPDATE
                 pattern = ?, is_enabled = ?, is_regex = ?, is_visible = ?, parent_trigger_id = ?
@@ -251,7 +271,7 @@ async fn save_pattern<'a, E: MySqlExecutor<'a>>(prod_db: E, pattern: &MessagePat
         .context("failed to save command template")
 }
 
-async fn save_template<'a, E: MySqlExecutor<'a>>(prod_db: E, template: &StringTemplate) -> Result<MySqlQueryResult, Error> {
+async fn save_template<'a, E: MySqlExecutor<'a>>(prod_db: E, template: &StringTemplate) -> Result<MySqlQueryResult, anyhow::Error> {
     query!("INSERT `sys-string_templates` (id, message_color, template) VALUE (?, ?, ?) ON DUPLICATE KEY UPDATE template = ?, message_color = ?",
             template.id, template.template, template.message_color, template.template, template.message_color)
         .execute(prod_db)
@@ -259,15 +279,17 @@ async fn save_template<'a, E: MySqlExecutor<'a>>(prod_db: E, template: &StringTe
         .context("failed to save command template")
 }
 
-pub(crate) async fn delete_by_id(prod_db: &ProdDB, trigger_id: &TriggerId) -> anyhow::Result<()> {
-     query!("DELETE FROM `sys-string_templates` WHERE id = (SELECT template_id FROM `sys-chat_trigger-trigger` WHERE id = ?)", trigger_id)
-        .execute(prod_db.deref())
+pub(crate) async fn delete_by_id(state: AxumState, trigger_id: &TriggerId) -> anyhow::Result<()> {
+    let pool = state.prod_db.deref();
+    query!("DELETE FROM `sys-string_templates` WHERE id = (SELECT template_id FROM `sys-chat_trigger-trigger` WHERE id = ?)", trigger_id)
+        .execute(pool)
         .await
         .context("failed to delete string template")?;
      query!("DELETE FROM `sys-chat_trigger-trigger` WHERE id = ?", trigger_id)
-        .execute(prod_db.deref())
+        .execute(pool)
         .await
         .context("failed to delete command trigger")?;
+    state.command_executor_service.remove_command(&trigger_id);
     Ok(())
 }
 

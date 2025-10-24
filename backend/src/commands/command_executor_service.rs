@@ -2,7 +2,7 @@ use super::cooldown_service::CooldownService;
 use crate::commands::template_service::TemplateService;
 use crate::AppState;
 use num_derive::FromPrimitive;
-use regex::Regex;
+use regex::{Regex, RegexBuilder, RegexSet};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::pin::Pin;
@@ -11,7 +11,8 @@ use std::time::Instant;
 use sqlx::Type;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::broadcast::Receiver;
-
+use crate::commands::command_controller::{Command, CooldownType, MessagePattern};
+use crate::db::ProdDB;
 // ChatMessage
 
 #[allow(dead_code)]
@@ -98,13 +99,56 @@ static TEXT_COMMAND_CALLBACK: TriggerCallback = |app_state, trigger_id, _chat_me
 
 // Service
 
+#[derive(Default)]
 pub struct CommandExecutorService {
     triggers: Vec<CommandTrigger>,
     cooldown_service: CooldownService,
 }
 
-
 impl CommandExecutorService {
+    pub(crate) fn remove_command(&self, command_id: &TriggerId) {
+        // self.triggers.retain(|c| c.id.as_ref() != command_id);
+    }
+
+    pub(crate) fn upsert_command(&self, command: &Command) -> Result<(), regex::Error> {
+        self.remove_command(command.id.as_ref());
+        let global_cooldown = match command.global_cooldown_type {
+            CooldownType::SECONDS => ChatCooldown::SECONDS(command.global_cooldown_amount),
+            CooldownType::MESSAGES => ChatCooldown::MESSAGES(command.global_cooldown_amount)
+        };
+        let user_cooldown = match command.user_cooldown_type {
+            CooldownType::SECONDS => ChatCooldown::SECONDS(command.user_cooldown_amount),
+            CooldownType::MESSAGES => ChatCooldown::MESSAGES(command.user_cooldown_amount)
+        };
+        // self.triggers.push(CommandTrigger {
+        //     id: command.id.clone().into_boxed_str(),
+        //     global_cooldown,
+        //     user_cooldown,
+        //     permission: command.permission,
+        //     patterns: Self::convert_patterns(command.patterns.as_ref())?,
+        //     callback: TEXT_COMMAND_CALLBACK
+        // });
+        Ok(())
+    }
+
+    pub(crate) fn refresh_patterns(&self, prod_db: &ProdDB, trigger_id: &TriggerId) {
+        todo!()
+    }
+
+    fn convert_patterns(patterns: &[MessagePattern]) -> Result<Vec<Regex>,regex::Error> {
+        patterns.iter()
+            .filter(|x| x.is_enabled)
+            .map(|x1| {
+                match x1.is_regex {
+                    true => Regex::new(x1.pattern.as_str()),
+                    false => RegexBuilder::new(format!("^{}(?: |$).*", &x1.pattern).as_str())
+                        .case_insensitive(true)
+                        .build(),
+                }
+            })
+            .collect()
+    }
+
     #[allow(dead_code)]
     pub async fn receive_commands(&self, app_state: Arc<AppState>, mut receiver: Receiver<ChatMessage>){
         loop {

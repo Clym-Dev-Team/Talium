@@ -11,6 +11,7 @@ use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use tokio::runtime::Handle;
 use url::Url;
+use crate::commands::command_executor_service::CommandExecutorService;
 
 mod oauth_service;
 mod webserver_authentication;
@@ -40,7 +41,8 @@ pub async fn start() {
         webserver_config: RwLock::new(WebserverConfig {
             panel_base_url: Url::from_str("http://localhost:5173").unwrap(),
             server_base_url: Url::from_str("http://localhost:4771").unwrap(),
-        })
+        }),
+        command_executor_service: CommandExecutorService::default(),
     });
     let a2 = app_state.clone();
     Handle::current().spawn(async { axum::axum(5000, a2).await });
@@ -73,6 +75,7 @@ struct AppState {
     pub oauth_service: OAuthService,
     pub webserver_config: RwLock<WebserverConfig>,
     pub twitch_service: TwitchService,
+    pub command_executor_service: CommandExecutorService
 }
 
 #[allow(dead_code)]
