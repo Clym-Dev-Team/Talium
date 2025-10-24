@@ -74,6 +74,29 @@ pub async fn get_all_commands_by_auto_generated(prod_db: &ProdDB, is_auto_genera
     get_patterns(prod_db, query_res).await
 }
 
+pub async fn get_all_commands(prod_db: &ProdDB) -> anyhow::Result<Vec<Command>> {
+    let query_res = query_as!(CommandTable, r#"
+        SELECT
+            c.id,
+            c.description,
+            c.permission,
+            c.global_cooldown_amount,
+            c.global_cooldown_type,
+            c.user_cooldown_amount,
+            c.user_cooldown_type,
+            c.is_auto_generated as `is_auto_generated: _`,
+            c.template_id,
+            t.template,
+            t.message_color
+        FROM `sys-chat_trigger-trigger` as c
+        JOIN `sys-string_templates` as t ON c.template_id = t.id
+    "#, )
+        .fetch_all(prod_db.deref())
+        .await
+        .context("failed to query all commands")?;
+    get_patterns(prod_db, query_res).await
+}
+
 pub async fn search_all_commands(prod_db: &ProdDB, search: &str) -> anyhow::Result<Vec<Command>> {
     let search_str = format!("%{}%", search);
     let query_res = query_as!(CommandTable, r#"

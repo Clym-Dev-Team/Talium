@@ -43,14 +43,19 @@ pub enum CooldownType {
     MESSAGES = 1,
 }
 
+#[derive(Deserialize)]
+pub struct SearchQuery{
+    search: Option<String>,
+}
+
 //TODO use new return type that only returns enough information to render commands table, request the entire object on edit open
 pub async fn get_all_user_commands(
     State(state): State<AxumState>,
-    Query(search): Query<String>,
+    Query(search): Query<SearchQuery>,
 ) -> AxResult<impl IntoResponse> {
-    let commands = match search.is_empty() {
-        true => command_repo::get_all_commands_by_auto_generated(&state.prod_db, false).await,
-        false => command_repo::search_all_commands_by_is_auto_generated(&state.prod_db, search.as_ref(), false).await
+    let commands = match search.search.as_deref() {
+        Some("") | None => command_repo::get_all_commands_by_auto_generated(&state.prod_db, false).await,
+        Some(search) => command_repo::search_all_commands_by_is_auto_generated(&state.prod_db, search, false).await,
     }.map_err(|_| {
         // log
         StatusCode::INTERNAL_SERVER_ERROR
@@ -60,14 +65,16 @@ pub async fn get_all_user_commands(
 
 pub async fn get_all_commands(
     State(state): State<AxumState>,
-    Query(search): Query<String>,
+    Query(search): Query<SearchQuery>,
 ) -> AxResult<impl IntoResponse> {
-    Ok(Json(command_repo::search_all_commands(&state.prod_db, search.as_ref())
-        .await
-        .map_err(|_| {
-            // log
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?))
+    let commands = match search.search.as_deref() {
+        Some("") | None => command_repo::get_all_commands(&state.prod_db).await,
+        Some(search) => command_repo::search_all_commands(&state.prod_db, search).await,
+    }.map_err(|_| {
+        // log
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Json(commands))
 }
 
 pub async fn get_by_trigger_id(
@@ -84,7 +91,7 @@ pub async fn get_by_trigger_id(
 
 pub async fn set_enabled(
     State(state): State<AxumState>,
-    Query(trigger_id): Query<String>,
+    Path(trigger_id): Path<String>,
     body: String
 ) -> AxResult<impl IntoResponse> {
     //TODO move into query parameter
@@ -101,7 +108,7 @@ pub async fn set_enabled(
 
 pub async fn set_visible(
     State(state): State<AxumState>,
-    Query(trigger_id): Query<String>,
+    Path(trigger_id): Path<String>,
     body: String
 ) -> AxResult<impl IntoResponse> {
     let visible = bool::from_str(body.as_str()).map_err(|_| StatusCode::BAD_REQUEST)?;

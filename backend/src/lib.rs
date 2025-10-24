@@ -27,9 +27,7 @@ pub async fn start() {
     //check if all mandatory configuration values are set
     //start mini webserver
 
-    let connection_options = MySqlConnectOptions::new()
-        ;
-    let db_connection = MySqlPool::connect_with(connection_options).await.unwrap();
+    let db_connection = MySqlPool::connect(std::env::var("DATABASE_URL").unwrap().as_str()).await.unwrap();
     let prod_db = ProdDB::new(db_connection);
     println!("established db connection");
 
