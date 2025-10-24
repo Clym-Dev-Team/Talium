@@ -5,6 +5,7 @@ use axum::body::Body;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
 use axum::Json;
+use axum::response::Result as AxResult;
 use reqwest::StatusCode;
 use serde::Deserialize;
 
@@ -33,31 +34,31 @@ pub async fn receive_oauth(
     State(state): State<AxumState>,
     Path(service): Path<String>,
     Query(query): Query<ReceiveOAuthQuery>,
-) -> impl IntoResponse {
+) -> AxResult<impl IntoResponse> {
     let panel_base_url = if let Ok(v) = state.webserver_config.read() {
         v.panel_base_url.as_str().to_string()
     } else {
         // log lock poisoned
-        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        return Err(StatusCode::INTERNAL_SERVER_ERROR)?;
     };
     // Body:new( should be Redirect:to(& but for testing with postman, this is deactivated
     if query.error.is_some() || query.error_description.is_some() {
-        return Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode(&query.error_description.unwrap_or(query.error.unwrap())))).into_response();
+        return Ok(Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode(&query.error_description.unwrap_or(query.error.unwrap())))));
     }
     if query.scope.is_none() {
-        return Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode("Query param scope is required for non error Oauth response"))).into_response()
+        return Ok(Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode("Query param scope is required for non error Oauth response"))))
     }
     if query.code.is_none() {
-        return Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode("Query param code is required for non error Oauth response"))).into_response()
+        return Ok(Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode("Query param code is required for non error Oauth response"))))
     }
-    Body::new(format!("{}{}", panel_base_url, match state.oauth_service.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap()) {
+    Ok(Body::new(format!("{}{}", panel_base_url, match state.oauth_service.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap()) {
         Ok(()) => format!("{}?success=true", panel_base_url),
         Err(OauthReturnError::NotRequested) => format!("{}?success=false&error={}", panel_base_url, url_encode("This oauth was never requested from the bot")),
         Err(OauthReturnError::ReturnChannelClosed) => {
             eprintln!("Failed to process auth code, return channel was closed");
             format!("{}?success=false&error={}", panel_base_url, url_encode("Could not process auth code. Internal server error"))
         }
-    })).into_response()
+    })))
 }
 
 pub async fn list_oauth(_: Moderator, State(state): State<AxumState>) -> impl IntoResponse {
