@@ -1,31 +1,34 @@
 use super::cooldown_service::CooldownService;
 use crate::commands::template_service::TemplateService;
 use crate::AppState;
+use num_derive::FromPrimitive;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
-use serde::Deserialize;
+use sqlx::Type;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::broadcast::Receiver;
 
 // ChatMessage
 
 #[allow(dead_code)]
-#[derive(Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Deserialize, Serialize, FromPrimitive, Type)]
+#[repr(u8)]
 pub enum TwitchUserPermission {
-    Everyone,
-    PredictionsBlue,
-    PredictionsPink,
-    Subscriber,
-    Artist,
-    Founder,
-    Vip,
-    Moderator,
-    Broadcaster,
-    Owner,
-    System,
+    Everyone = 0,
+    PredictionsBlue = 1,
+    PredictionsPink = 2,
+    Subscriber = 3,
+    Artist = 4,
+    Founder = 5,
+    Vip = 6,
+    Moderator = 7,
+    Broadcaster = 8,
+    Owner = 9,
+    System = 10,
 }
 
 pub type TwitchUserId = str;
@@ -64,9 +67,9 @@ pub type TriggerId = str;
 // pub type TriggerCallback = fn(&AppState, &TriggerId, &ChatMessage) ;
 pub type TriggerCallback = fn(Arc<AppState>, Box<TriggerId>, ChatMessage) -> Pin<Box<dyn Future<Output=()>>>;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub enum ChatCooldown {
-    SECONDS(u32),
+    SECONDS(u16),
     MESSAGES(u16)
 }
 
