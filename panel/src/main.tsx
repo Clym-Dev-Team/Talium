@@ -21,11 +21,12 @@ import i18n from "./i18n.ts";
 import './index.css'
 import './main.css'
 import "./i18n";
+import {panel_path_prefix} from "@/static_config.tsx";
 
 const router = createBrowserRouter(
   createRoutesFromChildren(
-    <>
-      <Route path="/twitchToken" element={<TokenRemover/>}/>
+    <Route path={panel_path_prefix()}>
+      <Route path="twitchToken" element={<TokenRemover/>}/>
       <Route element={
         <LoginPage>
           <TwitchNavMenu/>
@@ -36,18 +37,18 @@ const router = createBrowserRouter(
         </LoginPage>
       }>
         <Route path="*" element={<p>Diese seite gibt es nicht</p>}/>
-        <Route path="/" element={<p>Diese seite gibt es nicht</p>}/>
-        <Route path="/history" element={<MessagePane/>}/>
-        <Route path="/commands" element={<CommandsPage/>}/>
-        <Route path="/health" element={<HealthOverview/>}/>
-        <Route path="/oauth" element={<OauthSetup/>}/>
-        <Route path="/oauth/result" element={<OauthResult/>}/>
-        <Route path="/accounts" element={<AccountsPage/>}/>
-        <Route path="/giveaways" element={<GiveawayListPage/>}/>
-        <Route path="/giveawayEdit/:gwId" element={<GiveawayQueryParamLoader/>}/>
-        <Route path="/watchtime" element={<WatchtimePage/>}/>
+        <Route path="" element={<p>Diese seite gibt es nicht</p>}/>
+        <Route path="history" element={<MessagePane/>}/>
+        <Route path="commands" element={<CommandsPage/>}/>
+        <Route path="health" element={<HealthOverview/>}/>
+        <Route path="oauth" element={<OauthSetup/>}/>
+        <Route path="oauth/result" element={<OauthResult/>}/>
+        <Route path="accounts" element={<AccountsPage/>}/>
+        <Route path="giveaways" element={<GiveawayListPage/>}/>
+        <Route path="giveawayEdit/:gwId" element={<GiveawayQueryParamLoader/>}/>
+        <Route path="watchtime" element={<WatchtimePage/>}/>
       </Route>
-    </>
+    </Route>
   )
 );
 

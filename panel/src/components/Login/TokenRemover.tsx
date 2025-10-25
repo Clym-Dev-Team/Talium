@@ -24,5 +24,6 @@ export default function TokenRemover() {
     tokenType: {tokenType} <br/>
     error: {error} <br/>
     error_description: {error_description} <br/>
+    <a href={panel_base_url()}>Return to Home</a>
   </div>
 }

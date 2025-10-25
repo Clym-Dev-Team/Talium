@@ -1,28 +1,22 @@
-use std::str::FromStr;
 use crate::commands::command_controller::{delete_by_id, get_all_commands, get_all_user_commands, get_by_trigger_id, save, set_enabled, set_visible};
 use crate::oauth_endpoint::{list_oauth, receive_oauth};
 use crate::AppState;
 use axum::routing::{any, delete, get, post};
 use axum::Router;
-use axum_proxy::AppendPrefix;
 use std::sync::Arc;
-use tower_http::body::Full;
 use tower_http::cors::CorsLayer;
-use tower_http::services::{Redirect, ServeDir, ServeFile};
+use tower_http::services::{ServeDir, ServeFile};
 use url::form_urlencoded;
-use crate::websocket_proxy::websocket_proxy;
 
 pub type AxumState = Arc<AppState>;
 
 pub async fn axum(on_port: u16, state: AxumState) {
-    let static_server = ServeDir::new(":/example").fallback(ServeFile::new("./example/index.html"));
     let (panel_base_url, server_base_url) = {
         let guard = state.webserver_config.read().unwrap();
         (guard.panel_base_url.clone(), guard.server_base_url.clone())
     };
-    println!("Proxying panel development server: {}", panel_base_url);
-    // let panel_ws_proxy = axum_proxy::builder(axum_proxy::client::http_default(), "ws", authority.as_str()).unwrap().build(AppendPrefix("/panel"));
-    // let panel_proxy = axum_proxy::builder_http(panel_base_url.authority()).unwrap().build(AppendPrefix("/panel"));
+    println!("Hosting embedded panel at: {}panel", server_base_url);
+
     // let public_panel_url = http::Uri::from_str(server_base_url.join("/panel").unwrap().as_str());
     // println!("redirecting / to {:?}", public_panel_url);
     // let re = Redirect::<Full>::temporary(public_panel_url.unwrap());
@@ -44,12 +38,12 @@ pub async fn axum(on_port: u16, state: AxumState) {
         .layer(cors_allow_all);
     let app = Router::new()
         .nest("/bot", bot_router)
-        // .nest_service("/panel", static_server)
-        // .route_service("/panel/", panel_ws_proxy)
-        // .nest_service("/panel", panel_proxy.clone())
-        // .route_service("/", re)
-        .route("/panel", any(websocket_proxy))
+        .nest_service("/panel", ServeDir::new("target/debug/panel_dist").fallback(ServeFile::new("target/debug/panel_dist/index.html")))
         .with_state(state);
+    //TODO serve index html with:
+    //TODO - edited base path for all relative hrefs
+    //TODO - config properties added: panel_base_addr, backend_base_addr, twitch_client_id
+    //       <link rel="preconnect" id="backend_base_addr" href="https://localhost:5000/someBasePath">
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", on_port)).await.unwrap();
     axum::serve(listener, app).await.unwrap();
