@@ -22,6 +22,7 @@ mod session_service;
 mod panel_user;
 mod panel_user_service;
 mod commands;
+mod websocket_proxy;
 
 pub async fn start() {
     //check if all mandatory configuration values are set
@@ -43,7 +44,7 @@ pub async fn start() {
         command_executor_service: CommandExecutorService::default(),
     });
     let a2 = app_state.clone();
-    Handle::current().spawn(async { axum::axum(5000, a2).await });
+    Handle::current().spawn(async { axum::axum(4771, a2).await });
 
     let state = rand::rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect();
     println!("state: {:?}", state);
