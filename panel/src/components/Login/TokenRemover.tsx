@@ -1,4 +1,4 @@
-import {PANEL_BASE_URL} from "@/main.tsx";
+import {panel_base_url} from "@/static_config.tsx";
 
 export default function TokenRemover() {
   const query = new URLSearchParams(document.location.hash.substring(1))

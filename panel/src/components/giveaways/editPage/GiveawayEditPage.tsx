@@ -19,7 +19,8 @@ import {usePopout} from "@s/popoutProvider/PopoutProvider.tsx";
 import DisruptiveActionPopup from "@c/giveaways/DisruptiveActionPopup.tsx";
 import {fetchWithAuth} from "@c/Login/LoginPage.tsx";
 import {useToast} from "@shadcn/use-toast.ts";
-import {PANEL_BASE_URL} from "@/main.tsx";
+
+import {panel_base_url} from "@/static_config.tsx";
 
 export interface GiveawayEditPageProps {
   initialData: Giveaway,
@@ -119,7 +120,7 @@ export default function GiveawayEditPage({initialData: gw}: GiveawayEditPageProp
       method: "POST",
     }).then(() => {
       if (action == GiveawayAction.DELETE) {
-        location.assign(PANEL_BASE_URL + "/giveaways")
+        location.assign(panel_base_url() + "/giveaways")
       } else {
         location.reload();
       }
