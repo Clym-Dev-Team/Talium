@@ -1,3 +1,4 @@
+use crate::commands::command_executor_service::CommandExecutorService;
 use crate::commands::twitch_service::TwitchService;
 use crate::db::ProdDB;
 use crate::oauth_service::OAuthService;
@@ -5,13 +6,11 @@ use crate::session_service::SessionService;
 use rand::distr::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use sqlx::mysql::MySqlConnectOptions;
 use sqlx::MySqlPool;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use tokio::runtime::Handle;
 use url::Url;
-use crate::commands::command_executor_service::CommandExecutorService;
 
 mod oauth_service;
 mod webserver_authentication;
@@ -23,6 +22,7 @@ mod panel_user;
 mod panel_user_service;
 mod commands;
 mod websocket_proxy;
+mod dynamic_index_html_handler;
 
 pub async fn start() {
     //check if all mandatory configuration values are set
@@ -38,7 +38,7 @@ pub async fn start() {
         twitch_service: TwitchService,
         prod_db,
         webserver_config: RwLock::new(WebserverConfig {
-            panel_base_url: Url::from_str("http://localhost:5173").unwrap(),
+            panel_base_url: Url::from_str("http://localhost:4771/panel").unwrap(),
             server_base_url: Url::from_str("http://localhost:4771").unwrap(),
         }),
         command_executor_service: CommandExecutorService::default(),
@@ -61,7 +61,9 @@ struct DbConfig {
     db_database: String,
 }
 
+
 /// Very basic, but can already be saved in the Database
+#[derive(Clone)]
 struct WebserverConfig {
     panel_base_url: Url,
     server_base_url: Url

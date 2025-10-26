@@ -1,11 +1,14 @@
+use std::str::FromStr;
 use crate::commands::command_controller::{delete_by_id, get_all_commands, get_all_user_commands, get_by_trigger_id, save, set_enabled, set_visible};
+use crate::dynamic_index_html_handler::DynamicIndexHtmlHandlerService;
 use crate::oauth_endpoint::{list_oauth, receive_oauth};
 use crate::AppState;
 use axum::routing::{any, delete, get, post};
 use axum::Router;
 use std::sync::Arc;
+use tower_http::body::Full;
 use tower_http::cors::CorsLayer;
-use tower_http::services::{ServeDir, ServeFile};
+use tower_http::services::{Redirect, ServeDir};
 use url::form_urlencoded;
 
 pub type AxumState = Arc<AppState>;
@@ -16,10 +19,6 @@ pub async fn axum(on_port: u16, state: AxumState) {
         (guard.panel_base_url.clone(), guard.server_base_url.clone())
     };
     println!("Hosting embedded panel at: {}panel", server_base_url);
-
-    // let public_panel_url = http::Uri::from_str(server_base_url.join("/panel").unwrap().as_str());
-    // println!("redirecting / to {:?}", public_panel_url);
-    // let re = Redirect::<Full>::temporary(public_panel_url.unwrap());
 
     let cors_allow_all = CorsLayer::very_permissive();
 
@@ -36,14 +35,16 @@ pub async fn axum(on_port: u16, state: AxumState) {
         // apply auth middleware to all above here
         .route("/auth/{service}", any(receive_oauth))
         .layer(cors_allow_all);
+
+    let server_panel = ServeDir::new("target/debug/panel_dist")
+        .append_index_html_on_directories(false)
+        .fallback(DynamicIndexHtmlHandlerService::new(state.clone()));
+
     let app = Router::new()
+        .nest_service("/panel", server_panel)
         .nest("/bot", bot_router)
-        .nest_service("/panel", ServeDir::new("target/debug/panel_dist").fallback(ServeFile::new("target/debug/panel_dist/index.html")))
+        .route_service("/", Redirect::<Full>::temporary(http::Uri::from_str(server_base_url.join("/panel").unwrap().as_str()).unwrap()))
         .with_state(state);
-    //TODO serve index html with:
-    //TODO - edited base path for all relative hrefs
-    //TODO - config properties added: panel_base_addr, backend_base_addr, twitch_client_id
-    //       <link rel="preconnect" id="backend_base_addr" href="https://localhost:5000/someBasePath">
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", on_port)).await.unwrap();
     axum::serve(listener, app).await.unwrap();
