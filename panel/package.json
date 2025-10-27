@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build_rust": "tsc && vite build --outDir ../backend/panel_dist --emptyOutDir --base /panel",
     "lint": "eslint .. --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
     "preview": "vite preview"
   },

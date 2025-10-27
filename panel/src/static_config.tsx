@@ -25,11 +25,11 @@ export function twitch_client_id(): string {
  * @param hard_coded value from vite via import.meta.env
  */
 function getTagOrHardcoded(id: string, hard_coded: string) {
-  let ele = document.getElementById(id);
-  if (ele === null) {
+  let head = document.getElementsByTagName("head")[0] as HTMLHeadElement;
+  let attribute = head.getAttribute(id);
+  if (attribute === null) {
     return hard_coded;
   } else {
-    let link = ele as HTMLLinkElement;
-    return link.href;
+    return attribute!;
   }
 }

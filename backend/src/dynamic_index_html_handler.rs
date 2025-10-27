@@ -29,8 +29,8 @@ impl Service<Request<Body>> for DynamicIndexHtmlHandlerService {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
-        let index = std::fs::read_to_string("target/debug/panel_dist/index.html").unwrap();
+    fn call(&mut self, _req: Request<Body>) -> Self::Future {
+        let index = std::fs::read_to_string("panel_dist/index.html").unwrap();
 
         let c = {
             let g = self.state.webserver_config.read().unwrap();
@@ -39,8 +39,7 @@ impl Service<Request<Body>> for DynamicIndexHtmlHandlerService {
         // strip trailing / in case of something like localhost:3487/ because it could interfere with creating paths by + "/somePath" in js
         let path_prefix = c.server_base_url.path().strip_suffix("/").unwrap_or(c.server_base_url.path());
         let bot_addr_without_trailing = c.server_base_url.as_str().strip_suffix("/").unwrap_or(c.server_base_url.as_str());
-        //TODO add twitch_client_id as config parameter
-        let additional_attributes = format!(r#"<head panel_base_addr="{}/panel" backend_base_addr="{}/bot" twitch_client_id="{}" "#, bot_addr_without_trailing, bot_addr_without_trailing, "");
+        let additional_attributes = format!(r#"<head panel_base_addr="{}/panel" backend_base_addr="{}/bot" twitch_client_id="{}" "#, bot_addr_without_trailing, bot_addr_without_trailing, c.panel_auth_twitch_client_id);
 
         let new_index = index
             // We are expecting the paths in the build dist to already start with /panel

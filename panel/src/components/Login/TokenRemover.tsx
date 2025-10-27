@@ -12,7 +12,7 @@ export default function TokenRemover() {
   if (error == null && token != null) {
     //TODO check state
     localStorage.setItem("accessToken", token)
-    setTimeout(() => location.assign(PANEL_BASE_URL), 1)
+    setTimeout(() => location.assign(panel_base_url()), 1)
   }
   //TODO error handling
 

@@ -1,10 +1,10 @@
-use std::str::FromStr;
 use crate::commands::command_controller::{delete_by_id, get_all_commands, get_all_user_commands, get_by_trigger_id, save, set_enabled, set_visible};
 use crate::dynamic_index_html_handler::DynamicIndexHtmlHandlerService;
 use crate::oauth_endpoint::{list_oauth, receive_oauth};
 use crate::AppState;
 use axum::routing::{any, delete, get, post};
 use axum::Router;
+use std::str::FromStr;
 use std::sync::Arc;
 use tower_http::body::Full;
 use tower_http::cors::CorsLayer;
@@ -36,7 +36,7 @@ pub async fn axum(on_port: u16, state: AxumState) {
         .route("/auth/{service}", any(receive_oauth))
         .layer(cors_allow_all);
 
-    let server_panel = ServeDir::new("target/debug/panel_dist")
+    let server_panel = ServeDir::new("panel_dist")
         .append_index_html_on_directories(false)
         .fallback(DynamicIndexHtmlHandlerService::new(state.clone()));
 

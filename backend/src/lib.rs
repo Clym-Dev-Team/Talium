@@ -40,6 +40,7 @@ pub async fn start() {
         webserver_config: RwLock::new(WebserverConfig {
             panel_base_url: Url::from_str("http://localhost:4771/panel").unwrap(),
             server_base_url: Url::from_str("http://localhost:4771").unwrap(),
+            panel_auth_twitch_client_id: "".to_string()
         }),
         command_executor_service: CommandExecutorService::default(),
     });
@@ -66,7 +67,8 @@ struct DbConfig {
 #[derive(Clone)]
 struct WebserverConfig {
     panel_base_url: Url,
-    server_base_url: Url
+    server_base_url: Url,
+    panel_auth_twitch_client_id: String,
     // maybe we need to add stuff like cors and disable auth here
 }
 
