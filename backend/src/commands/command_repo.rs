@@ -23,6 +23,7 @@ pub struct CommandTable {
     message_color: Option<String>,
 }
 
+#[allow(dead_code)]
 struct PreviewCommand {
     id: String,
     first_pattern: String,
@@ -31,6 +32,7 @@ struct PreviewCommand {
     template: Option<String>,
 }
 
+#[allow(dead_code)]
 async fn get_search_results(prod_db: &ProdDB, search: &str ) -> anyhow::Result<Vec<PreviewCommand>> {
     let search_str = format!("%{}%", search);
     query_as!(PreviewCommand, r#"

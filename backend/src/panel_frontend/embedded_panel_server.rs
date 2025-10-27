@@ -1,7 +1,7 @@
 use crate::axum::{convert_url, AxumState};
 use axum::body::Body;
+use axum::http::Request;
 use axum::response::Response;
-use http::Request;
 use std::convert::Infallible;
 use std::fs;
 use std::pin::Pin;

@@ -1,18 +1,18 @@
 use super::cooldown_service::CooldownService;
+use crate::commands::command_controller::{Command, CooldownType, MessagePattern};
 use crate::commands::template_service::TemplateService;
+use crate::db::ProdDB;
 use crate::AppState;
 use num_derive::FromPrimitive;
-use regex::{Regex, RegexBuilder, RegexSet};
+use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
+use sqlx::Type;
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
-use sqlx::Type;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::broadcast::Receiver;
-use crate::commands::command_controller::{Command, CooldownType, MessagePattern};
-use crate::db::ProdDB;
 // ChatMessage
 
 #[allow(dead_code)]
@@ -107,6 +107,7 @@ pub struct CommandExecutorService {
 
 impl CommandExecutorService {
     pub(crate) fn remove_command(&self, command_id: &TriggerId) {
+        //TODO
         // self.triggers.retain(|c| c.id.as_ref() != command_id);
     }
 
@@ -120,6 +121,7 @@ impl CommandExecutorService {
             CooldownType::SECONDS => ChatCooldown::SECONDS(command.user_cooldown_amount),
             CooldownType::MESSAGES => ChatCooldown::MESSAGES(command.user_cooldown_amount)
         };
+        //TODO 
         // self.triggers.push(CommandTrigger {
         //     id: command.id.clone().into_boxed_str(),
         //     global_cooldown,

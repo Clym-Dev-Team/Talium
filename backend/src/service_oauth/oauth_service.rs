@@ -89,7 +89,7 @@ impl OAuthService {
             .collect()
     }
 
-    fn read_lock(&self) -> RwLockReadGuard<Vec<OauthRequest>> {
+    fn read_lock(&self) -> RwLockReadGuard<'_, Vec<OauthRequest>> {
         match self.active_requests.read().ok() {
             Some(guard) => guard,
             None => {
@@ -103,7 +103,7 @@ impl OAuthService {
         }
     }
 
-    fn write_lock(&self) -> RwLockWriteGuard<Vec<OauthRequest>> {
+    fn write_lock(&self) -> RwLockWriteGuard<'_, Vec<OauthRequest>> {
         match self.active_requests.write() {
             Ok(guard) => guard,
             Err(e) => {

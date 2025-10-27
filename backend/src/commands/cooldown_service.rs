@@ -91,7 +91,7 @@ impl CooldownService {
         None
     }
 
-    fn read_guard(&self) -> RwLockReadGuard<InnerState> {
+    fn read_guard(&self) -> RwLockReadGuard<'_, InnerState> {
         match self.state.read() {
             Ok(guard) => guard,
             Err(poisoned) => {
@@ -104,7 +104,7 @@ impl CooldownService {
         }
     }
 
-    fn write_guard(&self) -> RwLockWriteGuard<InnerState> {
+    fn write_guard(&self) -> RwLockWriteGuard<'_, InnerState> {
         match self.state.write() {
             Ok(guard) => guard,
             Err(poisoned) => {

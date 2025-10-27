@@ -128,11 +128,11 @@ pub async fn save(
 ) -> impl IntoResponse {
     match command_repo::save(state, &to_save).await {
         Ok(()) => StatusCode::OK,
-        Err(SaveCommandError::DbError(db_error)) => {
+        Err(SaveCommandError::DbError(_db_error)) => {
             // log
             StatusCode::INTERNAL_SERVER_ERROR
         }
-        Err(SaveCommandError::RegexError(r)) => {
+        Err(SaveCommandError::RegexError(_r)) => {
             // log, but actually more return. This error needs to reach the user in the panel
             //TODO figure out how to return this error to the user
             StatusCode::BAD_REQUEST

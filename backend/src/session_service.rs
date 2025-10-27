@@ -67,7 +67,7 @@ impl SessionService {
         wg.retain(|s| s.access_token != access_token);
     }
 
-    fn read_guard(&self) -> RwLockReadGuard<Vec<Session>> {
+    fn read_guard(&self) -> RwLockReadGuard<'_, Vec<Session>> {
         match self.sessions.read() {
             Ok(guard) => guard,
             Err(poisoned) => {
@@ -80,7 +80,7 @@ impl SessionService {
         }
     }
 
-    fn write_guard(&self) -> RwLockWriteGuard<Vec<Session>> {
+    fn write_guard(&self) -> RwLockWriteGuard<'_, Vec<Session>> {
         match self.sessions.write() {
             Ok(guard) => guard,
             Err(poisoned) => {

@@ -6,7 +6,7 @@ use crate::AppState;
 use axum::middleware::from_fn_with_state;
 use axum::routing::{any, delete, get, post};
 use axum::Router;
-use http::Uri;
+use axum::http::Uri;
 use std::str::FromStr;
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;

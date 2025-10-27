@@ -7,12 +7,17 @@ use axum::response::{IntoResponse, Response};
 use axum::Error as AxError;
 use axum_proxy::{AppendPrefix, ReusedService};
 use futures_util::StreamExt;
-use http::StatusCode;
+use axum::http::StatusCode;
 use tokio::runtime::Handle;
 use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::tungstenite as ts;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tower_service::Service;
+
+// This file requires these additional dependencies of features. They are not included right now, because we don't need them for anything else
+// tokio-tungstenite
+// futures-util
+// axum-proxy with feautures: axum
 
 fn into_tungstenite(message: Result<AxMessage, AxError>) -> Option<Result<tungstenite::Message, ts::Error>> {
     if let Err(x) = message {
