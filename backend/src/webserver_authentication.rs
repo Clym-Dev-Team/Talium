@@ -23,7 +23,8 @@ struct ValidationReturn {
 
 const FORBIDDEN: fn() -> (StatusCode, String) = || (StatusCode::FORBIDDEN, "user lacks required permissions".to_owned());
 
-pub async fn auth_user(State(state): State<AxumState>, mut request: Request, next: Next) -> AxResult<impl IntoResponse> {
+#[allow(dead_code)]
+pub async fn auth_user(State(state): State<AxumState>, request: Request, next: Next) -> AxResult<impl IntoResponse> {
     let (mut request, user) = authenticate_user(state, request).await?;
 
     request.extensions_mut().insert(user);
