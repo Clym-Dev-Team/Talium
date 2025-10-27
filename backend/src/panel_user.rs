@@ -17,6 +17,7 @@ pub struct PanelUser {
 }
 
 /// Add this to the mapping function to add authentication to it
+#[derive(Clone)]
 pub struct Moderator(PanelUser);
 
 impl Moderator {

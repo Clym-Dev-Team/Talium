@@ -36,6 +36,9 @@ pub fn embedded_panel_service(state: AxumState) -> ServeDir<DynamicIndexHtmlHand
         eprintln!();
     } else if !index_exists.unwrap() {
         eprintln!("panel_dist is missing index.html cannot server embedded panel in a working state!");
+    } else {
+        let g = state.webserver_config.read().unwrap();
+        println!("Hosting embedded panel at: {}panel", g.server_base_url);
     }
     ServeDir::new(PANEL_DIST_DIR)
         .append_index_html_on_directories(false)
@@ -69,7 +72,7 @@ impl Service<Request<Body>> for DynamicIndexHtmlHandlerService {
     }
 
     fn call(&mut self, _req: Request<Body>) -> Self::Future {
-        let index = std::fs::read_to_string(PANEL_DIST_DIR.to_owned() + "/index.html").unwrap();
+        let index = fs::read_to_string(PANEL_DIST_DIR.to_owned() + "/index.html").unwrap();
 
         let c = {
             let g = self.state.webserver_config.read().unwrap();

@@ -61,6 +61,6 @@ pub async fn receive_oauth(
     })))
 }
 
-pub async fn list_oauth(_: Moderator, State(state): State<AxumState>) -> impl IntoResponse {
+pub async fn list_oauth(State(state): State<AxumState>) -> impl IntoResponse {
     Json(state.oauth_service.get_active_requests())
 }
