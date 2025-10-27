@@ -1,15 +1,14 @@
 use crate::commands::command_controller::{delete_by_id, get_all_commands, get_all_user_commands, get_by_trigger_id, save, set_enabled, set_visible};
-use crate::dynamic_index_html_handler::DynamicIndexHtmlHandlerService;
+use crate::embedded_panel_server::{embedded_panel_service, to_panel_redirect, SERVER_PANEL_PATH};
 use crate::oauth_endpoint::{list_oauth, receive_oauth};
 use crate::AppState;
 use axum::routing::{any, delete, get, post};
 use axum::Router;
+use http::Uri;
 use std::str::FromStr;
 use std::sync::Arc;
-use tower_http::body::Full;
 use tower_http::cors::CorsLayer;
-use tower_http::services::{Redirect, ServeDir};
-use url::form_urlencoded;
+use url::{form_urlencoded, Url};
 
 pub type AxumState = Arc<AppState>;
 
@@ -36,20 +35,20 @@ pub async fn axum(on_port: u16, state: AxumState) {
         .route("/auth/{service}", any(receive_oauth))
         .layer(cors_allow_all);
 
-    let server_panel = ServeDir::new("panel_dist")
-        .append_index_html_on_directories(false)
-        .fallback(DynamicIndexHtmlHandlerService::new(state.clone()));
-
     let app = Router::new()
-        .nest_service("/panel", server_panel)
+        .nest_service(SERVER_PANEL_PATH, embedded_panel_service(state.clone()))
+        .route_service("/", to_panel_redirect(server_base_url))
         .nest("/bot", bot_router)
-        .route_service("/", Redirect::<Full>::temporary(http::Uri::from_str(server_base_url.join("/panel").unwrap().as_str()).unwrap()))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", on_port)).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app).await.expect("axum::serve to never return");
 }
 
 pub fn url_encode<'a>(input: &str) -> String {
     form_urlencoded::byte_serialize(input.as_bytes()).collect()
+}
+
+pub fn convert_url(input: Url) -> Uri {
+    Uri::from_str(input.as_str()).expect("url::Url url should be valid http::Uri")
 }

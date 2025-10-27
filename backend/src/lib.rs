@@ -22,7 +22,7 @@ mod panel_user;
 mod panel_user_service;
 mod commands;
 mod websocket_proxy;
-mod dynamic_index_html_handler;
+mod embedded_panel_server;
 
 pub async fn start() {
     //check if all mandatory configuration values are set
