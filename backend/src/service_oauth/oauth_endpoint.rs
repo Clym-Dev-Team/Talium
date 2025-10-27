@@ -1,5 +1,5 @@
 use crate::axum::{url_encode, AxumState};
-use crate::oauth_service::OauthReturnError;
+use crate::service_oauth::oauth_service::OauthReturnError;
 use crate::webserver_authentication::Moderator;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};

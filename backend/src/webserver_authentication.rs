@@ -1,6 +1,6 @@
 use crate::axum::AxumState;
 pub(crate) use crate::panel_user::Moderator;
-use crate::panel_user_service::PanelUserService;
+use crate::panel_user::PanelUserService;
 use anyhow::Context;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;

@@ -1,7 +1,7 @@
 use crate::commands::command_executor_service::CommandExecutorService;
 use crate::commands::twitch_service::TwitchService;
 use crate::db::ProdDB;
-use crate::oauth_service::OAuthService;
+use service_oauth::oauth_service::OAuthService;
 use crate::session_service::SessionService;
 use rand::distr::Alphanumeric;
 use rand::Rng;
@@ -12,17 +12,14 @@ use std::sync::{Arc, RwLock};
 use tokio::runtime::Handle;
 use url::Url;
 
-mod oauth_service;
 mod webserver_authentication;
-mod oauth_endpoint;
 mod axum;
 mod db;
 mod session_service;
 mod panel_user;
-mod panel_user_service;
 mod commands;
-mod websocket_proxy;
-mod embedded_panel_server;
+mod panel_frontend;
+mod service_oauth;
 
 pub async fn start() {
     //check if all mandatory configuration values are set

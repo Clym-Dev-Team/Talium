@@ -1,6 +1,6 @@
 use crate::commands::command_controller::{delete_by_id, get_all_commands, get_all_user_commands, get_by_trigger_id, save, set_enabled, set_visible};
-use crate::embedded_panel_server::{embedded_panel_service, to_panel_redirect, SERVER_PANEL_PATH};
-use crate::oauth_endpoint::{list_oauth, receive_oauth};
+use crate::panel_frontend::embedded_panel_server::{embedded_panel_service, to_panel_redirect, SERVER_PANEL_PATH};
+use crate::service_oauth::oauth_endpoint::{list_oauth, receive_oauth};
 use crate::AppState;
 use axum::routing::{any, delete, get, post};
 use axum::Router;
