@@ -37,7 +37,7 @@ pub async fn start() {
         webserver_config: RwLock::new(WebserverConfig {
             panel_base_url: Url::from_str("http://localhost:4771/panel").unwrap(),
             server_base_url: Url::from_str("http://localhost:4771").unwrap(),
-            panel_auth_twitch_client_id: "".to_string()
+            panel_auth_twitch_client_id: "zmxjjn3xmncg8ewew6tjk08tub26bb".to_string()
         }),
         command_executor_service: CommandExecutorService::default(),
     });
@@ -88,7 +88,7 @@ mod _services {
     struct DiscordAlerting;
     struct TwitchClient;
     // AuthenticationService;
-    struct PanelWebServer;
+    // embedded_panel_server;
     struct WatchtimeService;
     // CommandsService;
     struct TimerService;

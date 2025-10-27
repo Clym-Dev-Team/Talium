@@ -20,3 +20,8 @@ reqwest = "0.12.24"
 regex = "1.12.2"
 num-derive = "0.4.2"
 num-traits = "0.2.19"
+
+twitch_highway = { version = "0.3.1", features = ["eventsub", "tokio", "bits", "raid", "polls", "twitch_oauth_token", "chat", "full", "websocket"] }
+serde_with = "3.15.1"
+asknothingx2-util = "0.1.10"
+tower = "0.5.2"
