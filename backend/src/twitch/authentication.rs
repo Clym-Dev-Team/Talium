@@ -4,10 +4,12 @@ use std::time::Duration;
 use anyhow::Context;
 use axum::http::method::Method;
 use axum::http::StatusCode;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
+use sqlx::types::chrono::{DateTime, Local, NaiveDateTime};
 use url::Url;
 use crate::axum::url_encode;
+use crate::commands::twitch_service::OauthCredential;
 use crate::service_oauth::oauth_service::OAuthService;
 
 #[serde_as]
@@ -22,8 +24,30 @@ pub struct ValidationReturn {
     pub expires_in: Duration,
 }
 
+#[serde_as]
+#[derive(Deserialize)]
+pub struct RefreshTokenReturn {
+    pub access_token: String,
+    pub refresh_token: String,
+    #[serde_as(as = "DurationSeconds")]
+    pub expires_in: Duration,
+    pub scopes: Vec<String>,
+    pub token_type: String,
+}
+
+impl Into<OauthCredential> for RefreshTokenReturn {
+    fn into(self) -> OauthCredential {
+       OauthCredential {
+           refresh_token: self.refresh_token,
+           scopes: self.scopes,
+           access_token: self.access_token,
+           expires_at: Local::now() + self.expires_in
+       }
+    }
+}
+
 /// Validate an accessToken with Twitch. Ok(None) represents a successful validation, but the token being invalid
-pub async fn validate_token(access_token: &str) -> anyhow::Result<Option<ValidationReturn>> {
+pub async fn validate_token(access_token: impl AsRef<str>) -> anyhow::Result<Option<ValidationReturn>> {
     // prob move client into app state
     let response = reqwest::Client::builder()
         .build()
@@ -45,11 +69,40 @@ pub async fn validate_token(access_token: &str) -> anyhow::Result<Option<Validat
     Ok(Some(validation_return))
 }
 
-pub async fn refresh_token(_access_token: &str) -> anyhow::Result<Option<ValidationReturn>> {
-    todo!()
+pub async fn refresh_token(refresh_token: impl AsRef<str>, client_id: impl AsRef<str>, client_secret: impl AsRef<str>) -> anyhow::Result<Option<RefreshTokenReturn>> {
+    #[derive(Serialize)]
+    struct RefreshRequest<'a> {
+        client_id: &'a str,
+        client_secret: &'a str,
+        grant_type: &'a str,
+        refresh_token: &'a str,
+    }
+    let response = reqwest::Client::builder()
+        .build()
+        .context("Failed to build client builder for refreshing twitch oauth token")?
+        .request(Method::GET, "https://id.twitch.tv/oauth2/token")
+        .json(&RefreshRequest {
+            refresh_token,
+            client_id,
+            client_secret,
+            grant_type: "refresh_token",
+        })
+        .send()
+        .await
+        .context("Failed to send request to validate oauth token")?;
+    if response.status() == StatusCode::BAD_REQUEST {
+        return Ok(None)
+    }
+    let response_body = response.text()
+        .await
+        .context("Failed to decode response body from refreshing twitch oauth token")?;
+    let validation_return: RefreshTokenReturn = serde_json::from_str(&response_body)
+        .context("Failed to deserialize response body from refreshing twitch oauth token")
+        .context("Original response body: ".to_string() + &response_body)?;
+    Ok(Some(validation_return))
 }
 
-pub fn authorization_url(client_id: String, redirect_url: String) -> (Url, String) {
+pub fn authorization_url(client_id: impl AsRef<str>, redirect_url: impl AsRef<str>) -> (Url, String) {
     let scopes = ["channel:bot", "user:bot", "moderator:read:chatters", "moderator:read:moderators", "user:read:chat", "user:manage:chat_color"];
     let state = OAuthService::random_state();
     let query = format!(r#"
@@ -58,7 +111,7 @@ pub fn authorization_url(client_id: String, redirect_url: String) -> (Url, Strin
         &redirect_uri={}
         &scope={}
         &state={}
-    "#, client_id, redirect_url, scopes.map(url_encode).join("+"), state);
+    "#, client_id.as_ref(), redirect_url.as_ref(), scopes.map(url_encode).join("+"), state);
     let mut url = Url::from_str("https://id.twitch.tv/oauth2/authorize").unwrap();
     url.set_query(Some(query.as_str()));
     println!("url: {:?}", url.as_str());

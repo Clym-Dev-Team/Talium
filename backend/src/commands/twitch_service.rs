@@ -1,18 +1,18 @@
 use crate::axum::AxumState;
 use crate::db::ProdDB;
+use crate::service_oauth::oauth_endpoint::get_redirect_url;
 use crate::service_oauth::oauth_service::OAuthService;
 use crate::twitch::authentication::{authorization_url, refresh_token, validate_token};
-use anyhow::Context;
+use crate::WebserverConfig;
+use anyhow::{anyhow, Context};
 use asknothingx2_util::oauth::{AccessToken, ClientId};
 use serde::Deserialize;
-use sqlx::types::chrono::NaiveDateTime;
+use sqlx::types::chrono::{DateTime, Local};
 use std::any::Any;
 use std::collections::HashMap;
-use std::io::Stderr;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 use std::time::Instant;
 use tower::{Layer, MakeService};
-use tower_http::follow_redirect::policy::PolicyExt;
 use tower_service::Service;
 use twitch_highway::chat::ChatAPI;
 use twitch_highway::eventsub::events::chat::ChannelChatMessage;
@@ -21,21 +21,19 @@ use twitch_highway::eventsub::websocket::routes::{channel_chat_message, revocati
 use twitch_highway::eventsub::websocket::{Request, Revocation, Router, Welcome};
 use twitch_highway::eventsub::{websocket, EventSubAPI, SubscriptionType};
 use twitch_highway::types::{BroadcasterId, SessionId, UserId};
-use twitch_highway::users::{User, UserAPI, UsersInfoResponse};
-use twitch_highway::{Error, TwitchAPI};
-use crate::service_oauth::oauth_endpoint::get_redirect_url;
-use crate::WebserverConfig;
+use twitch_highway::users::{User, UserAPI};
+use twitch_highway::TwitchAPI;
 
 #[derive(Default, Deserialize)]
-struct OauthCredential {
-    access_token: String,
-    refresh_token: String,
-    scopes: Vec<String>,
-    expires_at: NaiveDateTime,
+pub(crate) struct OauthCredential {
+    pub access_token: String,
+    pub refresh_token: String,
+    pub scopes: Vec<String>,
+    pub expires_at: DateTime<Local>,
 }
 
 #[derive(Default, Deserialize)]
-struct TwitchConfig {
+pub(crate) struct TwitchConfig {
     channel_name: String,
     chat_account_name: String,
     send_to: String,
@@ -50,16 +48,61 @@ pub struct TwitchService {
 }
 
 impl TwitchService {
+    async fn check_or_get_oauth(mut lock: MutexGuard<'_, (Instant, bool)>, db: ProdDB, oauth_service: OAuthService, webserver_config: WebserverConfig, twitch_config: TwitchConfig) -> Result<OauthCredential, anyhow::Error> {
+        //TODO check lock
+        //TODO validate
+        //TODO refresh
+        //TODO request new oauth
+        const FINAL_ERROR: &str = "Could not get new oauth token, bad credentials, needs reauthentication";
+        let credential = twitch_config.credential;
+        if lock.0.elapsed() < std::time::Duration::from_secs(15 * 60) {
+            return if lock.1 {
+                Ok(credential)
+            } else {
+                Err(anyhow!(FINAL_ERROR))
+            }
+        }
+        let mut errors = vec![];
+        match validate_token(credential.access_token.as_str()).await {
+            Ok(Some(_validation)) => {
+                *lock = (Instant::now(), true);
+                return Ok(credential)
+            },
+            Err(e) =>errors.push(e),
+            Ok(None) => {}
+        };
+        match refresh_token(credential.refresh_token, twitch_config.client_id.as_str(), twitch_config.client_secret).await {
+            Ok(Some(refreshed)) => {
+                //TODO save to db
+                *lock = (Instant::now(), true);
+                return Ok(refreshed.into())
+            }
+            Err(e) =>errors.push(e),
+            Ok(None) => {}
+        }
+        //TODO we cant do this here, our caller needs to do this, because one time we need to block, and don't have a TwitchService object,
+        // and another time we should not block and should hopefully be able to get a TwitchService object
+        // Handle::current().spawn(async move {
+        //     let (url, state) = authorization_url(twitch_config.client_id.as_str(), get_redirect_url(webserver_config.panel_base_url.to_string(), "twitch"));
+        //     let code = oauth_service.new_oauth_request("twitch", twitch_config.chat_account_name, url, state);
+        //     //TODO save to db
+        //     //TODO update access token in twitch_api
+        // });
+        *lock = (Instant::now(), false);
+        //TODO add errors
+        Err(anyhow!(FINAL_ERROR))
+    }
+
     pub async fn new(db: ProdDB, oauth_service: OAuthService, webserver_config: WebserverConfig, twitch_config: TwitchConfig) -> Result<TwitchService, anyhow::Error> {
         //TODO get credentials from db (our caller does that)
-        let token = if let Some(refreshed) = refresh_token(twitch_config.credential.access_token.as_str())
+        let token = if let Some(refreshed) = refresh_token(twitch_config.credential.access_token.as_str(), twitch_config.client_id.as_str(), twitch_config.client_secret.as_str())
             .await
             .context("Unable to start twitch input because oauth could not be refreshed")? {
             refreshed
         } else {
-            let (url, state) = authorization_url(twitch_config.client_id, get_redirect_url(webserver_config.panel_base_url.to_string(), "twitch"));
+            let (url, state) = authorization_url(twitch_config.client_id.as_str(), get_redirect_url(webserver_config.panel_base_url.to_string(), "twitch"));
             let code = oauth_service.new_oauth_request("twitch", twitch_config.chat_account_name, url, state);
-            let token = refresh_token(code.as_str()).await
+            let token = refresh_token(code.as_str(), twitch_config.client_id.as_str(), twitch_config.client_secret.as_str()).await
                 .context("Unable to get oauth tokens for auth flow code")?
                 .context("Auth flow code invalid, unable to start twitch client, could not get oauth token")?;
             //TODO save to db
@@ -153,11 +196,19 @@ impl TwitchService {
             Err(e) if e.is_api() && e.message().is_some_and(|t1| t1.starts_with("HTTP 401")) => {
                 //TODO handle unwrap
                 let lock = self.token_validation.lock().unwrap();
+                //TODO use new fn:
+                // Self::check_or_get_oauth(lock, )
                 if lock.0.elapsed() > std::time::Duration::from_secs(15 * 60) {
-                    let validation_result = validate_token(self.twitch_api.access_token()).await?;
-                    //TODO if okay, set result and retry
-                    // if Err, request new oauth in new thread
-                    todo!()
+                    match refresh_token(self.twitch_api.access_token()).await? {
+                        Ok(t) => {
+                            //TODO save new token in db
+                            req().await.context("Retry also failed")
+                        },
+                        Err(e) => {
+                            //TODO request new auth in new thread
+                            Err(e).context("Failed to refresh oauth token, failing current request")
+                        },
+                    }
                 } else if lock.1 {
                     req().await.context("Retry also failed")
                 } else {
