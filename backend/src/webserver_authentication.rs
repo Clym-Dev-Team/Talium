@@ -1,25 +1,14 @@
+use crate::twitch::authentication::validate_token;
 use crate::axum::AxumState;
 pub(crate) use crate::panel_user::Moderator;
 use crate::panel_user::{PanelUser, PanelUserService};
-use anyhow::Context;
 use axum::extract::{FromRequestParts, Request, State};
 use axum::http::request::Parts;
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::response::Result as AxResult;
-use reqwest::Method;
-use serde::Deserialize;
 use std::time::Instant;
-
-#[derive(Deserialize)]
-struct ValidationReturn {
-    #[allow(dead_code)]
-    #[serde(rename = "login")]
-    user_name: String,
-    #[serde(rename = "user_id")]
-    user_id: String
-}
 
 const FORBIDDEN: fn() -> (StatusCode, String) = || (StatusCode::FORBIDDEN, "user lacks required permissions".to_owned());
 
@@ -80,29 +69,6 @@ async fn authenticate_user(state: AxumState, request: Request) -> AxResult<(Requ
             Ok((request, user))
         }
     }
-}
-
-/// Validate an accessToken with Twitch. Ok(None) represents a successful validation, but the token being invalid
-async fn validate_token(access_token: &str) -> anyhow::Result<Option<ValidationReturn>> {
-    // prob move client into app state
-    let response = reqwest::Client::builder()
-        .build()
-        .context("Failed to build client builder for twitch access token validation")?
-        .request(Method::GET, "https://id.twitch.tv/oauth2/validate")
-        .header("Authorization", format!("Bearer {}", access_token))
-        .send()
-        .await
-        .context("Failed to send access token validation request to twitch")?;
-    if response.status() == StatusCode::UNAUTHORIZED {
-        return Ok(None)
-    }
-    let response_body = response.text()
-        .await
-        .context("Failed to decode response body from twitch access token validation")?;
-    let validation_return: ValidationReturn = serde_json::from_str(&response_body)
-        .context("Failed to deserialize response body from twitch access token validation")
-        .context("Original response body: ".to_string() + &response_body)?;
-    Ok(Some(validation_return))
 }
 
 fn get_header(headers: &HeaderMap<HeaderValue>, key: &str) -> Result<String, (StatusCode, String)> {

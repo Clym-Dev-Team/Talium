@@ -1,6 +1,8 @@
 use serde::Serialize;
 use std::sync::mpsc::{channel, Sender};
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use rand::distr::Alphanumeric;
+use rand::Rng;
 
 struct OauthRequest {
     state: String,
@@ -28,10 +30,14 @@ pub struct OauthRequestDisplay {
 }
 
 impl OAuthService {
-    pub fn new_oauth_request(&self, service_name: String, account_name: String, authorization_url: String, state: String) -> String {
+    pub fn new_oauth_request(&self, service_name: impl Into<String>, account_name: impl Into<String>, authorization_url: impl Into<String>, state: impl Into<String>) -> String {
         // if the RwLock for the requests gets poisoned, the sender for our channel will get dropped
         // which will lead to our .recv quitting. In that case we will just add our request to the
         // reinitialized request list and receive again
+        let service_name = service_name.into();
+        let account_name = account_name.into();
+        let authorization_url = authorization_url.into();
+        let state = state.into();
         let mut res = None;
         while res.is_none() {
             let (sender, receiver) = channel();
@@ -70,6 +76,10 @@ impl OAuthService {
         drop(guard);
 
         res.map_err(|_| OauthReturnError::ReturnChannelClosed)
+    }
+
+    pub fn random_state() -> String {
+        rand::rng().sample_iter(&Alphanumeric).take(32).map(char::from).collect()
     }
 
     #[cfg(test)]

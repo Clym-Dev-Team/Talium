@@ -20,6 +20,7 @@ mod panel_user;
 mod commands;
 mod panel_frontend;
 mod service_oauth;
+mod twitch;
 
 pub async fn start() {
     //check if all mandatory configuration values are set
@@ -32,7 +33,7 @@ pub async fn start() {
     let app_state = Arc::new(AppState {
         session_service: SessionService::default(),
         oauth_service: OAuthService::default(),
-        twitch_service: TwitchService,
+        twitch_service: TwitchService::new(),
         prod_db,
         webserver_config: RwLock::new(WebserverConfig {
             panel_base_url: Url::from_str("http://localhost:4771/panel").unwrap(),
@@ -44,9 +45,7 @@ pub async fn start() {
     let a2 = app_state.clone();
     Handle::current().spawn(async { axum::axum(4771, a2).await });
 
-    let state = rand::rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect();
-    println!("state: {:?}", state);
-    let oauth = app_state.oauth_service.new_oauth_request("twitch".to_string(), "account".to_string(), "".to_string(), state);
+    let oauth = app_state.oauth_service.new_oauth_request("twitch".to_string(), "account".to_string(), "".to_string(), OAuthService::random_state());
     println!("oauth: {:?}", oauth);
 }
 
