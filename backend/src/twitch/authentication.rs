@@ -1,16 +1,16 @@
-use std::str::FromStr;
-use serde_with::DurationSeconds;
-use std::time::Duration;
+use crate::axum::url_encode;
+use crate::commands::twitch_service::OauthCredential;
+use crate::service_oauth::oauth_service::OAuthService;
 use anyhow::Context;
 use axum::http::method::Method;
 use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use sqlx::types::chrono::{DateTime, Local, NaiveDateTime};
+use serde_with::DurationSeconds;
+use sqlx::types::chrono::Local;
+use std::str::FromStr;
+use std::time::Duration;
 use url::Url;
-use crate::axum::url_encode;
-use crate::commands::twitch_service::OauthCredential;
-use crate::service_oauth::oauth_service::OAuthService;
 
 #[serde_as]
 #[derive(Deserialize)]
@@ -53,7 +53,7 @@ pub async fn validate_token(access_token: impl AsRef<str>) -> anyhow::Result<Opt
         .build()
         .context("Failed to build client builder for twitch access token validation")?
         .request(Method::GET, "https://id.twitch.tv/oauth2/validate")
-        .header("Authorization", format!("Bearer {}", access_token))
+        .header("Authorization", format!("Bearer {}", access_token.as_ref()))
         .send()
         .await
         .context("Failed to send access token validation request to twitch")?;
@@ -82,9 +82,9 @@ pub async fn refresh_token(refresh_token: impl AsRef<str>, client_id: impl AsRef
         .context("Failed to build client builder for refreshing twitch oauth token")?
         .request(Method::GET, "https://id.twitch.tv/oauth2/token")
         .json(&RefreshRequest {
-            refresh_token,
-            client_id,
-            client_secret,
+            refresh_token: refresh_token.as_ref(),
+            client_id: client_id.as_ref(),
+            client_secret: client_secret.as_ref(),
             grant_type: "refresh_token",
         })
         .send()
