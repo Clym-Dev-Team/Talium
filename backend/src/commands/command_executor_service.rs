@@ -8,9 +8,11 @@ use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
 use sqlx::Type;
 use std::collections::HashMap;
+use std::fs::read;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
+use tokio::sync::RwLock;
 // ChatMessage
 
 #[allow(dead_code)]
@@ -105,18 +107,17 @@ static TEXT_COMMAND_CALLBACK: TriggerCallback = |app_state, trigger_id, _chat_me
 //    we also can't just create an emtpy version of ourselves, and fill the rest in later, because then our users would try to modify non existing commands
 #[derive(Default)]
 pub struct CommandExecutorService {
-    triggers: Vec<CommandTrigger>,
+    triggers: RwLock<Vec<CommandTrigger>>,
     cooldown_service: CooldownService,
 }
 
 impl CommandExecutorService {
-    pub(crate) fn remove_command(&self, command_id: &TriggerId) {
-        //TODO
-        // self.triggers.retain(|c| c.id.as_ref() != command_id);
+    pub(crate) async fn remove_command(&self, command_id: &TriggerId) {
+        self.triggers.write().await.retain(|c| c.id.as_ref() != command_id);
     }
 
-    pub(crate) fn upsert_command(&self, command: &Command) -> Result<(), regex::Error> {
-        self.remove_command(command.id.as_ref());
+    pub(crate) async fn upsert_command(&self, command: &Command) -> Result<(), regex::Error> {
+        self.remove_command(command.id.as_ref()).await;
         let global_cooldown = match command.global_cooldown_type {
             CooldownType::SECONDS => ChatCooldown::SECONDS(command.global_cooldown_amount),
             CooldownType::MESSAGES => ChatCooldown::MESSAGES(command.global_cooldown_amount)
@@ -125,19 +126,18 @@ impl CommandExecutorService {
             CooldownType::SECONDS => ChatCooldown::SECONDS(command.user_cooldown_amount),
             CooldownType::MESSAGES => ChatCooldown::MESSAGES(command.user_cooldown_amount)
         };
-        //TODO 
-        // self.triggers.push(CommandTrigger {
-        //     id: command.id.clone().into_boxed_str(),
-        //     global_cooldown,
-        //     user_cooldown,
-        //     permission: command.permission,
-        //     patterns: Self::convert_patterns(command.patterns.as_ref())?,
-        //     callback: TEXT_COMMAND_CALLBACK
-        // });
+        self.triggers.write().await.push(CommandTrigger {
+            id: command.id.clone().into_boxed_str(),
+            global_cooldown,
+            user_cooldown,
+            permission: command.permission,
+            patterns: Self::convert_patterns(command.patterns.as_ref())?,
+            callback: TEXT_COMMAND_CALLBACK
+        });
         Ok(())
     }
 
-    pub(crate) fn refresh_patterns(&self, prod_db: &ProdDB, trigger_id: &TriggerId) {
+    pub(crate) async fn refresh_patterns(&self, prod_db: &ProdDB, trigger_id: &TriggerId) {
         todo!()
     }
 
@@ -156,7 +156,7 @@ impl CommandExecutorService {
     }
 
     pub async fn process_chat_message(&self, app_state: Arc<FullState>, message: ChatMessage) {
-        for trigger in self.triggers.iter() {
+        for trigger in self.triggers.read().await.iter() {
             self.execute_trigger_if_matching(app_state.clone(), trigger, message.clone()).await
         }
     }

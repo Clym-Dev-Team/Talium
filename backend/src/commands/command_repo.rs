@@ -232,7 +232,7 @@ pub(crate) async fn set_enabled(state: AxumState, trigger_id: &TriggerId, enable
         return Ok(None)
     }
     if let Some(l2) = state.l2.get() {
-        l2.command_executor_service.refresh_patterns(&state.l1.prod_db, trigger_id);
+        l2.command_executor_service.refresh_patterns(&state.l1.prod_db, trigger_id).await;
     }
     transaction.commit().await?;
     Ok(Some(()))
@@ -263,7 +263,7 @@ pub(crate) async fn save(state: AxumState, command: &Command) -> Result<(), Save
 
     //TODO we should have already parsed the regex here, the call to the command-executor should not fail for any reason from our request
     if let Some(l2) = state.l2.get() {
-        l2.command_executor_service.upsert_command(&command)
+        l2.command_executor_service.upsert_command(&command).await
             .map_err(|e| SaveCommandError::RegexError(e))?;
     }
     transaction.commit().await.context("failed to commit save command transaction")
@@ -321,7 +321,7 @@ pub(crate) async fn delete_by_id(state: AxumState, trigger_id: &TriggerId) -> an
         .context("failed to delete command trigger")?;
 
     if let Some(l2) = state.l2.get() {
-        l2.command_executor_service.remove_command(&trigger_id);
+        l2.command_executor_service.remove_command(&trigger_id).await;
     }
     Ok(())
 }
