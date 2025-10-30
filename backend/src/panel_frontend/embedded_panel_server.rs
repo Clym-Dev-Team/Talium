@@ -37,7 +37,7 @@ pub fn embedded_panel_service(state: AxumState) -> ServeDir<DynamicIndexHtmlHand
     } else if !index_exists.unwrap() {
         eprintln!("panel_dist is missing index.html cannot server embedded panel in a working state!");
     } else {
-        let g = state.webserver_config.read().unwrap();
+        let g = state.l1.webserver_config.read().unwrap();
         println!("Hosting embedded panel at: {}panel", g.server_base_url);
     }
     ServeDir::new(PANEL_DIST_DIR)
@@ -75,7 +75,7 @@ impl Service<Request<Body>> for DynamicIndexHtmlHandlerService {
         let index = fs::read_to_string(PANEL_DIST_DIR.to_owned() + "/index.html").unwrap();
 
         let c = {
-            let g = self.state.webserver_config.read().unwrap();
+            let g = self.state.l1.webserver_config.read().unwrap();
             g.clone()
         };
         // strip trailing / in case of something like localhost:3487/ because it could interfere with creating paths by + "/somePath" in js

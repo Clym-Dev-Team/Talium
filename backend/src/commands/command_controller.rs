@@ -6,12 +6,13 @@ use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Result as AxResult;
-use axum::Json;
+use axum::{debug_handler, Json};
 use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use sqlx::Type;
 use std::str::FromStr;
 use crate::commands::command_repo::SaveCommandError;
+use crate::state::L1Arc;
 
 #[derive(Deserialize, Serialize)]
 pub struct MessagePattern {
@@ -54,8 +55,8 @@ pub async fn get_all_user_commands(
     Query(search): Query<SearchQuery>,
 ) -> AxResult<impl IntoResponse> {
     let commands = match search.search.as_deref() {
-        Some("") | None => command_repo::get_all_commands_by_auto_generated(&state.prod_db, false).await,
-        Some(search) => command_repo::search_all_commands_by_is_auto_generated(&state.prod_db, search, false).await,
+        Some("") | None => command_repo::get_all_commands_by_auto_generated(&state.l1.prod_db, false).await,
+        Some(search) => command_repo::search_all_commands_by_is_auto_generated(&state.l1.prod_db, search, false).await,
     }.map_err(|_| {
         // log
         StatusCode::INTERNAL_SERVER_ERROR
@@ -63,13 +64,14 @@ pub async fn get_all_user_commands(
     Ok(Json(commands))
 }
 
+#[debug_handler(state = AxumState)]
 pub async fn get_all_commands(
-    State(state): State<AxumState>,
+    l1: L1Arc,
     Query(search): Query<SearchQuery>,
 ) -> AxResult<impl IntoResponse> {
     let commands = match search.search.as_deref() {
-        Some("") | None => command_repo::get_all_commands(&state.prod_db).await,
-        Some(search) => command_repo::search_all_commands(&state.prod_db, search).await,
+        Some("") | None => command_repo::get_all_commands(&l1.prod_db).await,
+        Some(search) => command_repo::search_all_commands(&l1.prod_db, search).await,
     }.map_err(|_| {
         // log
         StatusCode::INTERNAL_SERVER_ERROR
@@ -78,10 +80,10 @@ pub async fn get_all_commands(
 }
 
 pub async fn get_by_trigger_id(
-    State(state): State<AxumState>,
+    l1: L1Arc,
     Path(trigger_id): Path<String>,
 ) -> AxResult<impl IntoResponse> {
-    Ok(Json(command_repo::get_by_id(&state.prod_db, trigger_id.as_ref())
+    Ok(Json(command_repo::get_by_id(&l1.prod_db, trigger_id.as_ref())
         .await
         .map_err(|_| {
             // log
@@ -107,12 +109,12 @@ pub async fn set_enabled(
 }
 
 pub async fn set_visible(
-    State(state): State<AxumState>,
+    l1: L1Arc,
     Path(trigger_id): Path<String>,
     body: String
 ) -> AxResult<impl IntoResponse> {
     let visible = bool::from_str(body.as_str()).map_err(|_| StatusCode::BAD_REQUEST)?;
-    command_repo::set_visible(&state.prod_db, trigger_id.as_str(), visible)
+    command_repo::set_visible(&l1.prod_db, trigger_id.as_str(), visible)
         .await
         .map_err(|_| {
             // log

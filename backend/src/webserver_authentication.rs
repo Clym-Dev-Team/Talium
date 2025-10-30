@@ -10,7 +10,7 @@ use axum::response::IntoResponse;
 use axum::response::Result as AxResult;
 use std::time::Instant;
 
-const FORBIDDEN: fn() -> (StatusCode, String) = || (StatusCode::FORBIDDEN, "user lacks required permissions".to_owned());
+const FORBIDDEN: (StatusCode, &'static str) = (StatusCode::FORBIDDEN, "user lacks required permissions");
 
 #[allow(dead_code)]
 pub async fn auth_user(State(state): State<AxumState>, request: Request, next: Next) -> AxResult<impl IntoResponse> {
@@ -29,7 +29,7 @@ pub async fn auth_mod(State(state): State<AxumState>, request: Request, next: Ne
         None =>  authenticate_user(state, request).await?,
     };
 
-    let moderator = Moderator::new(user).ok_or(FORBIDDEN())?;
+    let moderator = Moderator::new(user).ok_or(FORBIDDEN)?;
     request.extensions_mut().insert(moderator);
     Ok(next.run(request).await)
 }
@@ -39,15 +39,15 @@ async fn authenticate_user(state: AxumState, request: Request) -> AxResult<(Requ
     let user_agent = get_header(request.headers(), "User-Agent")?;
 
     //we would still want to implement the authentication bypass, although handling those anonymous users for extractors would be a challenge
-    match state.session_service.get_by_access_token(&access_token) {
+    match state.l1.session_service.get_by_access_token(&access_token) {
         Some(session) => {
             if session.user_agent != user_agent {
-                Err((StatusCode::UNAUTHORIZED, "Reauthenticate with access token".to_string()))?
-            } else if session.last_refreshed_at + state.session_service.session_timeout() < Instant::now() {
-                state.session_service.delete_by_access_token(&access_token);
-                Err((StatusCode::UNAUTHORIZED, "Reauthenticate with access token".to_string()))?
+                Err((StatusCode::UNAUTHORIZED, "Reauthenticate with access token"))?
+            } else if session.last_refreshed_at + state.l1.session_service.session_timeout() < Instant::now() {
+                state.l1.session_service.delete_by_access_token(&access_token);
+                Err((StatusCode::UNAUTHORIZED, "Reauthenticate with access token"))?
             } else {
-                _ = state.session_service.refresh_session(access_token);
+                _ = state.l1.session_service.refresh_session(access_token);
                 Ok((request, session.panel_user))
             }
         }
@@ -55,17 +55,17 @@ async fn authenticate_user(state: AxumState, request: Request) -> AxResult<(Requ
             let validated = validate_token(&access_token).await
                 .map_err(|_err| {
                     // log errors
-                    (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error. Retry authentication".to_string())
+                    (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error. Retry authentication")
                 })?
-                .ok_or((StatusCode::UNAUTHORIZED, "Invalid access token, Reauthenticate".to_string()))?;
-            let user = PanelUserService::find_by_id(&state.prod_db, validated.user_id)
+                .ok_or((StatusCode::UNAUTHORIZED, "Invalid access token, Reauthenticate"))?;
+            let user = PanelUserService::find_by_id(&state.l1.prod_db, validated.user_id)
                 .await
                 .map_err(|_err| {
                     // log error
-                    (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error. Retry authentication".to_string())
+                    (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error. Retry authentication")
                 })?
-                .ok_or(FORBIDDEN())?;
-            state.session_service.create_session(user.clone(), access_token, user_agent);
+                .ok_or(FORBIDDEN)?;
+            state.l1.session_service.create_session(user.clone(), access_token, user_agent);
             Ok((request, user))
         }
     }
@@ -80,15 +80,14 @@ fn get_header(headers: &HeaderMap<HeaderValue>, key: &str) -> Result<String, (St
 }
 
 impl FromRequestParts<AxumState> for Moderator {
-    type Rejection = (StatusCode, String);
+    type Rejection = (StatusCode, &'static str);
 
     async fn from_request_parts(parts: &mut Parts, _state: &AxumState) -> Result<Self, Self::Rejection> {
         match parts.extensions.get::<Moderator>() {
             Some(extension) => Ok(extension.clone()),
             None => match parts.extensions.get::<PanelUser>() {
-                None => Err(FORBIDDEN()),
-                Some(u) => Moderator::new(u.clone())
-                    .ok_or(FORBIDDEN()),
+                None => Err(FORBIDDEN),
+                Some(u) => Moderator::new(u.clone()).ok_or(FORBIDDEN),
             }
         }
     }

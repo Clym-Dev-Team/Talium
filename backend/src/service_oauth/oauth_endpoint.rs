@@ -7,6 +7,7 @@ use axum::response::Result as AxResult;
 use axum::Json;
 use reqwest::StatusCode;
 use serde::Deserialize;
+use crate::state::L1Arc;
 
 /// Get redirect url for a particular service. The url is fully formed with the host accessible from the outside.
 ///
@@ -60,6 +61,6 @@ pub async fn receive_oauth(
     })))
 }
 
-pub async fn list_oauth(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(state.l1.oauth_service.get_active_requests())
+pub async fn list_oauth(l1: L1Arc) -> impl IntoResponse {
+    Json(l1.oauth_service.get_active_requests())
 }

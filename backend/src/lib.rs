@@ -1,7 +1,6 @@
 use crate::commands::command_executor_service::{ChatMessage, CommandExecutorService};
 use crate::commands::twitch_service::TwitchService;
 use crate::db::ProdDB;
-use crate::session_service::SessionService;
 use serde::{Deserialize, Serialize};
 use service_oauth::oauth_service::OAuthService;
 use sqlx::MySqlPool;
@@ -10,6 +9,7 @@ use std::sync::{Arc, OnceLock, RwLock};
 use tokio::runtime::Handle;
 use tokio::sync::broadcast::error::RecvError;
 use url::Url;
+use state::{FullState, L1State, L2State, WebserverState};
 
 mod webserver_authentication;
 mod axum;
@@ -20,6 +20,7 @@ mod commands;
 mod panel_frontend;
 mod service_oauth;
 mod twitch;
+mod state;
 
 pub async fn start() {
     //check if all mandatory configuration values are set
@@ -109,44 +110,4 @@ struct WebserverConfig {
     server_base_url: Url,
     panel_auth_twitch_client_id: String,
     // maybe we need to add stuff like cors and disable auth here
-}
-
-struct L1State {
-    pub prod_db: ProdDB,
-    pub session_service: SessionService,
-    pub oauth_service: OAuthService,
-    pub webserver_config: RwLock<WebserverConfig>,
-}
-
-struct L2State {
-    pub twitch_service: TwitchService,
-    pub command_executor_service: CommandExecutorService
-}
-
-struct WebserverState {
-    pub l1: Arc<L1State>,
-    pub l2: OnceLock<Arc<L2State>>,
-}
-
-struct FullState {
-    pub l1: Arc<L1State>,
-    pub l2: Arc<L2State>,
-}
-
-#[allow(dead_code)]
-mod _services {
-    struct SetupWebserver;
-    struct PreMigrationsDB;
-    // ProdDB
-    struct Webconsole;
-    struct WebAlerting;
-    struct DiscordAlerting;
-    struct TwitchClient;
-    // AuthenticationService;
-    // embedded_panel_server;
-    struct WatchtimeService;
-    // CommandsService;
-    struct TimerService;
-    struct GiveawayService;
-    struct StreamInfoEditorService;
 }

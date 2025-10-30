@@ -1,8 +1,8 @@
 use crate::commands::command_executor_service::ChatMessage;
 use crate::db::ProdDB;
 use crate::service_oauth::oauth_endpoint::get_redirect_url;
+use crate::state::{FullState, L1State};
 use crate::twitch::authentication::{authorization_url, refresh_token, validate_token};
-use crate::{FullState, L1State};
 use anyhow::{anyhow, Context};
 use asknothingx2_util::oauth::{AccessToken, ClientId};
 use serde::Deserialize;
@@ -16,10 +16,10 @@ use tokio::sync::broadcast::Sender;
 use tokio::sync::{Mutex, RwLock};
 use tower::MakeService;
 use twitch_highway::eventsub::events::chat::ChannelChatMessage;
+use twitch_highway::eventsub::websocket;
 use twitch_highway::eventsub::websocket::extract::{Event, State};
 use twitch_highway::eventsub::websocket::routes::{channel_chat_message, revocation, welcome};
 use twitch_highway::eventsub::websocket::{Request, Revocation, Router, Welcome};
-use twitch_highway::eventsub::websocket;
 use twitch_highway::types::UserId;
 use twitch_highway::users::{User, UserAPI};
 use twitch_highway::TwitchAPI;
@@ -56,7 +56,7 @@ pub struct TwitchService {
 
 impl TwitchService {
     pub async fn new(l1: Arc<L1State>, twitch_config: TwitchConfig) -> Result<TwitchService, anyhow::Error> {
-        let cred_from_db: OauthCredential = ();
+        let cred_from_db: OauthCredential = !;
         //TODO get credentials from db (our caller does that)
         let oauth = match Self::check_or_get_oauth(&cred_from_db, &l1.prod_db, &twitch_config).await {
             Ok(oauth) => oauth,
