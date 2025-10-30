@@ -1,6 +1,6 @@
 use crate::axum::AxumState;
 use crate::commands::command_controller::{Command, CooldownType, MessagePattern};
-use crate::commands::command_executor_service::{TriggerId, TwitchUserPermission};
+use crate::commands::command_executor_service::{CommandWithRegex, TriggerId, TwitchUserPermission};
 use crate::commands::template_service::StringTemplate;
 use crate::db::ProdDB;
 use anyhow::Context;
@@ -256,15 +256,16 @@ pub(crate) enum SaveCommandError {
 }
 
 pub(crate) async fn save(state: AxumState, command: &Command) -> Result<(), SaveCommandError> {
+    // make this in the beginning, to make sure this is all valid regex
+    let with_regex: CommandWithRegex = command.try_into().map_err(|re| SaveCommandError::RegexError(re))?;
+
     let mut transaction = state.l1.prod_db.begin().await.context("failed to start save command transaction")
         .map_err(|e| SaveCommandError::DbError(e))?;
-    save_command(&command, &mut transaction).await
-        .map_err(|e| SaveCommandError::DbError(e))?;
 
-    //TODO we should have already parsed the regex here, the call to the command-executor should not fail for any reason from our request
+    save_command(&command, &mut transaction).await.map_err(|e| SaveCommandError::DbError(e))?;
+
     if let Some(l2) = state.l2.get() {
-        l2.command_executor_service.upsert_command(&command).await
-            .map_err(|e| SaveCommandError::RegexError(e))?;
+        l2.command_executor_service.upsert_command(with_regex).await
     }
     transaction.commit().await.context("failed to commit save command transaction")
         .map_err(|e| SaveCommandError::DbError(e))?;

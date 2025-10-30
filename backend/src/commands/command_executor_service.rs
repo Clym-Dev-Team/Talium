@@ -1,6 +1,6 @@
 use super::cooldown_service::CooldownService;
 use crate::commands::command_controller::{Command, CooldownType, MessagePattern};
-use crate::commands::template_service::TemplateService;
+use crate::commands::template_service::{StringTemplate, TemplateService};
 use crate::db::ProdDB;
 use crate::state::FullState;
 use num_derive::FromPrimitive;
@@ -8,12 +8,10 @@ use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
 use sqlx::Type;
 use std::collections::HashMap;
-use std::fs::read;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::RwLock;
-// ChatMessage
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Deserialize, Serialize, FromPrimitive, Type)]
@@ -63,15 +61,45 @@ pub struct ChatMessage {
 }
 
 // Triggers
-
 pub type TriggerId = str;
-// pub type TriggerCallback = fn(&AppState, &TriggerId, &ChatMessage) ;
 pub type TriggerCallback = fn(Arc<FullState>, Box<TriggerId>, ChatMessage) -> Pin<Box<dyn Future<Output=()>>>;
 
 #[derive(Deserialize, Serialize)]
 pub enum ChatCooldown {
     SECONDS(u16),
     MESSAGES(u16)
+}
+
+pub struct CommandWithRegex<'a> {
+    pub id: &'a str,
+    pub description: &'a str,
+    pub patterns: Vec<Regex>,
+    pub permission: TwitchUserPermission,
+    pub is_auto_generated: bool,
+    pub global_cooldown_amount: u16,
+    pub global_cooldown_type: CooldownType,
+    pub user_cooldown_amount: u16,
+    pub user_cooldown_type: CooldownType,
+    pub template: Option<&'a StringTemplate>,
+}
+
+impl<'a> TryFrom<&'a Command> for CommandWithRegex<'a> {
+    type Error = regex::Error;
+
+    fn try_from(value: &'a Command) -> Result<Self, Self::Error> {
+        Ok(CommandWithRegex {
+            patterns: CommandExecutorService::convert_patterns(value.patterns.as_ref())?,
+            permission: value.permission,
+            global_cooldown_amount: value.global_cooldown_amount,
+            global_cooldown_type: value.global_cooldown_type,
+            id: value.id.as_str(),
+            template: value.template.as_ref(),
+            is_auto_generated: value.is_auto_generated,
+            description: value.description.as_str(),
+            user_cooldown_amount: value.user_cooldown_amount,
+            user_cooldown_type: value.user_cooldown_type,
+        })
+    }
 }
 
 pub struct CommandTrigger {
@@ -91,13 +119,12 @@ static TEXT_COMMAND_CALLBACK: TriggerCallback = |app_state, trigger_id, _chat_me
         }
         Ok(None) => {
             // log
-            //     logger.error("Could not find template id for command id {}", commandId);
+            // logger.error("Could not find template id for command id {}", commandId);
         }
         Ok(Some(t)) => app_state.l2.twitch_service.send_raw_template(t.template.as_ref(), HashMap::new())
     }
 });
 
-// Service
 
 //TODO we have a race condition here, if we first request the values from the database, and then return the service, the direct call for us to refresh might get lost.
 // because we might not exist yet, but the modification in the db still goes through.
@@ -116,7 +143,7 @@ impl CommandExecutorService {
         self.triggers.write().await.retain(|c| c.id.as_ref() != command_id);
     }
 
-    pub(crate) async fn upsert_command(&self, command: &Command) -> Result<(), regex::Error> {
+    pub(crate) async fn upsert_command(&self, command: CommandWithRegex<'_>) {
         self.remove_command(command.id.as_ref()).await;
         let global_cooldown = match command.global_cooldown_type {
             CooldownType::SECONDS => ChatCooldown::SECONDS(command.global_cooldown_amount),
@@ -127,21 +154,20 @@ impl CommandExecutorService {
             CooldownType::MESSAGES => ChatCooldown::MESSAGES(command.user_cooldown_amount)
         };
         self.triggers.write().await.push(CommandTrigger {
-            id: command.id.clone().into_boxed_str(),
+            id: Box::from(command.id),
             global_cooldown,
             user_cooldown,
             permission: command.permission,
-            patterns: Self::convert_patterns(command.patterns.as_ref())?,
+            patterns: command.patterns,
             callback: TEXT_COMMAND_CALLBACK
         });
-        Ok(())
     }
 
     pub(crate) async fn refresh_patterns(&self, prod_db: &ProdDB, trigger_id: &TriggerId) {
         todo!()
     }
 
-    fn convert_patterns(patterns: &[MessagePattern]) -> Result<Vec<Regex>,regex::Error> {
+    fn convert_patterns(patterns: &[MessagePattern]) -> Result<Vec<Regex>, regex::Error> {
         patterns.iter()
             .filter(|x| x.is_enabled)
             .map(|x1| {

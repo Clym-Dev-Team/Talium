@@ -6,11 +6,10 @@ use crate::db::ProdDB;
 use crate::service_oauth::oauth_service::OAuthService;
 use crate::session_service::SessionService;
 use crate::WebserverConfig;
-use axum::extract::{FromRef, FromRequestParts};
+use axum::extract::{FromRequestParts};
 use std::sync::{Arc, OnceLock, RwLock};
 use axum::http::request::Parts;
 use reqwest::StatusCode;
-use tower::ServiceExt;
 use crate::axum::AxumState;
 
 #[allow(dead_code)]

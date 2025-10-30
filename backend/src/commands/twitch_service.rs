@@ -61,7 +61,7 @@ impl TwitchService {
         let oauth = match Self::check_or_get_oauth(&cred_from_db, &l1.prod_db, &twitch_config).await {
             Ok(oauth) => oauth,
             Err(e) => {
-                //TODO log err
+                // log err
                 TwitchCredentialStatus {
                     was_valid_at_check: true,
                     valid_checked_at: Instant::now(),

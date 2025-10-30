@@ -37,7 +37,7 @@ pub struct Command {
 }
 
 /// Do not modify order, this will break the type in the db
-#[derive(Deserialize, Serialize, Type, FromPrimitive)]
+#[derive(Deserialize, Serialize, Type, FromPrimitive, Copy, Clone)]
 #[repr(u8)]
 pub enum CooldownType {
     SECONDS = 0,
