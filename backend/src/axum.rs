@@ -2,7 +2,7 @@ use crate::commands::command_controller::{delete_by_id, get_all_commands, get_al
 use crate::panel_frontend::embedded_panel_server::{embedded_panel_service, to_panel_redirect, SERVER_PANEL_PATH};
 use crate::service_oauth::oauth_endpoint::{list_oauth, receive_oauth};
 use crate::webserver_authentication::auth_mod;
-use crate::AppState;
+use crate::{WebserverState};
 use axum::middleware::from_fn_with_state;
 use axum::routing::{any, delete, get, post};
 use axum::Router;
@@ -12,7 +12,7 @@ use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use url::{form_urlencoded, Url};
 
-pub type AxumState = Arc<AppState>;
+pub type AxumState = Arc<WebserverState>;
 
 pub async fn axum(on_port: u16, state: AxumState) {
     let webserver_config = {

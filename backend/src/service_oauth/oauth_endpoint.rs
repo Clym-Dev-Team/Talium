@@ -34,7 +34,7 @@ pub async fn receive_oauth(
     Path(service): Path<String>,
     Query(query): Query<ReceiveOAuthQuery>,
 ) -> AxResult<impl IntoResponse> {
-    let panel_base_url = if let Ok(v) = state.webserver_config.read() {
+    let panel_base_url = if let Ok(v) = state.l1.webserver_config.read() {
         v.panel_base_url.as_str().to_string()
     } else {
         // log lock poisoned
@@ -50,7 +50,7 @@ pub async fn receive_oauth(
     if query.code.is_none() {
         return Ok(Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode("Query param code is required for non error Oauth response"))))
     }
-    Ok(Body::new(format!("{}{}", panel_base_url, match state.oauth_service.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap()) {
+    Ok(Body::new(format!("{}{}", panel_base_url, match state.l1.oauth_service.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap()) {
         Ok(()) => format!("{}?success=true", panel_base_url),
         Err(OauthReturnError::NotRequested) => format!("{}?success=false&error={}", panel_base_url, url_encode("This oauth was never requested from the bot")),
         Err(OauthReturnError::ReturnChannelClosed) => {
@@ -61,5 +61,5 @@ pub async fn receive_oauth(
 }
 
 pub async fn list_oauth(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(state.oauth_service.get_active_requests())
+    Json(state.l1.oauth_service.get_active_requests())
 }

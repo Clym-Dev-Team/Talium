@@ -2,7 +2,7 @@ use super::cooldown_service::CooldownService;
 use crate::commands::command_controller::{Command, CooldownType, MessagePattern};
 use crate::commands::template_service::TemplateService;
 use crate::db::ProdDB;
-use crate::AppState;
+use crate::FullState;
 use num_derive::FromPrimitive;
 use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
@@ -11,8 +11,6 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
-use tokio::sync::broadcast::error::RecvError;
-use tokio::sync::broadcast::Receiver;
 // ChatMessage
 
 #[allow(dead_code)]
@@ -66,7 +64,7 @@ pub struct ChatMessage {
 
 pub type TriggerId = str;
 // pub type TriggerCallback = fn(&AppState, &TriggerId, &ChatMessage) ;
-pub type TriggerCallback = fn(Arc<AppState>, Box<TriggerId>, ChatMessage) -> Pin<Box<dyn Future<Output=()>>>;
+pub type TriggerCallback = fn(Arc<FullState>, Box<TriggerId>, ChatMessage) -> Pin<Box<dyn Future<Output=()>>>;
 
 #[derive(Deserialize, Serialize)]
 pub enum ChatCooldown {
@@ -84,7 +82,7 @@ pub struct CommandTrigger {
 }
 
 static TEXT_COMMAND_CALLBACK: TriggerCallback = |app_state, trigger_id, _chat_message| Box::pin(async move {
-    match TemplateService::get_template_by_trigger_id(&app_state.prod_db, trigger_id.as_ref()).await {
+    match TemplateService::get_template_by_trigger_id(&app_state.l1.prod_db, trigger_id.as_ref()).await {
         Err(_e) => {
             // log
             // logger.debug("Executing text command {}", commandId);
@@ -93,7 +91,7 @@ static TEXT_COMMAND_CALLBACK: TriggerCallback = |app_state, trigger_id, _chat_me
             // log
             //     logger.error("Could not find template id for command id {}", commandId);
         }
-        Ok(Some(t)) => app_state.twitch_service.send_raw_template(t.template.as_ref(), HashMap::new())
+        Ok(Some(t)) => app_state.l2.twitch_service.send_raw_template(t.template.as_ref(), HashMap::new())
     }
 });
 
@@ -151,24 +149,13 @@ impl CommandExecutorService {
             .collect()
     }
 
-    #[allow(dead_code)]
-    pub async fn receive_commands(&self, app_state: Arc<AppState>, mut receiver: Receiver<ChatMessage>){
-        loop {
-            let message = match receiver.recv().await {
-                Ok(m) => m,
-                Err(RecvError::Closed) => return,
-                Err(RecvError::Lagged(_s)) => {
-                    // log skip
-                    continue;
-                }
-            };
-            for trigger in self.triggers.iter() {
-                self.execute_trigger_if_matching(app_state.clone(), trigger, message.clone()).await
-            }
+    pub async fn process_chat_message(&self, app_state: Arc<FullState>, message: ChatMessage) {
+        for trigger in self.triggers.iter() {
+            self.execute_trigger_if_matching(app_state.clone(), trigger, message.clone()).await
         }
     }
 
-    async fn execute_trigger_if_matching(&self, app_state: Arc<AppState>, trigger: &CommandTrigger, chat_message: ChatMessage) {
+    async fn execute_trigger_if_matching(&self, app_state: Arc<FullState>, trigger: &CommandTrigger, chat_message: ChatMessage) {
         if chat_message.user.permission < trigger.permission {
             // logger.debug("User {} with {}, missing {} permission for command {}", message.user().name(), message.user().permission(), trigger.permission(), trigger.id());
             return;
