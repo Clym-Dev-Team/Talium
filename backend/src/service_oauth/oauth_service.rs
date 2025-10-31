@@ -82,12 +82,6 @@ impl OAuthService {
         rand::rng().sample_iter(&Alphanumeric).take(32).map(char::from).collect()
     }
 
-    #[cfg(test)]
-    pub fn corrupt_lock(&self) {
-        let _guard = self.active_requests.write().unwrap();
-        panic!("Purposely panic while holding guard");
-    }
-
     pub fn get_active_requests(&self) -> Vec<OauthRequestDisplay> {
         self.read_lock()
             .iter()

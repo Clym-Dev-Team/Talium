@@ -62,7 +62,7 @@ pub struct ChatMessage {
 
 // Triggers
 pub type TriggerId = str;
-pub type TriggerCallback = fn(Arc<FullState>, Box<TriggerId>, ChatMessage) -> Pin<Box<dyn Future<Output=()>>>;
+pub type TriggerCallback = fn(Arc<FullState>, Box<TriggerId>, ChatMessage) -> Pin<Box<dyn Future<Output=()> + Send>>;
 
 #[derive(Deserialize, Serialize)]
 pub enum ChatCooldown {
@@ -138,6 +138,34 @@ pub struct CommandExecutorService {
     cooldown_service: CooldownService,
 }
 
+impl  CommandExecutorService {
+    pub async fn process_chat_message(app_state: Arc<FullState>, message: ChatMessage) {
+        for trigger in app_state.l2.command_executor_service.triggers.read().await.iter() {
+            app_state.l2.command_executor_service.execute_trigger_if_matching(app_state.clone(), trigger, message.clone()).await
+        }
+    }
+
+    async fn execute_trigger_if_matching(&self, app_state: Arc<FullState>, trigger: &CommandTrigger, chat_message: ChatMessage) {
+        if chat_message.user.permission < trigger.permission {
+            // logger.debug("User {} with {}, missing {} permission for command {}", message.user().name(), message.user().permission(), trigger.permission(), trigger.id());
+            return;
+        }
+
+        if !trigger.patterns.iter().any(|r| r.is_match(&chat_message.message)) {
+            return;
+        }
+
+        let cooldown_res = self.cooldown_service.check_update_cooldown(&chat_message, trigger.id.as_ref(), &trigger.user_cooldown, &trigger.global_cooldown);
+        if cooldown_res.is_some() {
+            // logger.debug("Call to command {} from {} rejected because of global cooldowns", trigger.id(), message.user().name());
+            // logger.debug("Call to command {} from {} rejected because of user cooldowns", trigger.id(), message.user().name());
+            return;
+        }
+
+        (trigger.callback)(app_state, trigger.id.clone(), chat_message).await;
+    }
+}
+
 impl CommandExecutorService {
     pub(crate) async fn remove_command(&self, command_id: &TriggerId) {
         self.triggers.write().await.retain(|c| c.id.as_ref() != command_id);
@@ -163,7 +191,7 @@ impl CommandExecutorService {
         });
     }
 
-    pub(crate) async fn refresh_patterns(&self, prod_db: &ProdDB, trigger_id: &TriggerId) {
+    pub(crate) async fn refresh_patterns(&self, _prod_db: &ProdDB, _trigger_id: &TriggerId) {
         todo!()
     }
 
@@ -179,32 +207,6 @@ impl CommandExecutorService {
                 }
             })
             .collect()
-    }
-
-    pub async fn process_chat_message(&self, app_state: Arc<FullState>, message: ChatMessage) {
-        for trigger in self.triggers.read().await.iter() {
-            self.execute_trigger_if_matching(app_state.clone(), trigger, message.clone()).await
-        }
-    }
-
-    async fn execute_trigger_if_matching(&self, app_state: Arc<FullState>, trigger: &CommandTrigger, chat_message: ChatMessage) {
-        if chat_message.user.permission < trigger.permission {
-            // logger.debug("User {} with {}, missing {} permission for command {}", message.user().name(), message.user().permission(), trigger.permission(), trigger.id());
-            return;
-        }
-
-        if !trigger.patterns.iter().any(|r| r.is_match(&chat_message.message)) {
-            return;
-        }
-
-        let cooldown_res = self.cooldown_service.check_update_cooldown(&chat_message, trigger.id.as_ref(), &trigger.user_cooldown, &trigger.global_cooldown);
-        if cooldown_res.is_some() {
-            // logger.debug("Call to command {} from {} rejected because of global cooldowns", trigger.id(), message.user().name());
-            // logger.debug("Call to command {} from {} rejected because of user cooldowns", trigger.id(), message.user().name());
-            return;
-        }
-
-        (trigger.callback)(app_state, trigger.id.clone(), chat_message).await;
     }
 }
 

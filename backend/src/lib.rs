@@ -1,5 +1,5 @@
 use crate::commands::command_executor_service::{ChatMessage, CommandExecutorService};
-use crate::commands::twitch_service::TwitchService;
+use crate::commands::twitch_service::{TwitchConfig, TwitchService};
 use crate::db::ProdDB;
 use serde::{Deserialize, Serialize};
 use service_oauth::oauth_service::OAuthService;
@@ -52,7 +52,14 @@ pub async fn start() {
     Handle::current().spawn(async { axum::axum(4771, a2).await });
 
     // 2nc Stage
-    let service = TwitchService::new(l1.clone(), ()).await.unwrap();
+    let twitch_config = TwitchConfig {
+        channel_name: std::env::var("TWITCH_LISTEN_CHANNEL").unwrap(),
+        chat_account_name: std::env::var("TWITCH_ACCOUNT_NAME").unwrap(),
+        send_to: std::env::var("TWITCH_SEND_TO").unwrap(),
+        client_id: std::env::var("TWITCH_CLIENT_ID").unwrap(),
+        client_secret: std::env::var("TWITCH_CLIENT_SECRET").unwrap(),
+    };
+    let service = TwitchService::new(l1.clone(), twitch_config).await.unwrap();
     let l2 = Arc::new(L2State {
         twitch_service: service,
         command_executor_service: Default::default(),
@@ -75,7 +82,7 @@ pub async fn start() {
     Handle::current().spawn(async { TwitchService::start_websocket(full2, sender2) });
     let mut receiver = command_channel.subscribe();
     let full2 = full.clone();
-    Handle::current().spawn(async {
+    Handle::current().spawn(async move {
         loop {
             let message = match receiver.recv().await {
                 Ok(m) => *m,
@@ -87,7 +94,7 @@ pub async fn start() {
             };
             let full = full2.clone();
             Handle::current().spawn(async move {
-                CommandExecutorService::process_chat_message(&full.l2.command_executor_service, full, message).await;
+                CommandExecutorService::process_chat_message(full, message).await;
             });
         }
     });
@@ -101,7 +108,6 @@ struct DbConfig {
     db_password: String,
     db_database: String,
 }
-
 
 /// Very basic, but can already be saved in the Database
 #[derive(Clone)]

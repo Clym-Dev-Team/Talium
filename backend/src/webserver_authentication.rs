@@ -37,6 +37,14 @@ pub async fn auth_mod(State(state): State<AxumState>, request: Request, next: Ne
 async fn authenticate_user(state: AxumState, request: Request) -> AxResult<(Request, PanelUser)> {
     let access_token = get_header(request.headers(), "token")?;
     let user_agent = get_header(request.headers(), "User-Agent")?;
+    // How are we going to revalidate the auth tokens we use for login/sessions. Maybe twitch has some docs on how you are supposed to do this.
+    // if a token gets revoked, realistically we would know after a few hours at most, because currently we require one "action" every 30min to keep the session alive.
+    // But it is currently possible to keep a session alive indefinitely.
+    //
+    // We could maybe check the validity if the last time we checked is more than 15min ago.
+    // The trick is to not do that while validating the request, because that would delay the validation, and that's why we have the sessions.
+    // But if we allow the request for now anyway, and then in the background check if the token is valid, and remove it for the next request.
+    // One additional benefit is that we are not constantly checking the validity for each user, only when they actually do something.
 
     //we would still want to implement the authentication bypass, although handling those anonymous users for extractors would be a challenge
     match state.l1.session_service.get_by_access_token(&access_token) {
