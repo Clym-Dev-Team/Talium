@@ -6,7 +6,6 @@ use axum::response::IntoResponse;
 use axum::response::Result as AxResult;
 use axum::Json;
 use log::error;
-use reqwest::StatusCode;
 use serde::Deserialize;
 use crate::state::L1Arc;
 

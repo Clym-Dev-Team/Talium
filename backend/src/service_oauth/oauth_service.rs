@@ -12,7 +12,6 @@ struct OauthRequest {
     return_channel: Sender<String>,
 }
 
-#[derive(Default)]
 pub struct OAuthService {
     active_requests: RwLock<Vec<OauthRequest>>,
 }
@@ -35,6 +34,12 @@ pub type OauthState = str;
 pub type AuthorizationUrlBuilder = dyn (for<'a> Fn(&'a RedirectUrl, &'a OauthState) -> AuthorizationUrl) + Send + Sync;
 
 impl OAuthService {
+    pub fn new() -> OAuthService {
+        OAuthService {
+            active_requests: RwLock::new(Vec::new()),
+        }
+    }
+    
     pub fn new_oauth_request<B>(&self, service_name: impl Into<String>, account_name: impl Into<String>, authorization_url: B) -> String
     where B: (for<'a> Fn(&'a RedirectUrl, &'a OauthState) -> AuthorizationUrl) + Send + Sync + Clone + 'static,
     {

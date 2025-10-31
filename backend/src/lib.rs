@@ -2,7 +2,6 @@ use crate::commands::command_executor_service::{ChatMessage, CommandExecutorServ
 use twitch::twitch_service::{TwitchConfig, TwitchService};
 use crate::db::ProdDB;
 use serde::{Deserialize, Serialize};
-use service_oauth::oauth_service::OAuthService;
 use sqlx::MySqlPool;
 use std::str::FromStr;
 use std::sync::{Arc, OnceLock, RwLock};
@@ -11,6 +10,8 @@ use tokio::runtime::Handle;
 use tokio::sync::broadcast::error::RecvError;
 use url::Url;
 use state::{FullState, L1State, L2State, WebserverState};
+use crate::service_oauth::oauth_service::OAuthService;
+use crate::session_service::SessionService;
 
 mod webserver_authentication;
 mod axum;
@@ -42,8 +43,8 @@ pub async fn start() {
             panel_auth_twitch_client_id: "zmxjjn3xmncg8ewew6tjk08tub26bb".to_string()
         }),
         command_executor_service: CommandExecutorService::new(&prod_db).await,
-        oauth_service: Default::default(),
-        session_service: Default::default(),
+        oauth_service: OAuthService::new(),
+        session_service: SessionService::new(),
         prod_db,
     });
 

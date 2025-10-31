@@ -12,7 +12,6 @@ use log::{info, warn};
 use tokio::runtime::Handle;
 use tokio::sync::{Mutex, RwLock};
 use twitch_highway::TwitchAPI;
-use crate::service_oauth::oauth_service::{AuthorizationUrlBuilder, OauthState, RedirectUrl};
 
 #[derive(Default, Deserialize, Clone)]
 pub(crate) struct OauthCredential {
@@ -136,7 +135,6 @@ impl TwitchService {
 
     async fn check_or_get_oauth(cred: &OauthCredential, _db: &ProdDB, twitch_config: &TwitchConfig) -> Result<TwitchCredentialStatus, anyhow::Error> {
         const FINAL_ERROR: &str = "Could not get new oauth token, bad credentials, needs reauthentication";
-        // is first thread, do validation/refreshing
         let mut errors = vec![];
         match validate_token(cred.access_token.as_str()).await {
             Ok(Some(_validation)) => {
