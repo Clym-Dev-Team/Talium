@@ -1,27 +1,15 @@
-use crate::commands::command_executor_service::ChatMessage;
 use crate::db::ProdDB;
 use crate::service_oauth::oauth_endpoint::get_redirect_url;
-use crate::state::{FullState, L1State};
+use crate::state::L1State;
 use crate::twitch::authentication::{authorization_url, refresh_token, validate_token};
 use anyhow::{anyhow, Context};
 use asknothingx2_util::oauth::{AccessToken, ClientId};
 use serde::Deserialize;
 use sqlx::types::chrono::{DateTime, Local};
-use std::any::Any;
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::runtime::Handle;
-use tokio::sync::broadcast::Sender;
 use tokio::sync::{Mutex, RwLock};
-use tower::MakeService;
-use twitch_highway::eventsub::events::chat::ChannelChatMessage;
-use twitch_highway::eventsub::websocket::extract::{Event, State};
-use twitch_highway::eventsub::websocket::routes::{channel_chat_message, revocation, welcome};
-use twitch_highway::eventsub::websocket::{Request, Revocation, Router, Welcome};
-use twitch_highway::eventsub::{websocket, EventSubAPI, SubscriptionType};
-use twitch_highway::types::UserId;
-use twitch_highway::users::{User, UserAPI};
 use twitch_highway::TwitchAPI;
 
 #[derive(Default, Deserialize, Clone)]
@@ -48,10 +36,10 @@ struct TwitchCredentialStatus {
 }
 
 pub struct TwitchService {
-    twitch_api: Arc<RwLock<TwitchAPI>>,
-    token_validation: Arc<Mutex<TwitchCredentialStatus>>,
-    config: TwitchConfig,
-    l1: Arc<L1State>,
+    pub(super) twitch_api: Arc<RwLock<TwitchAPI>>,
+    pub(super) token_validation: Arc<Mutex<TwitchCredentialStatus>>,
+    pub(super) config: TwitchConfig,
+    pub(super) l1: Arc<L1State>,
 }
 
 impl TwitchService {
@@ -90,96 +78,10 @@ impl TwitchService {
         })
     }
 }
-impl TwitchService {
-    pub async fn start_websocket(state: Arc<FullState>, _commands_sender: Sender<Box<ChatMessage>>) {
-        async fn process_messages(_state: State<Arc<FullState>>, _message: Event<ChannelChatMessage>) {
-            //TODO deduplicate message (ids) with ringbuffer
-            //TODO push into sender
-        }
-        async fn process_welcome(state: State<Arc<FullState>>, Event(welcome): Event<Welcome>) {
-            let session_id = welcome.payload.session.id;
-            //TODO do we get called again when automatically reconnecting, and if so, is it okay that we are subscribing again
-            state.l2.twitch_service.twitch_api.read().await.websocket_subscription(SubscriptionType::ChannelChatMessage, session_id);
-        }
-        async fn process_revocation(_state: State<Arc<FullState>>, _welcome: Event<Revocation>) {}
-
-        let twitch_router = <Router as MakeService<(), Request>>::into_service(Router::<Arc<FullState>>::new()
-            .route(welcome(process_welcome))
-            .route(revocation(process_revocation))
-            .route(channel_chat_message(process_messages))
-            .with_state(state));
-
-        let _ws = websocket::client("wss://eventsub.wss.twitch.tv/ws", twitch_router).await;
-        //log error
-    }
-}
 
 impl TwitchService {
-    pub async fn get_user_by_id(&self, id: String) -> Result<Option<User>, anyhow::Error> {
-        let ids = [UserId::from(id)];
-        let req = || async {
-            self.twitch_api
-                .read()
-                .await
-                .get_users()
-                .ids(&ids)
-                .json()
-                .await
-        };
-        let mut res = self.handle_401_and_retry(req).await.context("failed to get user by id")?;
-        Ok(res.data.pop())
-    }
-
-    pub fn send_raw_template(&self, _template: &str, _values: HashMap<String, Box<dyn Any>>) {
-        // all errors should just be logged
-        todo!()
-    }
-}
-
-impl TwitchService {
-    async fn check_or_get_oauth(cred: &OauthCredential, _db: &ProdDB, twitch_config: &TwitchConfig) -> Result<TwitchCredentialStatus, anyhow::Error> {
-        const FINAL_ERROR: &str = "Could not get new oauth token, bad credentials, needs reauthentication";
-        // is first thread, do validation/refreshing
-        let mut errors = vec![];
-        match validate_token(cred.access_token.as_str()).await {
-            Ok(Some(_validation)) => {
-                return Ok(TwitchCredentialStatus {
-                    valid_checked_at: Instant::now(),
-                    was_valid_at_check: true,
-                    credential: cred.clone(),
-                })
-            },
-            Err(e) => errors.push(e),
-            Ok(None) => {}
-        };
-        match refresh_token(cred.refresh_token.as_str(), twitch_config.client_id.as_str(), twitch_config.client_secret.as_str()).await {
-            Ok(Some(refreshed)) => {
-                //TODO save to db
-                return Ok(TwitchCredentialStatus {
-                    valid_checked_at: Instant::now(),
-                    was_valid_at_check: true,
-                    credential: refreshed.into(),
-                })
-            }
-            Err(e) => errors.push(e),
-            Ok(None) => {}
-        }
-        //TODO add errors
-        Err(anyhow!(FINAL_ERROR))
-    }
-
-    async fn request_new_oauth(l1: &L1State, twitch_config: TwitchConfig) -> OauthCredential {
-        let (url, state) = authorization_url(twitch_config.client_id.as_str(), get_redirect_url("".to_string(), "twitch"));
-        //TODO make the url kida a builder, that gets evaluated when the api is actually called
-        let code = l1.oauth_service.new_oauth_request("twitch", twitch_config.chat_account_name.as_str(), url, state);
-
-        let _refreshed = refresh_token(code, twitch_config.client_id.as_str(), twitch_config.client_secret.as_str()).await;
-        //TODO save to db
-        todo!()
-    }
-
     #[inline(always)]
-    async fn handle_401_and_retry<R, F, Fut>(&self, req: F) -> Result<R, anyhow::Error> where
+    pub(super) async fn handle_401_and_retry<R, F, Fut>(&self, req: F) -> Result<R, anyhow::Error> where
         F: Fn() -> Fut,
         Fut: Future<Output=Result<R, twitch_highway::Error>>
     {
@@ -227,5 +129,46 @@ impl TwitchService {
             Err(e) => Err(e.into()),
             Ok(r) => Ok(r),
         }
+    }
+
+    async fn check_or_get_oauth(cred: &OauthCredential, _db: &ProdDB, twitch_config: &TwitchConfig) -> Result<TwitchCredentialStatus, anyhow::Error> {
+        const FINAL_ERROR: &str = "Could not get new oauth token, bad credentials, needs reauthentication";
+        // is first thread, do validation/refreshing
+        let mut errors = vec![];
+        match validate_token(cred.access_token.as_str()).await {
+            Ok(Some(_validation)) => {
+                return Ok(TwitchCredentialStatus {
+                    valid_checked_at: Instant::now(),
+                    was_valid_at_check: true,
+                    credential: cred.clone(),
+                })
+            },
+            Err(e) => errors.push(e),
+            Ok(None) => {}
+        };
+        match refresh_token(cred.refresh_token.as_str(), twitch_config.client_id.as_str(), twitch_config.client_secret.as_str()).await {
+            Ok(Some(refreshed)) => {
+                //TODO save to db
+                return Ok(TwitchCredentialStatus {
+                    valid_checked_at: Instant::now(),
+                    was_valid_at_check: true,
+                    credential: refreshed.into(),
+                })
+            }
+            Err(e) => errors.push(e),
+            Ok(None) => {}
+        }
+        //TODO add errors
+        Err(anyhow!(FINAL_ERROR))
+    }
+
+    async fn request_new_oauth(l1: &L1State, twitch_config: TwitchConfig) -> OauthCredential {
+        let (url, state) = authorization_url(twitch_config.client_id.as_str(), get_redirect_url("".to_string(), "twitch"));
+        //TODO make the url kida a builder, that gets evaluated when the api is actually called
+        let code = l1.oauth_service.new_oauth_request("twitch", twitch_config.chat_account_name.as_str(), url, state);
+
+        let _refreshed = refresh_token(code, twitch_config.client_id.as_str(), twitch_config.client_secret.as_str()).await;
+        //TODO save to db
+        todo!()
     }
 }

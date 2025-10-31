@@ -1,0 +1,62 @@
+use std::any::Any;
+use std::collections::HashMap;
+use std::sync::Arc;
+use twitch_highway::users::{User, UserAPI};
+use twitch_highway::types::UserId;
+use tokio::sync::broadcast::Sender;
+use twitch_highway::eventsub::websocket::extract::{Event, State};
+use twitch_highway::eventsub::events::chat::ChannelChatMessage;
+use twitch_highway::eventsub::websocket::{Request, Revocation, Router, Welcome};
+use twitch_highway::eventsub::{websocket, EventSubAPI, SubscriptionType};
+use tower::MakeService;
+use twitch_highway::eventsub::websocket::routes::{channel_chat_message, revocation, welcome};
+use anyhow::Context;
+use crate::commands::command_executor_service::ChatMessage;
+use crate::state::FullState;
+use crate::twitch::twitch_service::TwitchService;
+
+impl TwitchService {
+    pub async fn start_websocket(state: Arc<FullState>, _commands_sender: Sender<Box<ChatMessage>>) {
+        async fn process_messages(_state: State<Arc<FullState>>, _message: Event<ChannelChatMessage>) {
+            //TODO deduplicate message (ids) with ringbuffer
+            //TODO push into sender
+        }
+        async fn process_welcome(state: State<Arc<FullState>>, Event(welcome): Event<Welcome>) {
+            let session_id = welcome.payload.session.id;
+            //TODO do we get called again when automatically reconnecting, and if so, is it okay that we are subscribing again
+            state.l2.twitch_service.twitch_api.read().await.websocket_subscription(SubscriptionType::ChannelChatMessage, session_id);
+        }
+        async fn process_revocation(_state: State<Arc<FullState>>, _welcome: Event<Revocation>) {}
+
+        let twitch_router = <Router as MakeService<(), Request>>::into_service(Router::<Arc<FullState>>::new()
+            .route(welcome(process_welcome))
+            .route(revocation(process_revocation))
+            .route(channel_chat_message(process_messages))
+            .with_state(state));
+
+        let _ws = websocket::client("wss://eventsub.wss.twitch.tv/ws", twitch_router).await;
+        //log error
+    }
+}
+
+impl TwitchService {
+    pub async fn get_user_by_id(&self, id: String) -> Result<Option<User>, anyhow::Error> {
+        let ids = [UserId::from(id)];
+        let req = || async {
+            self.twitch_api
+                .read()
+                .await
+                .get_users()
+                .ids(&ids)
+                .json()
+                .await
+        };
+        let mut res = self.handle_401_and_retry(req).await.context("failed to get user by id")?;
+        Ok(res.data.pop())
+    }
+
+    pub fn send_raw_template(&self, _template: &str, _values: HashMap<String, Box<dyn Any>>) {
+        // all errors should just be logged
+        todo!()
+    }
+}

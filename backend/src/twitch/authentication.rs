@@ -1,5 +1,5 @@
 use crate::axum::url_encode;
-use crate::commands::twitch_service::OauthCredential;
+use crate::twitch::twitch_service::OauthCredential;
 use crate::service_oauth::oauth_service::OAuthService;
 use anyhow::Context;
 use axum::http::method::Method;

@@ -1,7 +1,7 @@
 use std::convert::Infallible;
 use std::ops::Deref;
 use crate::commands::command_executor_service::CommandExecutorService;
-use crate::commands::twitch_service::TwitchService;
+use crate::twitch::twitch_service::TwitchService;
 use crate::db::ProdDB;
 use crate::service_oauth::oauth_service::OAuthService;
 use crate::session_service::SessionService;

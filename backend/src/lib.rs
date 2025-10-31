@@ -1,5 +1,5 @@
 use crate::commands::command_executor_service::{ChatMessage, CommandExecutorService};
-use crate::commands::twitch_service::{TwitchConfig, TwitchService};
+use twitch::twitch_service::{TwitchConfig, TwitchService};
 use crate::db::ProdDB;
 use serde::{Deserialize, Serialize};
 use service_oauth::oauth_service::OAuthService;
