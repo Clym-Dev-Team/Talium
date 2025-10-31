@@ -38,6 +38,7 @@ pub async fn start() {
             server_base_url: Url::from_str("http://localhost:4771").unwrap(),
             panel_auth_twitch_client_id: "zmxjjn3xmncg8ewew6tjk08tub26bb".to_string()
         }),
+        command_executor_service: CommandExecutorService::new(&prod_db).await,
         oauth_service: Default::default(),
         session_service: Default::default(),
         prod_db,
@@ -62,7 +63,6 @@ pub async fn start() {
     let service = TwitchService::new(l1.clone(), twitch_config).await.unwrap();
     let l2 = Arc::new(L2State {
         twitch_service: service,
-        command_executor_service: Default::default(),
     });
 
     // 3rd. (Full) Stage

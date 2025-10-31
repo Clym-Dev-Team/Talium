@@ -98,7 +98,7 @@ pub async fn set_enabled(
 ) -> AxResult<impl IntoResponse> {
     //TODO move into query parameter
     let enabled = bool::from_str(body.as_ref()).map_err(|_| StatusCode::BAD_REQUEST)?;
-    command_repo::set_enabled(state, trigger_id.as_ref(), enabled)
+    command_repo::set_enabled(state.l1.as_ref(), trigger_id.as_ref(), enabled)
         .await
         .map_err(|_| {
             // log
@@ -125,10 +125,10 @@ pub async fn set_visible(
 }
 
 pub async fn save(
-    State(state): State<AxumState>,
+    l1: L1Arc,
     Json(to_save): Json<Command>,
 ) -> impl IntoResponse {
-    match command_repo::save(state, &to_save).await {
+    match command_repo::save(l1.as_ref(), &to_save).await {
         Ok(()) => StatusCode::OK,
         Err(SaveCommandError::DbError(_db_error)) => {
             // log
@@ -143,10 +143,10 @@ pub async fn save(
 }
 
 pub async fn delete_by_id(
-    State(state): State<AxumState>,
+    l1: L1Arc,
     Path(trigger_id): Path<String>,
 ) -> AxResult<impl IntoResponse> {
-    command_repo::delete_by_id(state, trigger_id.as_ref()).await.map_err(|_| {
+    command_repo::delete_by_id(l1.as_ref(), trigger_id.as_ref()).await.map_err(|_| {
         // log
         StatusCode::INTERNAL_SERVER_ERROR
     })?;

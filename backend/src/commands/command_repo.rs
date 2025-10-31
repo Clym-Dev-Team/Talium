@@ -1,8 +1,8 @@
-use crate::axum::AxumState;
 use crate::commands::command_controller::{Command, CooldownType, MessagePattern};
 use crate::commands::command_executor_service::{CommandWithRegex, TriggerId, TwitchUserPermission};
 use crate::commands::template_service::StringTemplate;
 use crate::db::ProdDB;
+use crate::state::L1State;
 use anyhow::Context;
 use num_traits::FromPrimitive;
 use sqlx::mysql::MySqlQueryResult;
@@ -221,8 +221,8 @@ async fn get_patterns(prod_db: &ProdDB, d: Vec<CommandTable>) -> anyhow::Result<
     Ok(commands)
 }
 
-pub(crate) async fn set_enabled(state: AxumState, trigger_id: &TriggerId, enabled: bool) -> anyhow::Result<Option<()>> {
-    let mut transaction = state.l1.prod_db.begin().await?;
+pub(crate) async fn set_enabled(l1: &L1State, trigger_id: &TriggerId, enabled: bool) -> anyhow::Result<Option<()>> {
+    let mut transaction = l1.prod_db.begin().await?;
     let affected = query!("UPDATE `sys-chat_trigger-patterns` SET is_enabled = ? WHERE parent_trigger_id = ?", enabled, trigger_id)
         .execute(transaction.deref_mut())
         .await
@@ -231,9 +231,7 @@ pub(crate) async fn set_enabled(state: AxumState, trigger_id: &TriggerId, enable
     if affected == 0 {
         return Ok(None)
     }
-    if let Some(l2) = state.l2.get() {
-        l2.command_executor_service.refresh_patterns(&state.l1.prod_db, trigger_id).await;
-    }
+    l1.command_executor_service.refresh_patterns(&l1.prod_db, trigger_id).await;
     transaction.commit().await?;
     Ok(Some(()))
 }
@@ -255,18 +253,15 @@ pub(crate) enum SaveCommandError {
     RegexError(regex::Error),
 }
 
-pub(crate) async fn save(state: AxumState, command: &Command) -> Result<(), SaveCommandError> {
-    // make this in the beginning, to make sure this is all valid regex
+pub(crate) async fn save(l1: &L1State, command: &Command) -> Result<(), SaveCommandError> {
     let with_regex: CommandWithRegex = command.try_into().map_err(|re| SaveCommandError::RegexError(re))?;
 
-    let mut transaction = state.l1.prod_db.begin().await.context("failed to start save command transaction")
+    let mut transaction = l1.prod_db.begin().await.context("failed to start save command transaction")
         .map_err(|e| SaveCommandError::DbError(e))?;
 
     save_command(&command, &mut transaction).await.map_err(|e| SaveCommandError::DbError(e))?;
 
-    if let Some(l2) = state.l2.get() {
-        l2.command_executor_service.upsert_command(with_regex).await
-    }
+    l1.command_executor_service.upsert_command(with_regex).await;
     transaction.commit().await.context("failed to commit save command transaction")
         .map_err(|e| SaveCommandError::DbError(e))?;
     Ok(())
@@ -310,8 +305,8 @@ async fn save_template<'a, E: MySqlExecutor<'a>>(prod_db: E, template: &StringTe
         .context("failed to save command template")
 }
 
-pub(crate) async fn delete_by_id(state: AxumState, trigger_id: &TriggerId) -> anyhow::Result<()> {
-    let pool = state.l1.prod_db.deref();
+pub(crate) async fn delete_by_id(l1: &L1State, trigger_id: &TriggerId) -> anyhow::Result<()> {
+    let pool = l1.prod_db.deref();
     query!("DELETE FROM `sys-string_templates` WHERE id = (SELECT template_id FROM `sys-chat_trigger-trigger` WHERE id = ?)", trigger_id)
         .execute(pool)
         .await
@@ -321,9 +316,7 @@ pub(crate) async fn delete_by_id(state: AxumState, trigger_id: &TriggerId) -> an
         .await
         .context("failed to delete command trigger")?;
 
-    if let Some(l2) = state.l2.get() {
-        l2.command_executor_service.remove_command(&trigger_id).await;
-    }
+    l1.command_executor_service.remove_command(&trigger_id).await;
     Ok(())
 }
 

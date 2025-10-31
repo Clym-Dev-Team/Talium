@@ -45,11 +45,11 @@ pub struct L1State {
     pub session_service: SessionService,
     pub oauth_service: OAuthService,
     pub webserver_config: RwLock<WebserverConfig>,
+    pub command_executor_service: CommandExecutorService
 }
 
 pub struct L2State {
     pub twitch_service: TwitchService,
-    pub command_executor_service: CommandExecutorService
 }
 
 pub struct L1Arc(Arc<L1State>);

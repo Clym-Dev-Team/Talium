@@ -29,7 +29,7 @@ pub(crate) struct TwitchConfig {
     pub client_secret: String,
 }
 
-struct TwitchCredentialStatus {
+pub(super) struct TwitchCredentialStatus {
     valid_checked_at: Instant,
     was_valid_at_check: bool,
     credential: OauthCredential,
