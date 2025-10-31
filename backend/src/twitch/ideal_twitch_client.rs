@@ -13,6 +13,6 @@ enum SendChatError {
 
 impl Helix {
     pub async fn send_chat_message(broadcaster_id: impl AsRef<str>, sender_id: impl AsRef<str>, message: impl AsRef<str>, reply_parent_message_id: Option<impl AsRef<str>>, for_source_only: bool) -> Result<Vec<User>, SendChatError> {
-        todo!()
+        panic!("not implemented, just an example")
     }
 }

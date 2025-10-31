@@ -11,10 +11,11 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
+use log::{debug, error, trace, warn};
 use tokio::sync::RwLock;
 
 #[allow(dead_code)]
-#[derive(Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Deserialize, Serialize, FromPrimitive, Type)]
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, PartialEq, Eq, Deserialize, Serialize, FromPrimitive, Type)]
 #[repr(u8)]
 pub enum TwitchUserPermission {
     Everyone = 0,
@@ -113,15 +114,12 @@ pub struct CommandTrigger {
 
 static TEXT_COMMAND_CALLBACK: TriggerCallback = |app_state, trigger_id, _chat_message| Box::pin(async move {
     match TemplateService::get_template_by_trigger_id(&app_state.l1.prod_db, trigger_id.as_ref()).await {
-        Err(_e) => {
-            // log
-            // logger.debug("Executing text command {}", commandId);
+        Err(e) => error!("Could not fetch template for command {} from db: {:?}", trigger_id, e),
+        Ok(None) => warn!("Could not find template id for command id {}", trigger_id),
+        Ok(Some(t)) => {
+            debug!("Executing text command {}", trigger_id);
+            app_state.l2.twitch_service.send_raw_template(t.template.as_ref(), HashMap::new())
         }
-        Ok(None) => {
-            // log
-            // logger.error("Could not find template id for command id {}", commandId);
-        }
-        Ok(Some(t)) => app_state.l2.twitch_service.send_raw_template(t.template.as_ref(), HashMap::new())
     }
 });
 
@@ -187,7 +185,7 @@ impl  CommandExecutorService {
 
     async fn execute_trigger_if_matching(&self, app_state: Arc<FullState>, trigger: &CommandTrigger, chat_message: ChatMessage) {
         if chat_message.user.permission < trigger.permission {
-            // logger.debug("User {} with {}, missing {} permission for command {}", message.user().name(), message.user().permission(), trigger.permission(), trigger.id());
+            trace!("User {} with perm: {:?}, missing {:?} permission for command {}", chat_message.user.name, chat_message.user.permission, trigger.permission, trigger.id);
             return;
         }
 
@@ -197,8 +195,8 @@ impl  CommandExecutorService {
 
         let cooldown_res = self.cooldown_service.check_update_cooldown(&chat_message, trigger.id.as_ref(), &trigger.user_cooldown, &trigger.global_cooldown);
         if cooldown_res.is_some() {
-            // logger.debug("Call to command {} from {} rejected because of global cooldowns", trigger.id(), message.user().name());
-            // logger.debug("Call to command {} from {} rejected because of user cooldowns", trigger.id(), message.user().name());
+            trace!("Call to command {} from {} rejected because of global cooldowns", trigger.id, chat_message.user.name);
+            trace!("Call to command {} from {} rejected because of user cooldowns", trigger.id, chat_message.user.name);
             return;
         }
 

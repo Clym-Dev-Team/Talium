@@ -9,6 +9,7 @@ use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::response::Result as AxResult;
 use std::time::Instant;
+use log::error;
 
 const FORBIDDEN: (StatusCode, &'static str) = (StatusCode::FORBIDDEN, "user lacks required permissions");
 
@@ -61,15 +62,15 @@ async fn authenticate_user(state: AxumState, request: Request) -> AxResult<(Requ
         }
         None => {
             let validated = validate_token(&access_token).await
-                .map_err(|_err| {
-                    // log errors
+                .map_err(|err| {
+                    error!("Failed to validate session token with twitch: {:?}", err);
                     (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error. Retry authentication")
                 })?
                 .ok_or((StatusCode::UNAUTHORIZED, "Invalid access token, Reauthenticate"))?;
             let user = PanelUserService::find_by_id(&state.l1.prod_db, validated.user_id)
                 .await
-                .map_err(|_err| {
-                    // log error
+                .map_err(|err| {
+                    error!("Failed to fetch panelUser for userId: {:?}", err);
                     (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error. Retry authentication")
                 })?
                 .ok_or(FORBIDDEN)?;

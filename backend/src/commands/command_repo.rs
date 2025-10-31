@@ -125,7 +125,7 @@ pub async fn search_all_commands(prod_db: &ProdDB, search: &str) -> anyhow::Resu
     "#, search_str, search_str, search_str, search_str)
         .fetch_all(prod_db.deref())
         .await
-        .context("failed to search table for all commands")?;
+        .with_context(|| format!("failed to search table for all commands; search: {}", search))?;
     get_patterns(prod_db, query_res).await
 }
 
@@ -156,7 +156,7 @@ pub async fn search_all_commands_by_is_auto_generated(prod_db: &ProdDB, search: 
     "#, search_str, search_str, search_str, search_str, is_auto_generated)
         .fetch_all(prod_db.deref())
         .await
-        .context("failed to search table for all commands by is_auto_generated")?;
+        .with_context(|| format!("failed to search table for all commands by is_auto_generated; search: {}", search))?;
     get_patterns(prod_db, query_res).await
 }
 

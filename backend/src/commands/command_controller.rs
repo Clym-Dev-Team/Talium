@@ -11,6 +11,7 @@ use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use sqlx::Type;
 use std::str::FromStr;
+use log::{error, warn};
 use crate::commands::command_repo::SaveCommandError;
 use crate::state::L1Arc;
 
@@ -57,8 +58,8 @@ pub async fn get_all_user_commands(
     let commands = match search.search.as_deref() {
         Some("") | None => command_repo::get_all_commands_by_auto_generated(&state.l1.prod_db, false).await,
         Some(search) => command_repo::search_all_commands_by_is_auto_generated(&state.l1.prod_db, search, false).await,
-    }.map_err(|_| {
-        // log
+    }.map_err(|e| {
+        error!("{:?}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(Json(commands))
@@ -72,8 +73,8 @@ pub async fn get_all_commands(
     let commands = match search.search.as_deref() {
         Some("") | None => command_repo::get_all_commands(&l1.prod_db).await,
         Some(search) => command_repo::search_all_commands(&l1.prod_db, search).await,
-    }.map_err(|_| {
-        // log
+    }.map_err(|e| {
+        error!("{:?}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(Json(commands))
@@ -85,8 +86,8 @@ pub async fn get_by_trigger_id(
 ) -> AxResult<impl IntoResponse> {
     Ok(Json(command_repo::get_by_id(&l1.prod_db, trigger_id.as_ref())
         .await
-        .map_err(|_| {
-            // log
+        .map_err(|e| {
+            error!("{:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?))
 }
@@ -100,8 +101,8 @@ pub async fn set_enabled(
     let enabled = bool::from_str(body.as_ref()).map_err(|_| StatusCode::BAD_REQUEST)?;
     command_repo::set_enabled(state.l1.as_ref(), trigger_id.as_ref(), enabled)
         .await
-        .map_err(|_| {
-            // log
+        .map_err(|e| {
+            error!("{:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .ok_or(StatusCode::NOT_FOUND)?;
@@ -116,8 +117,8 @@ pub async fn set_visible(
     let visible = bool::from_str(body.as_str()).map_err(|_| StatusCode::BAD_REQUEST)?;
     command_repo::set_visible(&l1.prod_db, trigger_id.as_str(), visible)
         .await
-        .map_err(|_| {
-            // log
+        .map_err(|e| {
+            error!("{:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .ok_or(StatusCode::NOT_FOUND)?;
@@ -130,12 +131,12 @@ pub async fn save(
 ) -> impl IntoResponse {
     match command_repo::save(l1.as_ref(), &to_save).await {
         Ok(()) => StatusCode::OK,
-        Err(SaveCommandError::DbError(_db_error)) => {
-            // log
+        Err(SaveCommandError::DbError(db_error)) => {
+            error!("Error saving command from panel: {:?}", db_error);
             StatusCode::INTERNAL_SERVER_ERROR
         }
-        Err(SaveCommandError::RegexError(_r)) => {
-            // log, but actually more return. This error needs to reach the user in the panel
+        Err(SaveCommandError::RegexError(r)) => {
+            warn!("User tried to save invalid regex: {:?}", r);
             //TODO figure out how to return this error to the user
             StatusCode::BAD_REQUEST
         }
@@ -146,8 +147,8 @@ pub async fn delete_by_id(
     l1: L1Arc,
     Path(trigger_id): Path<String>,
 ) -> AxResult<impl IntoResponse> {
-    command_repo::delete_by_id(l1.as_ref(), trigger_id.as_ref()).await.map_err(|_| {
-        // log
+    command_repo::delete_by_id(l1.as_ref(), trigger_id.as_ref()).await.map_err(|e| {
+        error!("Unable to execute command deletion: {:?}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(())

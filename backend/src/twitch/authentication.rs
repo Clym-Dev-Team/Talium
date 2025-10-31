@@ -1,6 +1,4 @@
-use crate::axum::url_encode;
 use crate::twitch::twitch_service::OauthCredential;
-use crate::service_oauth::oauth_service::{AuthorizationUrl, AuthorizationUrlBuilder, OAuthService, OauthState};
 use anyhow::Context;
 use axum::http::method::Method;
 use axum::http::StatusCode;
@@ -8,9 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use serde_with::DurationSeconds;
 use sqlx::types::chrono::Local;
-use std::str::FromStr;
 use std::time::Duration;
-use url::Url;
 
 #[serde_as]
 #[derive(Deserialize)]
@@ -100,21 +96,4 @@ pub async fn refresh_token(refresh_token: impl AsRef<str>, client_id: impl AsRef
         .context("Failed to deserialize response body from refreshing twitch oauth token")
         .context("Original response body: ".to_string() + &response_body)?;
     Ok(Some(validation_return))
-}
-
-pub fn authorization_url(client_id: impl AsRef<str>) -> Box<AuthorizationUrlBuilder> {
-    const TWITCH_AUTHORIZE: &'static str = "https://id.twitch.tv/oauth2/authorize";
-    const SCOPES: [&str; 6] = ["channel:bot", "user:bot", "moderator:read:chatters", "moderator:read:moderators", "user:read:chat", "user:manage:chat_color"];
-    let client_id = client_id.as_ref().to_string();
-    // Box::new( move |redirect, state| {
-    //     format!(r#"
-    //     {}
-    //     ?response_type=code
-    //     &client_id={}
-    //     &redirect_uri={}
-    //     &scope={}
-    //     &state={}
-    // "#, TWITCH_AUTHORIZE, client_id, redirect, SCOPES.map(url_encode).join("+"), state)
-    // })
-    todo!()
 }

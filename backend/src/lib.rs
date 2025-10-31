@@ -6,6 +6,7 @@ use service_oauth::oauth_service::OAuthService;
 use sqlx::MySqlPool;
 use std::str::FromStr;
 use std::sync::{Arc, OnceLock, RwLock};
+use log::error;
 use tokio::runtime::Handle;
 use tokio::sync::broadcast::error::RecvError;
 use url::Url;
@@ -22,7 +23,9 @@ mod service_oauth;
 mod twitch;
 mod state;
 
+
 pub async fn start() {
+    env_logger::init();
     //check if all mandatory configuration values are set
     //start mini webserver
 
@@ -75,20 +78,21 @@ pub async fn start() {
     let oauth = full.l1.oauth_service.new_oauth_request("twitch".to_string(), "account".to_string(), |_x, _x1| "".to_string());
     println!("oauth: {:?}", oauth);
 
-    let (command_channel, _) = tokio::sync::broadcast::channel::<Box<ChatMessage>>(20);
+    let (chat_channel, _) = tokio::sync::broadcast::channel::<Box<ChatMessage>>(20);
     // fanout of messages
     let full2 = full.clone();
-    let sender2 = command_channel.clone();
+    let sender2 = chat_channel.clone();
     Handle::current().spawn(async { TwitchService::start_websocket(full2, sender2) });
-    let mut receiver = command_channel.subscribe();
+
+    let mut receiver = chat_channel.subscribe();
     let full2 = full.clone();
     Handle::current().spawn(async move {
         loop {
             let message = match receiver.recv().await {
                 Ok(m) => *m,
                 Err(RecvError::Closed) => return,
-                Err(RecvError::Lagged(_s)) => {
-                    // log skip
+                Err(RecvError::Lagged(skipped)) => {
+                    error!("Twitch ChatMessage channel lagged, skipped {} messages!", skipped);
                     continue;
                 }
             };

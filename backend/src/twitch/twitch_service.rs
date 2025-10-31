@@ -8,6 +8,7 @@ use serde::Deserialize;
 use sqlx::types::chrono::{DateTime, Local};
 use std::sync::Arc;
 use std::time::Instant;
+use log::{info, warn};
 use tokio::runtime::Handle;
 use tokio::sync::{Mutex, RwLock};
 use twitch_highway::TwitchAPI;
@@ -54,8 +55,8 @@ impl TwitchService {
         };
         let oauth = match Self::check_or_get_oauth(&cred_from_db, &l1.prod_db, &twitch_config).await {
             Ok(oauth) => oauth,
-            Err(_e) => {
-                // log err
+            Err(e) => {
+                warn!("Twitch Oauth credentials from DB invalid, and could not be refreshed: {:?}", e);
                 TwitchCredentialStatus {
                     was_valid_at_check: true,
                     valid_checked_at: Instant::now(),
@@ -104,6 +105,7 @@ impl TwitchService {
                             let twitch_api = self.twitch_api.clone();
                             let token_validation = self.token_validation.clone();
                             Handle::current().spawn(async move {
+                                info!("Awaiting manual reauthorization of twitch account oauth!");
                                 let credential = TwitchService::request_new_oauth(&l1, config).await;
                                 {
                                     let mut api_lock = twitch_api.write().await;
@@ -115,7 +117,7 @@ impl TwitchService {
                                     token_lock.was_valid_at_check = true;
                                     token_lock.credential = credential;
                                 }
-                                //log
+                                info!("Successfully get, refreshed, and set new Oauth Token for Twitch Client");
                             });
                             return Err(e).context("Credentials Bad, not retrying");
                         }

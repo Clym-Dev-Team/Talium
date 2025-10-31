@@ -11,6 +11,7 @@ use twitch_highway::eventsub::{websocket, EventSubAPI, SubscriptionType};
 use tower::MakeService;
 use twitch_highway::eventsub::websocket::routes::{channel_chat_message, revocation, welcome};
 use anyhow::Context;
+use log::error;
 use crate::commands::command_executor_service::ChatMessage;
 use crate::state::FullState;
 use crate::twitch::twitch_service::TwitchService;
@@ -35,7 +36,9 @@ impl TwitchService {
             .with_state(state));
 
         let _ws = websocket::client("wss://eventsub.wss.twitch.tv/ws", twitch_router).await;
-        //log error
+        if let Err(e) = _ws {
+            error!("Unable to connect to twitch websocket: {:?}", e);
+        }
     }
 }
 
