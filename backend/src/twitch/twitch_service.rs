@@ -1,7 +1,7 @@
+use crate::axum::url_encode;
 use crate::db::ProdDB;
-use crate::service_oauth::oauth_endpoint::get_redirect_url;
 use crate::state::L1State;
-use crate::twitch::authentication::{authorization_url, refresh_token, validate_token};
+use crate::twitch::authentication::{refresh_token, validate_token};
 use anyhow::{anyhow, Context};
 use asknothingx2_util::oauth::{AccessToken, ClientId};
 use serde::Deserialize;
@@ -11,6 +11,7 @@ use std::time::Instant;
 use tokio::runtime::Handle;
 use tokio::sync::{Mutex, RwLock};
 use twitch_highway::TwitchAPI;
+use crate::service_oauth::oauth_service::{AuthorizationUrlBuilder, OauthState, RedirectUrl};
 
 #[derive(Default, Deserialize, Clone)]
 pub(crate) struct OauthCredential {
@@ -163,9 +164,20 @@ impl TwitchService {
     }
 
     async fn request_new_oauth(l1: &L1State, twitch_config: TwitchConfig) -> OauthCredential {
-        let (url, state) = authorization_url(twitch_config.client_id.as_str(), get_redirect_url("".to_string(), "twitch"));
-        //TODO make the url kida a builder, that gets evaluated when the api is actually called
-        let code = l1.oauth_service.new_oauth_request("twitch", twitch_config.chat_account_name.as_str(), url, state);
+        const TWITCH_AUTHORIZE: &'static str = "https://id.twitch.tv/oauth2/authorize";
+        const SCOPES: [&str; 6] = ["channel:bot", "user:bot", "moderator:read:chatters", "moderator:read:moderators", "user:read:chat", "user:manage:chat_color"];
+        let client_id = twitch_config.client_id.clone();
+
+        let code = l1.oauth_service.new_oauth_request("twitch", twitch_config.chat_account_name.as_str(), move |redirect, state| {
+            format!(r#"
+                {}
+                ?response_type=code
+                &client_id={}
+                &redirect_uri={}
+                &scope={}
+                &state={}
+            "#, TWITCH_AUTHORIZE, client_id, redirect, SCOPES.map(url_encode).join("+"), state)
+        });
 
         let _refreshed = refresh_token(code, twitch_config.client_id.as_str(), twitch_config.client_secret.as_str()).await;
         //TODO save to db

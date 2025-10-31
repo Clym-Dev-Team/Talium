@@ -1,6 +1,6 @@
 use crate::axum::url_encode;
 use crate::twitch::twitch_service::OauthCredential;
-use crate::service_oauth::oauth_service::OAuthService;
+use crate::service_oauth::oauth_service::{AuthorizationUrl, AuthorizationUrlBuilder, OAuthService, OauthState};
 use anyhow::Context;
 use axum::http::method::Method;
 use axum::http::StatusCode;
@@ -102,18 +102,19 @@ pub async fn refresh_token(refresh_token: impl AsRef<str>, client_id: impl AsRef
     Ok(Some(validation_return))
 }
 
-pub fn authorization_url(client_id: impl AsRef<str>, redirect_url: impl AsRef<str>) -> (Url, String) {
-    let scopes = ["channel:bot", "user:bot", "moderator:read:chatters", "moderator:read:moderators", "user:read:chat", "user:manage:chat_color"];
-    let state = OAuthService::random_state();
-    let query = format!(r#"
-        ?response_type=code
-        &client_id={}
-        &redirect_uri={}
-        &scope={}
-        &state={}
-    "#, client_id.as_ref(), redirect_url.as_ref(), scopes.map(url_encode).join("+"), state);
-    let mut url = Url::from_str("https://id.twitch.tv/oauth2/authorize").unwrap();
-    url.set_query(Some(query.as_str()));
-    println!("url: {:?}", url.as_str());
-    (url, state)
+pub fn authorization_url(client_id: impl AsRef<str>) -> Box<AuthorizationUrlBuilder> {
+    const TWITCH_AUTHORIZE: &'static str = "https://id.twitch.tv/oauth2/authorize";
+    const SCOPES: [&str; 6] = ["channel:bot", "user:bot", "moderator:read:chatters", "moderator:read:moderators", "user:read:chat", "user:manage:chat_color"];
+    let client_id = client_id.as_ref().to_string();
+    // Box::new( move |redirect, state| {
+    //     format!(r#"
+    //     {}
+    //     ?response_type=code
+    //     &client_id={}
+    //     &redirect_uri={}
+    //     &scope={}
+    //     &state={}
+    // "#, TWITCH_AUTHORIZE, client_id, redirect, SCOPES.map(url_encode).join("+"), state)
+    // })
+    todo!()
 }

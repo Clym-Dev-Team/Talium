@@ -125,13 +125,6 @@ static TEXT_COMMAND_CALLBACK: TriggerCallback = |app_state, trigger_id, _chat_me
     }
 });
 
-
-//TODO we have a race condition here, if we first request the values from the database, and then return the service, the direct call for us to refresh might get lost.
-// because we might not exist yet, but the modification in the db still goes through.
-// Possible solutions:
-//  - indicate to users of our service that we are being created, and make them wait for us to finish.
-//  - move creation of out service into l1 state. The creation of this just requires the DB, the execution is difficult
-//    we also can't just create an emtpy version of ourselves, and fill the rest in later, because then our users would try to modify non existing commands
 pub struct CommandExecutorService {
     triggers: RwLock<Vec<CommandTrigger>>,
     cooldown_service: CooldownService,

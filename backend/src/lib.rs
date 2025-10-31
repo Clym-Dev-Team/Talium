@@ -72,7 +72,7 @@ pub async fn start() {
         l2,
     });
 
-    let oauth = full.l1.oauth_service.new_oauth_request("twitch".to_string(), "account".to_string(), "".to_string(), OAuthService::random_state());
+    let oauth = full.l1.oauth_service.new_oauth_request("twitch".to_string(), "account".to_string(), |_x, _x1| "".to_string());
     println!("oauth: {:?}", oauth);
 
     let (command_channel, _) = tokio::sync::broadcast::channel::<Box<ChatMessage>>(20);

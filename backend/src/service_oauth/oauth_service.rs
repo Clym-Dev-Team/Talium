@@ -6,7 +6,7 @@ use rand::Rng;
 
 struct OauthRequest {
     state: String,
-    url: String,
+    url_builder: Box<AuthorizationUrlBuilder>,
     account_name: String,
     service_name: String,
     return_channel: Sender<String>,
@@ -29,21 +29,28 @@ pub struct OauthRequestDisplay {
     url: String,
 }
 
+pub type RedirectUrl = str;
+pub type AuthorizationUrl = String;
+pub type OauthState = str;
+pub type AuthorizationUrlBuilder = dyn (for<'a> Fn(&'a RedirectUrl, &'a OauthState) -> AuthorizationUrl) + Send + Sync;
+
 impl OAuthService {
-    pub fn new_oauth_request(&self, service_name: impl Into<String>, account_name: impl Into<String>, authorization_url: impl Into<String>, state: impl Into<String>) -> String {
+    pub fn new_oauth_request<B>(&self, service_name: impl Into<String>, account_name: impl Into<String>, authorization_url: B) -> String
+    where B: (for<'a> Fn(&'a RedirectUrl, &'a OauthState) -> AuthorizationUrl) + Send + Sync + Clone + 'static,
+    {
         // if the RwLock for the requests gets poisoned, the sender for our channel will get dropped
         // which will lead to our .recv quitting. In that case we will just add our request to the
         // reinitialized request list and receive again
         let service_name = service_name.into();
         let account_name = account_name.into();
-        let authorization_url = authorization_url.into();
-        let state = state.into();
+        let authorization_url = Box::from(authorization_url);
+        let state = OAuthService::random_state();
         let mut res = None;
         while res.is_none() {
             let (sender, receiver) = channel();
             let request = OauthRequest {
                 state: state.clone(),
-                url: authorization_url.clone(),
+                url_builder: authorization_url.clone(),
                 account_name: account_name.clone(),
                 service_name: service_name.clone(),
                 return_channel: sender,
@@ -57,8 +64,7 @@ impl OAuthService {
         res.unwrap()
     }
 
-    #[allow(unused_variables)]
-    pub fn return_oauth(&self, service: String, state: String, scope: String, code: String) -> Result<(), OauthReturnError> {
+    pub fn return_oauth(&self, service: String, state: String, _scope: String, code: String) -> Result<(), OauthReturnError> {
         let mut guard = self.write_lock();
         let (index, request) = guard
             .iter()
@@ -86,9 +92,9 @@ impl OAuthService {
         self.read_lock()
             .iter()
             .map(|r| OauthRequestDisplay {
+                url: (r.url_builder)(r.service_name.as_str(), r.state.as_str()),
                 service_name: r.service_name.clone(),
                 account_name: r.account_name.clone(),
-                url: r.url.clone(),
             })
             .collect()
     }
