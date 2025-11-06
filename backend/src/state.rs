@@ -8,15 +8,14 @@ use crate::session_service::SessionService;
 use crate::WebserverConfig;
 use axum::extract::{FromRequestParts};
 use std::sync::{Arc, OnceLock, RwLock};
-use anyhow::{anyhow};
+use anyhow::Context;
 use axum::http::request::Parts;
-use log::error;
+use log::{error, info, warn};
 use reqwest::StatusCode;
 use tokio::runtime::Handle;
 use tokio::sync::broadcast::error::RecvError;
-use tokio::sync::Mutex;
+use tokio::sync::MutexGuard;
 use crate::axum::AxumState;
-use crate::state::InitializationError::AlreadyInitialized;
 
 #[allow(dead_code)]
 mod _theoretical_services_checklist {
@@ -45,8 +44,8 @@ type CompletedFull = bool;
 pub struct WebserverState {
     pub l1: Arc<L1State>,
     pub l2: OnceLock<Arc<L2State>>,
-    // state transition mutex, so that only one transition can happen at once
-    transition_lock: Mutex<CompletedFull>,
+    // ensures only one transition can happen at once, even when transitions multiple levels at one time. Also stops from the full state being initialized more than once
+    transition_lock: tokio::sync::Mutex<CompletedFull>,
 }
 
 pub struct L1State {
@@ -64,7 +63,9 @@ pub struct L2State {
 pub struct L1Arc(Arc<L1State>);
 pub struct L2Arc(Arc<L2State>);
 
+#[derive(Debug)]
 pub enum InitializationError {
+    SkippedLowerInitialization,
     AlreadyInitialized,
     InitializationError(anyhow::Error),
 }
@@ -96,34 +97,48 @@ impl WebserverState {
             client_id: std::env::var("TWITCH_CLIENT_ID").unwrap(),
             client_secret: std::env::var("TWITCH_CLIENT_SECRET").unwrap(),
         };
-        self.setup_twitch(twitch_config).await
+        let l = self.transition_lock.lock().await;
+        self.init_l2(l, twitch_config).await
     }
 
     pub async fn setup_twitch(&self, twitch_config: TwitchConfig) -> InitializationResult {
         let l = self.transition_lock.lock().await;
+        self.init_l2(l, twitch_config).await
+    }
+
+    async fn init_l2(&self, transition_lock: MutexGuard<'_, CompletedFull>, twitch_config: TwitchConfig) -> InitializationResult {
         if self.l2.get().is_some() {
-            return Err(AlreadyInitialized);
+            return Err(InitializationError::AlreadyInitialized);
         }
-        let service = TwitchService::new(self.l1.clone(), twitch_config).await.unwrap();
+        let service = TwitchService::new(self.l1.clone(), twitch_config)
+            .await
+            .context("Unable to initialize Twitch service")?;
         let l2 = Arc::new(L2State {
             twitch_service: service,
         });
-
-        let _ = self.l2.get_or_init(|| l2.clone());
-        //TODO log errors
-        drop(l);
-        let _ = self.default_full().await;
+        self.l2.set(l2).map_err(|_| {
+            // this code path should never happen, all state changes should respect the lock
+            error!("Tried to initialize more than once after is already initialized check, and while holding the lock!");
+            InitializationError::AlreadyInitialized
+        })?;
+        if let Err(e) = self.default_full(transition_lock).await {
+            // semantically, only InitializationError makes sense here, SkippedLowerInitialization and AlreadyInitialized
+            // should never occur here, because we just now established the lower level. It would be nice if we could encode that into the typesystem
+            info!("Unable to eagerly initialize full state: {:?}", e);
+        };
         Ok(())
     }
 
-    pub async fn default_full(&self,) -> InitializationResult {
-        let mut l = self.transition_lock.lock().await;
-        if *l {
-            return Err(AlreadyInitialized);
+    async fn default_full(&self, mut transition_lock: MutexGuard<'_, CompletedFull>) -> InitializationResult {
+        let Some(l2)  =  self.l2.get() else {
+            return Err(InitializationError::SkippedLowerInitialization);
+        };
+        if *transition_lock {
+            return Err(InitializationError::AlreadyInitialized);
         }
         let full = Arc::new(FullState {
             l1: self.l1.clone(),
-            l2: self.l2.get().unwrap().clone(),
+            l2: l2.clone(),
         });
         let (chat_channel, _) = tokio::sync::broadcast::channel::<Box<ChatMessage>>(20);
         // fanout of messages
@@ -149,8 +164,8 @@ impl WebserverState {
                 });
             }
         });
-        *l = true;
-        drop(l);
+        *transition_lock = true;
+        drop(transition_lock);
         Ok(())
     }
 }
