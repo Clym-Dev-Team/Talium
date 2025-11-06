@@ -20,7 +20,6 @@ mod panel_frontend;
 mod service_oauth;
 mod twitch;
 mod state;
-mod start_up_factory;
 
 pub async fn start() {
     env_logger::init();
