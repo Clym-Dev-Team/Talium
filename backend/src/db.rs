@@ -1,6 +1,7 @@
 use sqlx::{MySql, Pool};
 use std::ops::Deref;
 
+#[derive(Clone)]
 pub(crate) struct ProdDB(Pool<MySql>);
 
 impl ProdDB {

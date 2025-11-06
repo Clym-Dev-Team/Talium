@@ -56,12 +56,12 @@ impl CooldownService {
             ChatCooldown::SECONDS(seconds) => {
                 let last_instant = l.global_seconds.get(trigger_id);
                 if last_instant.is_some() {
-                    let seconds_between = last_instant.unwrap().duration_since(chat_message.send_at).as_secs();
+                    let seconds_between = last_instant.unwrap().duration_since(chat_message.received_at).as_secs();
                     if seconds_between <= *seconds as u64 {
                         return Some(RejectionReason::GlobalCooldown);
                     }
                 }
-                l.global_seconds.insert(Box::from(trigger_id), chat_message.send_at);
+                l.global_seconds.insert(Box::from(trigger_id), chat_message.received_at);
             }
         };
         match user_cooldown {
@@ -80,12 +80,12 @@ impl CooldownService {
                 let key = (Box::from(trigger_id), chat_message.user.id.clone());
                 let last_instant = l.user_seconds.get(&key);
                 if last_instant.is_some() {
-                    let seconds_between = last_instant.unwrap().duration_since(chat_message.send_at).as_secs();
+                    let seconds_between = last_instant.unwrap().duration_since(chat_message.received_at).as_secs();
                     if seconds_between <= *seconds as u64 {
                         return Some(RejectionReason::UserCooldown);
                     }
                 }
-                l.user_seconds.insert(key, chat_message.send_at);
+                l.user_seconds.insert(key, chat_message.received_at);
             }
         };
         None

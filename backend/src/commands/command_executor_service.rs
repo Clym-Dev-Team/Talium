@@ -51,14 +51,10 @@ pub struct ChatMessage {
     pub message_id: TwitchMessageId,
     pub message: Box<str>,
     pub user: TwitchUser,
-    pub is_highlighted_message: bool,
-    pub is_skip_subs_mode_message: bool,
-    pub is_designated_first_message: bool,
-    pub is_user_introduction: bool,
     pub get_custom_reward_id: Option<Box<str>>,
     pub reply_to_message_id: Option<Box<str>>,
     pub channel_id: Box<str>,
-    pub send_at: Instant,
+    pub received_at: Instant,
 }
 
 // Triggers
