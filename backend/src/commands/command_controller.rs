@@ -52,12 +52,12 @@ pub struct SearchQuery{
 
 //TODO use new return type that only returns enough information to render commands table, request the entire object on edit open
 pub async fn get_all_user_commands(
-    State(state): State<AxumState>,
+    l1: L1Arc,
     Query(search): Query<SearchQuery>,
 ) -> AxResult<impl IntoResponse> {
     let commands = match search.search.as_deref() {
-        Some("") | None => command_repo::get_all_commands_by_auto_generated(&state.l1.prod_db, false).await,
-        Some(search) => command_repo::search_all_commands_by_is_auto_generated(&state.l1.prod_db, search, false).await,
+        Some("") | None => command_repo::get_all_commands_by_auto_generated(&l1.prod_db, false).await,
+        Some(search) => command_repo::search_all_commands_by_is_auto_generated(&l1.prod_db, search, false).await,
     }.map_err(|e| {
         error!("{:?}", e);
         StatusCode::INTERNAL_SERVER_ERROR
@@ -93,13 +93,13 @@ pub async fn get_by_trigger_id(
 }
 
 pub async fn set_enabled(
-    State(state): State<AxumState>,
+    l1: L1Arc,
     Path(trigger_id): Path<String>,
     body: String
 ) -> AxResult<impl IntoResponse> {
     //TODO move into query parameter
     let enabled = bool::from_str(body.as_ref()).map_err(|_| StatusCode::BAD_REQUEST)?;
-    command_repo::set_enabled(state.l1.as_ref(), trigger_id.as_ref(), enabled)
+    command_repo::set_enabled(l1.as_ref(), trigger_id.as_ref(), enabled)
         .await
         .map_err(|e| {
             error!("{:?}", e);

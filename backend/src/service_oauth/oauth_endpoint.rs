@@ -19,11 +19,11 @@ pub struct ReceiveOAuthQuery {
 }
 
 pub async fn receive_oauth(
-    State(state): State<AxumState>,
+    l1: L1Arc,
     Path(service): Path<String>,
     Query(query): Query<ReceiveOAuthQuery>,
 ) -> AxResult<impl IntoResponse> {
-    let panel_base_url = if let Ok(v) = state.l1.webserver_config.read() {
+    let panel_base_url = if let Ok(v) = l1.webserver_config.read() {
         v.panel_base_url.as_str().to_string()
     } else {
         error!("Error, webserver_config lock poisoned, unable to set panel redirect url");
@@ -39,7 +39,7 @@ pub async fn receive_oauth(
     if query.code.is_none() {
         return Ok(Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode("Query param code is required for non error Oauth response"))))
     }
-    let result = state.l1.oauth_service.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap());
+    let result = l1.oauth_service.return_oauth(service, query.state, query.scope.unwrap(), query.code.unwrap());
     Ok(Body::new(format!("{}{}", panel_base_url, match result {
         Ok(()) => format!("{}?success=true", panel_base_url),
         Err(OauthReturnError::NotRequested) => format!("{}?success=false&error={}", panel_base_url, url_encode("This oauth was never requested from the bot")),

@@ -10,11 +10,12 @@ use tower_http::body::Full;
 use tower_http::services::{Redirect, ServeDir};
 use tower_service::Service;
 use url::Url;
+use crate::WebserverConfig;
 
 const PANEL_DIST_DIR: &str = "panel_dist";
 pub const SERVER_PANEL_PATH: &str = "/panel";
 
-pub fn embedded_panel_service(state: AxumState) -> ServeDir<DynamicIndexHtmlHandlerService> {
+pub fn embedded_panel_service(state: AxumState, webserver_config: &WebserverConfig) -> ServeDir<DynamicIndexHtmlHandlerService> {
     let dir_exists = fs::exists(PANEL_DIST_DIR);
     let index_exists = fs::exists(PANEL_DIST_DIR.to_owned() + "/index.html");
     if dir_exists.is_err() {
@@ -37,8 +38,7 @@ pub fn embedded_panel_service(state: AxumState) -> ServeDir<DynamicIndexHtmlHand
     } else if !index_exists.unwrap() {
         eprintln!("panel_dist is missing index.html cannot server embedded panel in a working state!");
     } else {
-        let g = state.l1.webserver_config.read().unwrap();
-        println!("Hosting embedded panel at: {}panel", g.server_base_url);
+        println!("Hosting embedded panel at: {}panel", webserver_config.server_base_url);
     }
     ServeDir::new(PANEL_DIST_DIR)
         .append_index_html_on_directories(false)
@@ -75,6 +75,8 @@ impl Service<Request<Body>> for DynamicIndexHtmlHandlerService {
         let index = fs::read_to_string(PANEL_DIST_DIR.to_owned() + "/index.html").unwrap();
 
         let c = {
+            // unfixable, i think it is currently impossible to borrow from self inside if the future with they way the tower service is defined and Futures not being sized yet
+            // work arounds would be implementing future manually, or using another crate
             let g = self.state.l1.webserver_config.read().unwrap();
             g.clone()
         };
