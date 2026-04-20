@@ -1,8 +1,9 @@
-use serde::Serialize;
-use std::sync::mpsc::{channel, Sender};
-use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use rand::distr::Alphanumeric;
 use rand::Rng;
+use rand::distr::Alphanumeric;
+use serde::Serialize;
+use std::sync::mpsc::{Sender, channel};
+use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use url::Url;
 
 struct OauthRequest {
     state: String,
@@ -39,9 +40,10 @@ impl OAuthService {
             active_requests: RwLock::new(Vec::new()),
         }
     }
-    
+
     pub fn new_oauth_request<B>(&self, service_name: impl Into<String>, account_name: impl Into<String>, authorization_url: B) -> String
-    where B: (for<'a> Fn(&'a RedirectUrl, &'a OauthState) -> AuthorizationUrl) + Send + Sync + Clone + 'static,
+    where
+        B: (for<'a> Fn(&'a RedirectUrl, &'a OauthState) -> AuthorizationUrl) + Send + Sync + Clone + 'static,
     {
         // if the RwLock for the requests gets poisoned, the sender for our channel will get dropped
         // which will lead to our .recv quitting. In that case we will just add our request to the
@@ -93,11 +95,21 @@ impl OAuthService {
         rand::rng().sample_iter(&Alphanumeric).take(32).map(char::from).collect()
     }
 
-    pub fn get_active_requests(&self) -> Vec<OauthRequestDisplay> {
+    pub fn get_active_requests(&self, server_base_url: Url) -> Vec<OauthRequestDisplay> {
         self.read_lock()
             .iter()
             .map(|r| OauthRequestDisplay {
-                url: (r.url_builder)(r.service_name.as_str(), r.state.as_str()),
+                url: (r.url_builder)(
+                    server_base_url
+                        .join("bot/")
+                        .unwrap()
+                        .join("auth/")
+                        .unwrap()
+                        .join(r.service_name.as_str())
+                        .unwrap()
+                        .as_str(),
+                    r.state.as_str(),
+                ),
                 service_name: r.service_name.clone(),
                 account_name: r.account_name.clone(),
             })

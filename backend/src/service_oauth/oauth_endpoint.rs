@@ -23,12 +23,7 @@ pub async fn receive_oauth(
     Path(service): Path<String>,
     Query(query): Query<ReceiveOAuthQuery>,
 ) -> AxResult<impl IntoResponse> {
-    let panel_base_url = if let Ok(v) = l1.webserver_config.read() {
-        v.panel_base_url.as_str().to_string()
-    } else {
-        error!("Error, webserver_config lock poisoned, unable to set panel redirect url");
-        "".to_string()
-    };
+    let panel_base_url = l1.read_webserver_config().panel_base_url.as_str().to_string();
     // Body:new( should be Redirect:to(& but for testing with postman, this is deactivated
     if query.error.is_some() || query.error_description.is_some() {
         return Ok(Body::new(format!("{}?success=false&error={}", panel_base_url, url_encode(&query.error_description.unwrap_or(query.error.unwrap())))));
@@ -51,5 +46,5 @@ pub async fn receive_oauth(
 }
 
 pub async fn list_oauth(l1: L1Arc) -> impl IntoResponse {
-    Json(l1.oauth_service.get_active_requests())
+    Json(l1.oauth_service.get_active_requests(l1.read_webserver_config().server_base_url.clone()))
 }

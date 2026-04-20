@@ -7,7 +7,7 @@ use crate::service_oauth::oauth_service::OAuthService;
 use crate::session_service::SessionService;
 use crate::WebserverConfig;
 use axum::extract::{FromRequestParts};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, RwLockReadGuard};
 use anyhow::Context;
 use axum::http::request::Parts;
 use log::{error, info};
@@ -40,6 +40,18 @@ pub struct L1State {
     pub oauth_service: OAuthService,
     pub webserver_config: RwLock<WebserverConfig>,
     pub command_executor_service: CommandExecutorService
+}
+
+impl L1State {
+    pub fn read_webserver_config(&self) -> RwLockReadGuard<'_, WebserverConfig> {
+        if let Ok(v) = self.webserver_config.read() {
+            v
+        } else {
+            error!("webserver_config lock poisoned, clearing poison and hoping for the best!");
+            self.webserver_config.clear_poison();
+            self.webserver_config.read().unwrap()
+        }
+    }
 }
 
 pub struct L2State {

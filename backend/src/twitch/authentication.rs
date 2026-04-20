@@ -1,3 +1,4 @@
+use serde_with::DefaultOnNull;
 use crate::twitch::twitch_service::OauthCredential;
 use anyhow::Context;
 use axum::http::method::Method;
@@ -12,6 +13,7 @@ use std::time::Duration;
 #[derive(Deserialize)]
 pub struct ValidationReturn {
     pub client_id: String,
+    #[serde_as(deserialize_as = "DefaultOnNull")]
     pub scopes: Vec<String>,
     pub user_id: String,
     #[serde(rename = "login")]
@@ -27,6 +29,7 @@ pub struct RefreshTokenReturn {
     pub refresh_token: String,
     #[serde_as(as = "DurationSeconds")]
     pub expires_in: Duration,
+    #[serde_as(deserialize_as = "DefaultOnNull")]
     pub scopes: Vec<String>,
     pub token_type: String,
 }
@@ -76,7 +79,9 @@ pub async fn refresh_token(refresh_token: impl AsRef<str>, client_id: impl AsRef
     let response = reqwest::Client::builder()
         .build()
         .context("Failed to build client builder for refreshing twitch oauth token")?
-        .request(Method::GET, "https://id.twitch.tv/oauth2/token")
+        .request(Method::POST, "https://id.twitch.tv/oauth2/token")
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        //TODO body should be x-www-urlencoded
         .json(&RefreshRequest {
             refresh_token: refresh_token.as_ref(),
             client_id: client_id.as_ref(),

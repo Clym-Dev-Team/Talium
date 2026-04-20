@@ -1,21 +1,22 @@
-use crate::axum::{convert_url, AxumState};
+use crate::axum::convert_url;
+use crate::state::L1State;
 use axum::body::Body;
 use axum::http::Request;
 use axum::response::Response;
 use std::convert::Infallible;
 use std::fs;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::{Context, Poll};
 use tower_http::body::Full;
 use tower_http::services::{Redirect, ServeDir};
 use tower_service::Service;
 use url::Url;
-use crate::WebserverConfig;
 
 const PANEL_DIST_DIR: &str = "panel_dist";
 pub const SERVER_PANEL_PATH: &str = "/panel";
 
-pub fn embedded_panel_service(state: AxumState, webserver_config: &WebserverConfig) -> ServeDir<DynamicIndexHtmlHandlerService> {
+pub fn embedded_panel_service(state: Arc<L1State>) -> ServeDir<DynamicIndexHtmlHandlerService> {
     let dir_exists = fs::exists(PANEL_DIST_DIR);
     let index_exists = fs::exists(PANEL_DIST_DIR.to_owned() + "/index.html");
     if dir_exists.is_err() {
@@ -38,7 +39,7 @@ pub fn embedded_panel_service(state: AxumState, webserver_config: &WebserverConf
     } else if !index_exists.unwrap() {
         eprintln!("panel_dist is missing index.html cannot server embedded panel in a working state!");
     } else {
-        println!("Hosting embedded panel at: {}panel", webserver_config.server_base_url);
+        println!("Hosting embedded panel at: {}panel", state.read_webserver_config().server_base_url);
     }
     ServeDir::new(PANEL_DIST_DIR)
         .append_index_html_on_directories(false)
@@ -51,11 +52,11 @@ pub fn to_panel_redirect(server_base_url: Url) -> Redirect<Full> {
 
 #[derive(Clone)]
 pub struct DynamicIndexHtmlHandlerService {
-    pub(crate) state: AxumState
+    pub(crate) state: Arc<L1State>
 }
 
 impl DynamicIndexHtmlHandlerService {
-    pub(crate) fn new(state: AxumState) -> DynamicIndexHtmlHandlerService {
+    pub(crate) fn new(state: Arc<L1State>) -> DynamicIndexHtmlHandlerService {
         DynamicIndexHtmlHandlerService {
             state,
         }
@@ -75,9 +76,7 @@ impl Service<Request<Body>> for DynamicIndexHtmlHandlerService {
         let index = fs::read_to_string(PANEL_DIST_DIR.to_owned() + "/index.html").unwrap();
 
         let c = {
-            // unfixable, i think it is currently impossible to borrow from self inside if the future with they way the tower service is defined and Futures not being sized yet
-            // work arounds would be implementing future manually, or using another crate
-            let g = self.state.l1.webserver_config.read().unwrap();
+            let g = self.state.webserver_config.read().unwrap();
             g.clone()
         };
         // strip trailing / in case of something like localhost:3487/ because it could interfere with creating paths by + "/somePath" in js

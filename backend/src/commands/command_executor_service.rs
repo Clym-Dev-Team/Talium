@@ -126,7 +126,11 @@ pub struct CommandExecutorService {
 
 impl CommandExecutorService {
     pub(crate) async fn new(_db: &ProdDB) -> CommandExecutorService {
-        todo!("get commands from db, and also return Result here")
+        // todo!("get commands from db, and also return Result here")
+        Self {
+            triggers: Default::default(),
+            cooldown_service: Default::default(),
+        }
     }
 
     pub(crate) async fn remove_command(&self, command_id: &TriggerId) {

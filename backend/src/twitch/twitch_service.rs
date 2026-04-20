@@ -2,13 +2,13 @@ use crate::axum::url_encode;
 use crate::db::ProdDB;
 use crate::state::L1State;
 use crate::twitch::authentication::{refresh_token, validate_token};
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use asknothingx2_util::oauth::{AccessToken, ClientId};
+use log::{error, info, warn};
 use serde::Deserialize;
 use sqlx::types::chrono::{DateTime, Local};
 use std::sync::Arc;
 use std::time::Instant;
-use log::{info, warn};
 use tokio::runtime::Handle;
 use tokio::sync::{Mutex, RwLock};
 use twitch_highway::TwitchAPI;
@@ -47,8 +47,8 @@ impl TwitchService {
     pub async fn new(l1: Arc<L1State>, twitch_config: TwitchConfig) -> Result<TwitchService, anyhow::Error> {
         //TODO get credentials from db
         let cred_from_db: OauthCredential = OauthCredential {
-            access_token: std::env::var("TWITCH_ACCESS_TOKEN").unwrap(),
-            refresh_token: std::env::var("TWITCH_REFRESH_TOKEN").unwrap(),
+            access_token: std::env::var("TWITCH_ACCESS_TOKEN").unwrap_or("dwaihdwuihwadhidwuih".to_string()),
+            refresh_token: std::env::var("TWITCH_REFRESH_TOKEN").unwrap_or("uhjkduihkwaduiug".to_string()),
             scopes: vec![],
             expires_at: Default::default(),
         };
@@ -59,9 +59,9 @@ impl TwitchService {
                 TwitchCredentialStatus {
                     was_valid_at_check: true,
                     valid_checked_at: Instant::now(),
-                    credential: Self::request_new_oauth(&l1, twitch_config.clone()).await
+                    credential: Self::request_new_oauth(&l1, twitch_config.clone()).await,
                 }
-            },
+            }
         };
         let api = TwitchAPI::new(
             AccessToken::from(oauth.credential.access_token.as_str()),
@@ -82,9 +82,10 @@ impl TwitchService {
 
 impl TwitchService {
     #[inline(always)]
-    pub(super) async fn handle_401_and_retry<R, F, Fut>(&self, req: F) -> Result<R, anyhow::Error> where
+    pub(super) async fn handle_401_and_retry<R, F, Fut>(&self, req: F) -> Result<R, anyhow::Error>
+    where
         F: Fn() -> Fut,
-        Fut: Future<Output=Result<R, twitch_highway::Error>>
+        Fut: Future<Output=Result<R, twitch_highway::Error>>,
     {
         match req().await {
             Err(e) if e.is_api() && e.message().is_some_and(|t1| t1.starts_with("HTTP 401")) => {
@@ -95,7 +96,7 @@ impl TwitchService {
                             let mut api_lock = self.twitch_api.write().await;
                             *api_lock = api_lock.clone().set_access_token(AccessToken::from(d.credential.access_token.clone()));
                             *cred_lock = d;
-                        },
+                        }
                         Err(e) => {
                             cred_lock.valid_checked_at = Instant::now();
                             cred_lock.was_valid_at_check = false;
@@ -127,13 +128,13 @@ impl TwitchService {
                 }
                 drop(cred_lock);
                 req().await.context("Retry also failed")
-            },
+            }
             Err(e) => Err(e.into()),
             Ok(r) => Ok(r),
         }
     }
 
-    async fn check_or_get_oauth(cred: &OauthCredential, _db: &ProdDB, twitch_config: &TwitchConfig) -> Result<TwitchCredentialStatus, anyhow::Error> {
+    async fn check_or_get_oauth(cred: &OauthCredential, db: &ProdDB, twitch_config: &TwitchConfig) -> Result<TwitchCredentialStatus, anyhow::Error> {
         const FINAL_ERROR: &str = "Could not get new oauth token, bad credentials, needs reauthentication";
         let mut errors = vec![];
         match validate_token(cred.access_token.as_str()).await {
@@ -142,45 +143,65 @@ impl TwitchService {
                     valid_checked_at: Instant::now(),
                     was_valid_at_check: true,
                     credential: cred.clone(),
-                })
-            },
+                });
+            }
             Err(e) => errors.push(e),
             Ok(None) => {}
         };
-        match refresh_token(cred.refresh_token.as_str(), twitch_config.client_id.as_str(), twitch_config.client_secret.as_str()).await {
+        match refresh_token(
+            cred.refresh_token.as_str(),
+            twitch_config.client_id.as_str(),
+            twitch_config.client_secret.as_str(),
+        )
+        .await
+        {
             Ok(Some(refreshed)) => {
                 //TODO save to db
                 return Ok(TwitchCredentialStatus {
                     valid_checked_at: Instant::now(),
                     was_valid_at_check: true,
                     credential: refreshed.into(),
-                })
+                });
             }
             Err(e) => errors.push(e),
             Ok(None) => {}
         }
         //TODO add errors
+        error!("Errors: {:?}", errors);
         Err(anyhow!(FINAL_ERROR))
     }
 
     async fn request_new_oauth(l1: &L1State, twitch_config: TwitchConfig) -> OauthCredential {
         const TWITCH_AUTHORIZE: &'static str = "https://id.twitch.tv/oauth2/authorize";
-        const SCOPES: [&str; 6] = ["channel:bot", "user:bot", "moderator:read:chatters", "moderator:read:moderators", "user:read:chat", "user:manage:chat_color"];
+        const SCOPES: [&str; 6] = [
+            "channel:bot",
+            "user:bot",
+            "moderator:read:chatters",
+            "moderator:read:moderators",
+            "user:read:chat",
+            "user:manage:chat_color",
+        ];
         let client_id = twitch_config.client_id.clone();
 
-        let code = l1.oauth_service.new_oauth_request("twitch", twitch_config.chat_account_name.as_str(), move |redirect, state| {
-            format!(r#"
-                {}
-                ?response_type=code
-                &client_id={}
-                &redirect_uri={}
-                &scope={}
-                &state={}
-            "#, TWITCH_AUTHORIZE, client_id, redirect, SCOPES.map(url_encode).join("+"), state)
-        });
+        let code = l1
+            .oauth_service
+            .new_oauth_request("twitch", twitch_config.chat_account_name.as_str(), move |redirect, state| {
+                format!(
+                    r#"{}?response_type=code&client_id={}&redirect_uri={}&scope={}&state={}"#,
+                    TWITCH_AUTHORIZE,
+                    client_id,
+                    redirect,
+                    SCOPES.map(url_encode).join("+"),
+                    state
+                )
+            });
 
         let _refreshed = refresh_token(code, twitch_config.client_id.as_str(), twitch_config.client_secret.as_str()).await;
         //TODO save to db
         todo!()
+    }
+
+    fn save_cred_to_db(db: &ProdDB, cred: TwitchCredentialStatus) {
+
     }
 }
