@@ -1,16 +1,10 @@
-use crate::commands::command_executor_service::CommandExecutorService;
 use crate::db::ProdDB;
-use crate::service_oauth::oauth_service::OAuthService;
-use crate::session_service::SessionService;
+use crate::state::L1Application;
+use crate::twitch::twitch_service::TwitchService;
 use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
-use state::{L1State, WebserverState};
 use std::str::FromStr;
-use std::sync::{Arc, RwLock};
-use log::error;
-use tokio::runtime::Handle;
 use url::Url;
-use crate::twitch::twitch_service::TwitchService;
 
 mod webserver_authentication;
 mod axum;
@@ -31,25 +25,17 @@ pub async fn start() {
     let prod_db = ProdDB::new(db_connection);
     println!("established db connection");
 
-    let l1 = Arc::new(L1State {
-        webserver_config: RwLock::new(WebserverConfig {
-            panel_base_url: Url::from_str("http://localhost:4771/panel").unwrap(),
-            server_base_url: Url::from_str("http://localhost:4771").unwrap(),
-            panel_auth_twitch_client_id: "zmxjjn3xmncg8ewew6tjk08tub26bb".to_string()
-        }),
-        command_executor_service: CommandExecutorService::new(&prod_db).await,
-        oauth_service: OAuthService::new(),
-        session_service: SessionService::new(),
-        prod_db,
-    });
+    let webserver_config = WebserverConfig {
+        panel_base_url: Url::from_str("http://localhost:4771/panel").unwrap(),
+        server_base_url: Url::from_str("http://localhost:4771").unwrap(),
+        panel_auth_twitch_client_id: "zmxjjn3xmncg8ewew6tjk08tub26bb".to_string()
+    };
+    let app = L1Application::new(prod_db, webserver_config).await;
 
-    let webserver_state = Arc::new(WebserverState::new(l1.clone()));
-    let a2 = webserver_state.clone();
-    Handle::current().spawn(async { axum::axum(4771, a2).await });
-    if let Err(e) = webserver_state.init_l2(TwitchService::get_config_from_env()).await {
-        error!("Error Starting default twitch {:?}", e);
-    }
-    webserver_state.default_full().await.unwrap();
+    let app = app.upgrade(TwitchService::get_config_from_env(), 4771).await
+        .map_err(move |(_, e)| e)
+        .unwrap();
+    let app = app.upgrade().await;
 }
 
 #[derive(Clone, Deserialize, Serialize)]

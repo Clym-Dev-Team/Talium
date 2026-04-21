@@ -10,9 +10,9 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use url::{form_urlencoded, Url};
-use crate::state::WebserverState;
+use crate::state::ApplicationState;
 
-pub type AxumState = Arc<WebserverState>;
+pub type AxumState = Arc<ApplicationState>;
 
 pub async fn axum(on_port: u16, state: AxumState) {
     let webserver_config = {

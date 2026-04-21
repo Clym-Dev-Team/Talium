@@ -12,6 +12,7 @@ use anyhow::Context;
 use axum::http::request::Parts;
 use log::{error};
 use reqwest::StatusCode;
+use tokio::runtime::Handle;
 use crate::axum::AxumState;
 
 #[allow(dead_code)]
@@ -37,7 +38,7 @@ pub struct L1State {
     pub session_service: SessionService,
     pub oauth_service: OAuthService,
     pub webserver_config: RwLock<WebserverConfig>,
-    pub command_executor_service: CommandExecutorService
+    pub command_executor_service: CommandExecutorService,
 }
 
 impl L1State {
@@ -65,85 +66,75 @@ pub struct FullState {
     pub l2: Arc<L2State>,
 }
 
-type CompletedFull = bool;
-
-pub struct WebserverState {
+pub struct ApplicationState {
     pub l1: Arc<L1State>,
     pub l2: OnceLock<Arc<L2State>>,
     // ensures only one transition can happen at once, even when transitions multiple levels at one time. Also stops from the full state being initialized more than once
-    transition_lock: tokio::sync::Mutex<CompletedFull>,
+    transition_lock: tokio::sync::Mutex<()>,
 }
-
-#[derive(Debug)]
-pub enum InitializationError {
-    SkippedLowerInitialization,
-    AlreadyInitialized,
-    InitializationError(anyhow::Error),
-}
-pub type InitializationResult = Result<(), InitializationError>;
-
-impl From<anyhow::Error> for InitializationError {
-    fn from(value: anyhow::Error) -> Self {
-        InitializationError::InitializationError(value)
-    }
-}
-
 
 // State Stage Transitions
-impl WebserverState {
-    pub fn new(l1: Arc<L1State>) -> Self {
-        WebserverState{
-            l1,
-            transition_lock: Default::default(),
+pub struct L1Application(Arc<ApplicationState>);
+pub struct L2Application(Arc<ApplicationState>);
+pub struct FullApplication(Arc<ApplicationState>);
+
+impl L1Application {
+    pub async fn new(prod_db: ProdDB, webserver_config: WebserverConfig) -> L1Application {
+        let l1 = L1State {
+            command_executor_service: CommandExecutorService::new(&prod_db).await,
+            session_service: SessionService::new(),
+            oauth_service: OAuthService::new(),
+            webserver_config: RwLock::new(webserver_config),
+            prod_db,
+        };
+        L1Application(Arc::new(ApplicationState {
+            l1: Arc::new(l1),
             l2: Default::default(),
-        }
+            transition_lock: Default::default(),
+        }))
     }
-    //TODO move these state change methods on an enum that wraps the WebserverState
-    // that way the state changes are type safe, and stuff like ::AlreadyInitialized and ::SkippedLowerInitialization can be removed
-    pub async fn init_l2(&self, twitch_config: TwitchConfig) -> InitializationResult {
-        let _l = self.transition_lock.lock().await;
-        if self.l2.get().is_some() {
-             return Err(InitializationError::AlreadyInitialized)
-        }
-        let service = TwitchService::new(self.l1.clone(), twitch_config)
-            .await
-            .context("Unable to initialize Twitch service")?;
+    pub async fn upgrade(self, twitch_config: TwitchConfig, webserver_port: u16) -> Result<L2Application, (Self, anyhow::Error)> {
+        let l = self.0.transition_lock.lock().await;
+        assert!(self.0.l2.get().is_none());
+        let service = match TwitchService::new(self.0.l1.clone(), twitch_config).await {
+            Ok(service) => service,
+            Err(e) => {
+                drop(l);
+                return Err((self, e.context("Unable to initialize Twitch service")));
+            }
+        };
         let l2 = Arc::new(L2State {
             twitch_service: service,
         });
-        // if let Err(e) = l2.default_full().await {
-            // semantically, only InitializationError makes sense here, SkippedLowerInitialization and AlreadyInitialized
-            // should never occur here, because we just now established the lower level. It would be nice if we could encode that into the typesystem
-            // info!("Unable to eagerly initialize full state: {:?}", e);
-        // };
-        self.l2.set(l2)
-            .map_err(|_| {()})// so that we don't print the l2State
+        self.0.l2.set(l2.clone())
+            .map_err(|_| { () }) // so that we don't print the l2State
             .expect("l2 to be uninitialized because we hold the lock and l2 was checked to be uninitialized");
-        Ok(())
+        let axum_state = self.0.clone();
+        Handle::current().spawn(async move { crate::axum::axum(webserver_port, axum_state).await });
+        drop(l);
+        Ok(L2Application(self.0))
     }
+}
 
-    pub async fn default_full(&self) -> InitializationResult {
-        let l2 = match self.l2.get() {
-            Some(l2) => l2.clone(),
-            None => return Err(InitializationError::SkippedLowerInitialization),
-        };
+impl L2Application {
+    pub async fn upgrade(self) -> FullApplication {
+        let l2 = self.0.l2.get().expect("L2Application should have l2State");
         let full = Arc::new(FullState {
-            l1: self.l1.clone(),
+            l1: self.0.l1.clone(),
             l2: l2.clone(),
         });
 
         l2.twitch_service.start_receiving_events(l2.clone(), full);
-        Ok(())
+        FullApplication(self.0)
     }
 }
-
 
 // LxArc Impls
 impl Deref for L1Arc {
     type Target = Arc<L1State>;
 
     fn deref(&self) -> &Self::Target {
-       &self.0
+        &self.0
     }
 }
 
