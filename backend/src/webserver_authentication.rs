@@ -48,16 +48,15 @@ async fn authenticate_user(state: AxumState, request: Request) -> AxResult<(Requ
     // One additional benefit is that we are not constantly checking the validity for each user, only when they actually do something.
 
     //we would still want to implement the authentication bypass, although handling those anonymous users for extractors would be a challenge
-    let l1 = state.get_l1().await;
-    match l1.session_service.get_by_access_token(&access_token) {
+    match state.l1.session_service.get_by_access_token(&access_token) {
         Some(session) => {
             if session.user_agent != user_agent {
                 Err((StatusCode::UNAUTHORIZED, "Reauthenticate with access token"))?
-            } else if session.last_refreshed_at + l1.session_service.session_timeout() < Instant::now() {
-                l1.session_service.delete_by_access_token(&access_token);
+            } else if session.last_refreshed_at + state.l1.session_service.session_timeout() < Instant::now() {
+                state.l1.session_service.delete_by_access_token(&access_token);
                 Err((StatusCode::UNAUTHORIZED, "Reauthenticate with access token"))?
             } else {
-                _ = l1.session_service.refresh_session(access_token);
+                _ = state.l1.session_service.refresh_session(access_token);
                 Ok((request, session.panel_user))
             }
         }
@@ -68,14 +67,14 @@ async fn authenticate_user(state: AxumState, request: Request) -> AxResult<(Requ
                     (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error. Retry authentication")
                 })?
                 .ok_or((StatusCode::UNAUTHORIZED, "Invalid access token, Reauthenticate"))?;
-            let user = PanelUserService::find_by_id(&l1.prod_db, validated.user_id)
+            let user = PanelUserService::find_by_id(&state.l1.prod_db, validated.user_id)
                 .await
                 .map_err(|err| {
                     error!("Failed to fetch panelUser for userId: {:?}", err);
                     (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error. Retry authentication")
                 })?
                 .ok_or(FORBIDDEN)?;
-            l1.session_service.create_session(user.clone(), access_token, user_agent);
+            state.l1.session_service.create_session(user.clone(), access_token, user_agent);
             Ok((request, user))
         }
     }

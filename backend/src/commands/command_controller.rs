@@ -2,7 +2,7 @@ use crate::axum::AxumState;
 use crate::commands::command_executor_service::TwitchUserPermission;
 use crate::commands::command_repo;
 use crate::commands::template_service::StringTemplate;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, Query};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Result as AxResult;

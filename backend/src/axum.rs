@@ -15,9 +15,8 @@ use crate::state::WebserverState;
 pub type AxumState = Arc<WebserverState>;
 
 pub async fn axum(on_port: u16, state: AxumState) {
-    let l1 = state.get_l1().await;
     let webserver_config = {
-        l1.read_webserver_config().clone()
+        state.l1.read_webserver_config().clone()
     };
 
     let cors_allow_all = CorsLayer::very_permissive();
@@ -37,7 +36,7 @@ pub async fn axum(on_port: u16, state: AxumState) {
         .layer(cors_allow_all);
 
     let app = Router::new()
-        .nest_service(SERVER_PANEL_PATH, embedded_panel_service(l1))
+        .nest_service(SERVER_PANEL_PATH, embedded_panel_service(state.l1.clone()))
         .route_service("/", to_panel_redirect(webserver_config.server_base_url))
         .nest("/bot", bot_router)
         .with_state(state);

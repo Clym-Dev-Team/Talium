@@ -1,6 +1,6 @@
 use crate::axum::url_encode;
 use crate::db::ProdDB;
-use crate::state::L1State;
+use crate::state::{FullState, L1State, L2State};
 use crate::twitch::authentication::{refresh_token, validate_token};
 use anyhow::{Context, anyhow};
 use asknothingx2_util::oauth::{AccessToken, ClientId};
@@ -11,7 +11,9 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::runtime::Handle;
 use tokio::sync::{Mutex, RwLock};
+use tokio::sync::broadcast::error::RecvError;
 use twitch_highway::TwitchAPI;
+use crate::commands::command_executor_service::{ChatMessage, CommandExecutorService};
 
 #[derive(Default, Deserialize, Clone)]
 pub(crate) struct OauthCredential {
@@ -77,6 +79,46 @@ impl TwitchService {
             config: twitch_config,
             l1,
         })
+    }
+
+    pub fn get_config_from_env() -> TwitchConfig {
+        // todo get twitch config from database
+        TwitchConfig {
+            channel_name: std::env::var("TWITCH_LISTEN_CHANNEL").unwrap(),
+            chat_account_name: std::env::var("TWITCH_ACCOUNT_NAME").unwrap(),
+            send_to: std::env::var("TWITCH_SEND_TO").unwrap(),
+            client_id: std::env::var("TWITCH_CLIENT_ID").unwrap(),
+            client_secret: std::env::var("TWITCH_CLIENT_SECRET").unwrap(),
+        }
+    }
+
+    pub fn start_receiving_events(&self, l2: Arc<L2State>, full: Arc<FullState>) {
+        let (chat_channel, _) = tokio::sync::broadcast::channel::<Box<ChatMessage>>(20);
+        // fanout of messages
+        let sender2 = chat_channel.clone();
+        Handle::current().spawn(async move { TwitchService::start_websocket(
+            l2,
+            sender2
+        ) });
+
+        let mut receiver = chat_channel.subscribe();
+        let full2 = full.clone();
+        Handle::current().spawn(async move {
+            loop {
+                let message = match receiver.recv().await {
+                    Ok(m) => *m,
+                    Err(RecvError::Closed) => return,
+                    Err(RecvError::Lagged(skipped)) => {
+                        error!("Twitch ChatMessage channel lagged, skipped {} messages!", skipped);
+                        continue;
+                    }
+                };
+                let full = full2.clone();
+                Handle::current().spawn(async move {
+                    CommandExecutorService::process_chat_message(full, message).await;
+                });
+            }
+        });
     }
 }
 

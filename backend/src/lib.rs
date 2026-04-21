@@ -10,6 +10,7 @@ use std::sync::{Arc, RwLock};
 use log::error;
 use tokio::runtime::Handle;
 use url::Url;
+use crate::twitch::twitch_service::TwitchService;
 
 mod webserver_authentication;
 mod axum;
@@ -45,9 +46,10 @@ pub async fn start() {
     let webserver_state = Arc::new(WebserverState::new(l1.clone()));
     let a2 = webserver_state.clone();
     Handle::current().spawn(async { axum::axum(4771, a2).await });
-    if let Err(e) = webserver_state.default_twitch().await {
+    if let Err(e) = webserver_state.init_l2(TwitchService::get_config_from_env()).await {
         error!("Error Starting default twitch {:?}", e);
     }
+    webserver_state.default_full().await.unwrap();
 }
 
 #[derive(Clone, Deserialize, Serialize)]

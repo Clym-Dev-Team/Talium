@@ -1,19 +1,17 @@
 use std::convert::Infallible;
 use std::ops::Deref;
-use crate::commands::command_executor_service::{ChatMessage, CommandExecutorService};
+use crate::commands::command_executor_service::{CommandExecutorService};
 use crate::twitch::twitch_service::{TwitchConfig, TwitchService};
 use crate::db::ProdDB;
 use crate::service_oauth::oauth_service::OAuthService;
 use crate::session_service::SessionService;
 use crate::WebserverConfig;
 use axum::extract::{FromRequestParts};
-use std::sync::{Arc, RwLock, RwLockReadGuard};
+use std::sync::{Arc, OnceLock, RwLock, RwLockReadGuard};
 use anyhow::Context;
 use axum::http::request::Parts;
-use log::{error, info};
+use log::{error};
 use reqwest::StatusCode;
-use tokio::runtime::Handle;
-use tokio::sync::broadcast::error::RecvError;
 use crate::axum::AxumState;
 
 #[allow(dead_code)]
@@ -58,6 +56,7 @@ pub struct L2State {
     pub twitch_service: TwitchService,
 }
 
+// For Axum FromRequestParts
 pub struct L1Arc(Arc<L1State>);
 pub struct L2Arc(Arc<L2State>);
 
@@ -68,30 +67,11 @@ pub struct FullState {
 
 type CompletedFull = bool;
 
-struct L1Stage {
-    pub l1: Arc<L1State>,
-}
-
-struct L2Stage {
-    pub l1: Arc<L1State>,
-    pub l2: Arc<L2State>,
-}
-
-struct CompleteStage {
-    pub l1: Arc<L1State>,
-    pub l2: Arc<L2State>,
-}
-
 pub struct WebserverState {
-    state: tokio::sync::RwLock<InnerState>,
+    pub l1: Arc<L1State>,
+    pub l2: OnceLock<Arc<L2State>>,
     // ensures only one transition can happen at once, even when transitions multiple levels at one time. Also stops from the full state being initialized more than once
     transition_lock: tokio::sync::Mutex<CompletedFull>,
-}
-
-pub enum InnerState {
-    L1Stage(L1Stage),
-    L2Stage(L2Stage),
-    CompleteStage(CompleteStage),
 }
 
 #[derive(Debug)]
@@ -113,105 +93,50 @@ impl From<anyhow::Error> for InitializationError {
 impl WebserverState {
     pub fn new(l1: Arc<L1State>) -> Self {
         WebserverState{
-            state: tokio::sync::RwLock::from(InnerState::L1Stage(L1Stage { l1 })),
+            l1,
             transition_lock: Default::default(),
+            l2: Default::default(),
         }
     }
-
-    pub async fn default_twitch(&self) -> InitializationResult {
-        // todo get twitch config from database
-        let twitch_config = TwitchConfig {
-            channel_name: std::env::var("TWITCH_LISTEN_CHANNEL").unwrap(),
-            chat_account_name: std::env::var("TWITCH_ACCOUNT_NAME").unwrap(),
-            send_to: std::env::var("TWITCH_SEND_TO").unwrap(),
-            client_id: std::env::var("TWITCH_CLIENT_ID").unwrap(),
-            client_secret: std::env::var("TWITCH_CLIENT_SECRET").unwrap(),
-        };
-        self.setup_twitch(twitch_config).await
-    }
-
-    pub async fn setup_twitch(&self, twitch_config: TwitchConfig) -> InitializationResult {
+    //TODO move these state change methods on an enum that wraps the WebserverState
+    // that way the state changes are type safe, and stuff like ::AlreadyInitialized and ::SkippedLowerInitialization can be removed
+    pub async fn init_l2(&self, twitch_config: TwitchConfig) -> InitializationResult {
         let _l = self.transition_lock.lock().await;
-        let l2 = match self.state.read().await.deref() {
-            InnerState::L1Stage(l1) => l1.init_l2(twitch_config).await?,
-            _ => return Err(InitializationError::AlreadyInitialized),
-        };
-        {
-            *self.state.write().await = InnerState::L2Stage(l2);
-            // drop write lock before mutex
+        if self.l2.get().is_some() {
+             return Err(InitializationError::AlreadyInitialized)
         }
-        Ok(())
-    }
-
-    pub async fn get_l1(&self) -> Arc<L1State> {
-        match self.state.read().await.deref() {
-            InnerState::L1Stage(l1) => l1.l1.clone(),
-            InnerState::L2Stage(l2) => l2.l1.clone(),
-            InnerState::CompleteStage(c) => c.l1.clone(),
-        }
-    }
-
-    pub async fn get_l2(&self) -> Option<Arc<L2State>> {
-        match self.state.read().await.deref() {
-            InnerState::L1Stage(l1) => None,
-            InnerState::L2Stage(l2) => Some(l2.l2.clone()),
-            InnerState::CompleteStage(c) => Some(c.l2.clone()),
-        }
-    }
-}
-
-impl L1Stage {
-    async fn init_l2(&self, twitch_config: TwitchConfig) -> anyhow::Result<L2Stage> {
         let service = TwitchService::new(self.l1.clone(), twitch_config)
             .await
             .context("Unable to initialize Twitch service")?;
         let l2 = Arc::new(L2State {
             twitch_service: service,
         });
-        let l2 = L2Stage { l2, l1: self.l1.clone() };
-        if let Err(e) = l2.default_full().await {
+        // if let Err(e) = l2.default_full().await {
             // semantically, only InitializationError makes sense here, SkippedLowerInitialization and AlreadyInitialized
             // should never occur here, because we just now established the lower level. It would be nice if we could encode that into the typesystem
-            info!("Unable to eagerly initialize full state: {:?}", e);
-        };
-        Ok(l2)
+            // info!("Unable to eagerly initialize full state: {:?}", e);
+        // };
+        self.l2.set(l2)
+            .map_err(|_| {()})// so that we don't print the l2State
+            .expect("l2 to be uninitialized because we hold the lock and l2 was checked to be uninitialized");
+        Ok(())
     }
-}
 
-impl L2Stage {
-    async fn default_full(&self) -> anyhow::Result<CompleteStage> {
+    pub async fn default_full(&self) -> InitializationResult {
+        let l2 = match self.l2.get() {
+            Some(l2) => l2.clone(),
+            None => return Err(InitializationError::SkippedLowerInitialization),
+        };
         let full = Arc::new(FullState {
             l1: self.l1.clone(),
-            l2: self.l2.clone(),
-        });
-        let (chat_channel, _) = tokio::sync::broadcast::channel::<Box<ChatMessage>>(20);
-        // fanout of messages
-        let full2 = full.clone();
-        let sender2 = chat_channel.clone();
-        Handle::current().spawn(async { TwitchService::start_websocket(full2, sender2) });
-
-        let mut receiver = chat_channel.subscribe();
-        let full2 = full.clone();
-        Handle::current().spawn(async move {
-            loop {
-                let message = match receiver.recv().await {
-                    Ok(m) => *m,
-                    Err(RecvError::Closed) => return,
-                    Err(RecvError::Lagged(skipped)) => {
-                        error!("Twitch ChatMessage channel lagged, skipped {} messages!", skipped);
-                        continue;
-                    }
-                };
-                let full = full2.clone();
-                Handle::current().spawn(async move {
-                    CommandExecutorService::process_chat_message(full, message).await;
-                });
-            }
+            l2: l2.clone(),
         });
 
-        Ok(CompleteStage { l1: self.l1.clone(), l2: self.l2.clone() })
+        l2.twitch_service.start_receiving_events(l2.clone(), full);
+        Ok(())
     }
 }
+
 
 // LxArc Impls
 impl Deref for L1Arc {
@@ -233,7 +158,7 @@ impl FromRequestParts<AxumState> for L1Arc {
     type Rejection = Infallible;
 
     async fn from_request_parts(_parts: &mut Parts, state: &AxumState) -> Result<Self, Self::Rejection> {
-        Ok(L1Arc(state.get_l1().await))
+        Ok(L1Arc(state.l1.clone()))
     }
 }
 
@@ -241,7 +166,7 @@ impl FromRequestParts<AxumState> for L2Arc {
     type Rejection = (StatusCode, &'static str);
 
     async fn from_request_parts(_parts: &mut Parts, state: &AxumState) -> Result<Self, Self::Rejection> {
-        state.get_l2().await
+        state.l2.get()
             .ok_or((StatusCode::SERVICE_UNAVAILABLE, "This feature is currently not available. This can also be the case on server startup"))
             .map(|t| L2Arc(t.clone()))
     }
